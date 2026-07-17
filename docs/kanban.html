@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hearthstone Card Library Kanban</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#11141a; --panel:#1a2029; --card:#222a35; --line:#364151; --text:#f3f6fb; --muted:#9ca9ba; --accent:#67a5ff; --blocked:#f2a65a; --done:#72c69a; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; background:var(--bg); color:var(--text); font:14px/1.5 "Segoe UI","Malgun Gothic",sans-serif; }
+    header { position:sticky; top:0; z-index:10; padding:20px clamp(16px,3vw,36px); background:rgba(17,20,26,.96); border-bottom:1px solid var(--line); }
+    .heading { display:flex; flex-wrap:wrap; align-items:baseline; gap:10px 18px; }
+    h1 { margin:0; font-size:clamp(22px,3vw,34px); }
+    #summary { color:var(--muted); }
+    .controls { display:grid; grid-template-columns:minmax(200px,2fr) repeat(2,minmax(130px,1fr)) auto; gap:10px; margin-top:16px; }
+    input, select, label.toggle { min-height:40px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--text); padding:8px 11px; }
+    label.toggle { display:flex; align-items:center; gap:8px; white-space:nowrap; }
+    main { padding:20px clamp(16px,3vw,36px) 40px; overflow-x:auto; }
+    .board { display:grid; grid-template-columns:repeat(5,minmax(260px,1fr)); gap:14px; min-width:1356px; }
+    .column { align-self:start; min-height:180px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+    .column-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; }
+    .column h2 { margin:0; font-size:15px; text-transform:uppercase; letter-spacing:.05em; }
+    .count { min-width:26px; padding:2px 7px; border-radius:999px; background:var(--card); color:var(--muted); text-align:center; }
+    .cards { display:grid; gap:10px; }
+    article { padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--card); box-shadow:0 8px 18px rgba(0,0,0,.14); }
+    article.is-blocked { border-color:var(--blocked); }
+    .card-top, .badges { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+    .card-top { justify-content:space-between; }
+    .id { color:var(--accent); font-weight:700; }
+    .badge { padding:2px 6px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:11px; }
+    .badge.blocked { border-color:var(--blocked); color:var(--blocked); }
+    article h3 { margin:9px 0 7px; font-size:15px; }
+    .next { margin:0; color:var(--muted); }
+    details { margin-top:10px; border-top:1px solid var(--line); padding-top:8px; }
+    summary { cursor:pointer; color:var(--accent); }
+    dl { display:grid; grid-template-columns:72px 1fr; gap:5px 8px; margin:9px 0 0; }
+    dt { color:var(--muted); }
+    dd { margin:0; overflow-wrap:anywhere; }
+    a { color:var(--accent); }
+    .empty { margin:8px 0; color:var(--muted); text-align:center; }
+    @media (max-width:760px) { .controls { grid-template-columns:1fr; } main { overflow:visible; } .board { min-width:0; grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="heading"><h1>Hearthstone Card Library</h1><span id="summary"></span></div>
+    <div class="controls" aria-label="칸반 필터">
+      <input id="board-search" type="search" placeholder="ID 또는 작업명 검색" autocomplete="off">
+      <select id="type-filter" aria-label="유형"><option value="">모든 유형</option><option>feature</option><option>bug</option><option>design</option><option>research</option><option>chore</option></select>
+      <select id="priority-filter" aria-label="우선순위"><option value="">모든 우선순위</option><option>P0</option><option>P1</option><option>P2</option><option>P3</option></select>
+      <label class="toggle"><input id="active-only" type="checkbox"> 진행 중만</label>
+    </div>
+  </header>
+  <main>
+    <div class="board">
+      <section class="column" data-column="backlog"><div class="column-header"><h2>Backlog</h2><span class="count">0</span></div><div class="cards"></div></section>
+      <section class="column" data-column="ready"><div class="column-header"><h2>Ready</h2><span class="count">0</span></div><div class="cards"></div></section>
+      <section class="column" data-column="in_progress"><div class="column-header"><h2>In Progress</h2><span class="count">0</span></div><div class="cards"></div></section>
+      <section class="column" data-column="verify"><div class="column-header"><h2>Verify</h2><span class="count">0</span></div><div class="cards"></div></section>
+      <section class="column" data-column="done"><div class="column-header"><h2>Done</h2><span class="count">0</span></div><div class="cards"></div></section>
+    </div>
+  </main>
+  <script id="kanban-data" type="application/json">
+  {
+    "cards": [
+      {"id":"HCL-003","title":"칸반 기반 프로젝트 관리 도입","status":"in_progress","priority":"P0","type":"chore","updated":"2026-07-18","codex":"HCL-003 · 칸반 기반 프로젝트 관리 도입","branch":"main","worktree":"main","dependsOn":[],"spec":"superpowers/specs/2026-07-17-hcl-003-kanban-project-tracking-design.md","plan":"superpowers/plans/2026-07-18-hcl-003-kanban-project-tracking.md","nextGate":"tracking validator, canonical files, and repository workflow integration","blocked":""},
+      {"id":"HCL-004","title":"현재 저장소 기준선 감사·정리","status":"ready","priority":"P0","type":"chore","updated":"2026-07-18","codex":"","branch":"","worktree":"","dependsOn":["HCL-003"],"spec":"","plan":"","nextGate":"audit ownership and verification state of every untracked project file","blocked":""},
+      {"id":"HCL-005","title":"기본 UI와 사용자 흐름 설계","status":"backlog","priority":"P1","type":"design","updated":"2026-07-18","codex":"","branch":"","worktree":"","dependsOn":["HCL-004"],"spec":"","plan":"","nextGate":"run the approved GStack product and design workflow","blocked":"HCL-004 baseline must be established first"},
+      {"id":"HCL-006","title":"공식 카드 엔드포인트 어댑터","status":"backlog","priority":"P1","type":"feature","updated":"2026-07-18","codex":"","branch":"","worktree":"","dependsOn":["HCL-004"],"spec":"","plan":"","nextGate":"research the current official endpoint and freeze fixture contracts","blocked":"HCL-004 baseline must be established first"},
+      {"id":"HCL-007","title":"원본 캐시와 정규화 로컬 DB","status":"backlog","priority":"P1","type":"feature","updated":"2026-07-18","codex":"","branch":"","worktree":"","dependsOn":["HCL-006"],"spec":"","plan":"","nextGate":"define raw-cache and normalized-schema boundaries after the adapter contract","blocked":"HCL-006 adapter contract is required"},
+      {"id":"HCL-008","title":"기본 검색과 AND/OR 필터","status":"backlog","priority":"P1","type":"feature","updated":"2026-07-18","codex":"","branch":"","worktree":"","dependsOn":["HCL-007"],"spec":"","plan":"","nextGate":"design the filter expression model against normalized card data","blocked":"HCL-007 normalized schema is required"},
+      {"id":"HCL-009","title":"카드 효과 의미 태깅과 시너지 모델","status":"backlog","priority":"P2","type":"feature","updated":"2026-07-18","codex":"","branch":"","worktree":"","dependsOn":["HCL-008"],"spec":"","plan":"","nextGate":"define inferred semantic fields and provenance after base search works","blocked":"HCL-008 query model is required"},
+      {"id":"HCL-010","title":"덱 편집기와 덱 코드 가져오기·내보내기","status":"backlog","priority":"P2","type":"feature","updated":"2026-07-18","codex":"","branch":"","worktree":"","dependsOn":["HCL-008","HCL-009"],"spec":"","plan":"","nextGate":"approve deck rules, validation, statistics, and deck-code flow","blocked":"HCL-008 search and HCL-009 semantic relationships are required"}
+    ]
+  }
+  </script>
+  <script>
+    (() => {
+      "use strict";
+      const statuses = ["backlog", "ready", "in_progress", "verify", "done"];
+      const priorityRank = { P0:0, P1:1, P2:2, P3:3 };
+      const KANBAN_CARDS = Object.freeze(JSON.parse(document.querySelector("#kanban-data").textContent).cards);
+      const controls = {
+        search: document.querySelector("#board-search"),
+        type: document.querySelector("#type-filter"),
+        priority: document.querySelector("#priority-filter"),
+        activeOnly: document.querySelector("#active-only"),
+      };
+      const summary = document.querySelector("#summary");
+
+      function linkOrText(value) {
+        if (!value) return document.createTextNode("—");
+        const link = document.createElement("a");
+        link.href = value;
+        link.textContent = value.split("/").at(-1);
+        return link;
+      }
+
+      function detailRow(list, label, value, isLink = false) {
+        const term = document.createElement("dt");
+        term.textContent = label;
+        const detail = document.createElement("dd");
+        detail.append(isLink ? linkOrText(value) : document.createTextNode(value || "—"));
+        list.append(term, detail);
+      }
+
+      function renderCard(card) {
+        const article = document.createElement("article");
+        if (card.blocked) article.classList.add("is-blocked");
+        const top = document.createElement("div");
+        top.className = "card-top";
+        top.innerHTML = `<span class="id"></span><span class="badges"></span>`;
+        top.querySelector(".id").textContent = card.id;
+        const badges = top.querySelector(".badges");
+        for (const value of [card.priority, card.type]) {
+          const badge = document.createElement("span"); badge.className = "badge"; badge.textContent = value; badges.append(badge);
+        }
+        if (card.blocked) {
+          const badge = document.createElement("span"); badge.className = "badge blocked"; badge.textContent = "BLOCKED"; badges.append(badge);
+        }
+        const title = document.createElement("h3"); title.textContent = card.title;
+        const next = document.createElement("p"); next.className = "next"; next.textContent = card.nextGate;
+        const details = document.createElement("details");
+        details.innerHTML = "<summary>상세</summary><dl></dl>";
+        const list = details.querySelector("dl");
+        detailRow(list, "Updated", card.updated);
+        detailRow(list, "Codex", card.codex);
+        detailRow(list, "Branch", card.branch);
+        detailRow(list, "Worktree", card.worktree);
+        detailRow(list, "Depends", card.dependsOn.join(", "));
+        detailRow(list, "Blocked", card.blocked);
+        detailRow(list, "Spec", card.spec, true);
+        detailRow(list, "Plan", card.plan, true);
+        article.append(top, title, next, details);
+        return article;
+      }
+
+      function visibleCards() {
+        const query = controls.search.value.normalize("NFKC").toLocaleLowerCase("ko-KR").trim();
+        return KANBAN_CARDS
+          .filter((card) => !controls.activeOnly.checked || ["in_progress", "verify"].includes(card.status))
+          .filter((card) => !controls.type.value || card.type === controls.type.value)
+          .filter((card) => !controls.priority.value || card.priority === controls.priority.value)
+          .filter((card) => !query || `${card.id} ${card.title}`.normalize("NFKC").toLocaleLowerCase("ko-KR").includes(query))
+          .sort((a, b) => priorityRank[a.priority] - priorityRank[b.priority] || a.id.localeCompare(b.id));
+      }
+
+      function render() {
+        const visible = visibleCards();
+        for (const status of statuses) {
+          const column = document.querySelector(`[data-column="${status}"]`);
+          const statusCards = visible.filter((card) => card.status === status);
+          column.querySelector(".count").textContent = statusCards.length;
+          const container = column.querySelector(".cards");
+          if (statusCards.length) container.replaceChildren(...statusCards.map(renderCard));
+          else {
+            const empty = document.createElement("p"); empty.className = "empty"; empty.textContent = "표시할 작업 없음"; container.replaceChildren(empty);
+          }
+        }
+        summary.textContent = `${visible.length} / ${KANBAN_CARDS.length} active tasks`;
+      }
+
+      for (const control of Object.values(controls)) control.addEventListener("input", render);
+      render();
+    })();
+  </script>
+</body>
+</html>
