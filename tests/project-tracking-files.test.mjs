@@ -38,3 +38,28 @@ test("offline Kanban exposes the five columns and approved controls", () => {
     "HCL-010",
   ]);
 });
+
+test("repository instructions enforce main-only tracking and the merge gate", () => {
+  const agents = readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8");
+  const claude = readFileSync(path.join(repoRoot, "CLAUDE.md"), "utf8");
+  const readme = readFileSync(path.join(repoRoot, "README.md"), "utf8");
+  const vitestConfig = readFileSync(path.join(repoRoot, "vitest.config.ts"), "utf8");
+  const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"));
+
+  for (const file of ["docs/TODO.md", "docs/DONE.md", "docs/kanban.html"]) {
+    assert.match(agents, new RegExp(file.replace("/", "\\/")));
+  }
+  assert.match(agents, /main\.\.\.HEAD -- docs\/TODO\.md docs\/DONE\.md docs\/kanban\.html/);
+  assert.match(claude, /Project Tracking/);
+  assert.match(readme, /docs\/kanban\.html/);
+  assert.match(readme, /docs\/TODO\.md/);
+  assert.match(readme, /docs\/DONE\.md/);
+  assert.equal(
+    packageJson.scripts["tracking:test"],
+    "node --test tests/project-tracking.test.mjs tests/project-tracking-files.test.mjs",
+  );
+  assert.equal(packageJson.scripts["tracking:check"], "node scripts/validate-project-tracking.mjs");
+  assert.match(packageJson.scripts.check, /^npm run tracking:test && npm run tracking:check && /);
+  assert.match(vitestConfig, /configDefaults\.exclude/);
+  assert.match(vitestConfig, /tests\/project-tracking\*\.test\.mjs/);
+});

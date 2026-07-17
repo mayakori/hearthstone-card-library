@@ -1,0 +1,31 @@
+{
+  "name": "hearthstone-card-library",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "rust:check": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "tracking:test": "node --test tests/project-tracking.test.mjs tests/project-tracking-files.test.mjs",
+    "tracking:check": "node scripts/validate-project-tracking.mjs",
+    "check": "npm run tracking:test && npm run tracking:check && npm run test && npm run build && npm run rust:check"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "solid-js": "^1.9.14"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "happy-dom": "^20.10.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5",
+    "vite-plugin-solid": "^2.11.12",
+    "vitest": "^4.1.10"
+  }
+}
