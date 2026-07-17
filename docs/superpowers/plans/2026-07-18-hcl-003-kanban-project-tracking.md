@@ -37,6 +37,7 @@
 - `CLAUDE.md`: short entry-point reminder that delegates to AGENTS.
 - `README.md`: user-facing links to Kanban, TODO, and DONE instead of a duplicate roadmap.
 - `package.json`: expose `tracking:test` and `tracking:check` and include them in `check`.
+- `vitest.config.ts`: keep Node built-in runner suites out of Vitest discovery.
 
 ---
 
@@ -1080,10 +1081,11 @@ git commit -m "feat(HCL-003): add canonical Kanban tracking"
 - Modify: `CLAUDE.md`
 - Modify: `README.md`
 - Modify: `package.json`
+- Modify: `vitest.config.ts`
 
 **Interfaces:**
 - Consumes: Task 1 validator, Task 2 files, existing `npm run check` sequence, and current project instructions.
-- Produces: explicit main-only rules, user-facing tracking links, `tracking:test`, `tracking:check`, and a composite verification gate.
+- Produces: explicit main-only rules, user-facing tracking links, Vitest/Node runner separation, `tracking:test`, `tracking:check`, and a composite verification gate.
 
 - [ ] **Step 1: Add failing repository workflow contract tests**
 
@@ -1094,6 +1096,7 @@ test("repository instructions enforce main-only tracking and the merge gate", ()
   const agents = readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8");
   const claude = readFileSync(path.join(repoRoot, "CLAUDE.md"), "utf8");
   const readme = readFileSync(path.join(repoRoot, "README.md"), "utf8");
+  const vitestConfig = readFileSync(path.join(repoRoot, "vitest.config.ts"), "utf8");
   const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"));
 
   for (const file of ["docs/TODO.md", "docs/DONE.md", "docs/kanban.html"]) {
@@ -1110,6 +1113,8 @@ test("repository instructions enforce main-only tracking and the merge gate", ()
   );
   assert.equal(packageJson.scripts["tracking:check"], "node scripts/validate-project-tracking.mjs");
   assert.match(packageJson.scripts.check, /^npm run tracking:test && npm run tracking:check && /);
+  assert.match(vitestConfig, /configDefaults\.exclude/);
+  assert.match(vitestConfig, /tests\/project-tracking\*\.test\.mjs/);
 });
 ```
 
@@ -1121,7 +1126,7 @@ Run:
 node --test tests/project-tracking-files.test.mjs
 ```
 
-Expected: FAIL because AGENTS does not yet contain the main-only merge gate.
+Expected: FAIL because AGENTS does not yet contain the main-only merge gate and Vitest does not exclude Node-runner tracking suites.
 
 - [ ] **Step 3: Add the authoritative tracking workflow to AGENTS**
 
@@ -1211,7 +1216,22 @@ Replace the README directory tree with this exact block:
 └─ CLAUDE.md            Claude Code 진입 문서
 ```
 
-- [ ] **Step 6: Wire the validator into npm**
+- [ ] **Step 6: Exclude Node-runner tracking suites from Vitest**
+
+Replace `vitest.config.ts` with:
+
+```ts
+import { configDefaults, defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    environment: "happy-dom",
+    exclude: [...configDefaults.exclude, "tests/project-tracking*.test.mjs"],
+  },
+});
+```
+
+- [ ] **Step 7: Wire the validator into npm**
 
 Update the `scripts` object in `package.json` so the relevant tail is exactly:
 
@@ -1222,7 +1242,7 @@ Update the `scripts` object in `package.json` so the relevant tail is exactly:
 "check": "npm run tracking:test && npm run tracking:check && npm run test && npm run build && npm run rust:check"
 ```
 
-- [ ] **Step 7: Run the workflow contract and npm tracking gates**
+- [ ] **Step 8: Run the workflow contract and npm tracking gates**
 
 Run:
 
@@ -1230,14 +1250,15 @@ Run:
 node --test tests/project-tracking-files.test.mjs
 npm run tracking:test
 npm run tracking:check
+npm run test
 ```
 
-Expected: file contract has 3 tests pass; tracking suite has 10 tests pass; CLI reports 8 active cards and 2 archived tasks.
+Expected: file contract has 3 tests pass; tracking suite has 10 tests pass; CLI reports 8 active cards and 2 archived tasks; Vitest runs only the existing `src/app-meta.test.ts` suite and passes 1 test.
 
-- [ ] **Step 8: Commit the workflow integration**
+- [ ] **Step 9: Commit the workflow integration**
 
 ```powershell
-git add -- AGENTS.md CLAUDE.md README.md package.json tests/project-tracking-files.test.mjs
+git add -- AGENTS.md CLAUDE.md README.md package.json vitest.config.ts tests/project-tracking-files.test.mjs
 git commit -m "docs(HCL-003): enforce Kanban tracking workflow"
 ```
 
