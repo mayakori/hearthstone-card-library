@@ -55,7 +55,10 @@ const card = {
 };
 
 function board(cards = [card]) {
-  return `<!doctype html><script id="kanban-data" type="application/json">${JSON.stringify({ cards })}</script>`;
+  const columns = ["backlog", "ready", "in_progress", "verify", "done"]
+    .map((status) => `<section data-column="${status}"></section>`)
+    .join("");
+  return `<!doctype html>${columns}<script id="kanban-data" type="application/json">${JSON.stringify({ cards })}</script>`;
 }
 
 test("parses TODO metadata and strips code ticks and em-dash nulls", () => {
@@ -176,4 +179,59 @@ test("rejects malformed task and card IDs instead of skipping them", () => {
   });
   assert.ok(errors.includes("Invalid TODO ID: HCL-X"));
   assert.ok(errors.includes("Invalid Kanban ID: HCL-X"));
+});
+
+test("rejects malformed HCL task headings in TODO instead of skipping them", () => {
+  const malformedHeading = "## HCL-011 - 잘못된 구분자";
+  const errors = validateTracking({
+    todoMarkdown: `${todo}\n${malformedHeading}\n`,
+    doneMarkdown: done,
+    kanbanHtml: board(),
+    repoRoot: "C:/repo",
+    fileExists: () => true,
+  });
+
+  assert.ok(errors.includes(`Malformed TODO task heading: ${malformedHeading}`));
+});
+
+test("rejects malformed HCL task headings in DONE instead of skipping them", () => {
+  const malformedHeading = "## HCL-011 —";
+  const errors = validateTracking({
+    todoMarkdown: todo,
+    doneMarkdown: `${done}\n${malformedHeading}\n`,
+    kanbanHtml: board(),
+    repoRoot: "C:/repo",
+    fileExists: () => true,
+  });
+
+  assert.ok(errors.includes(`Malformed DONE task heading: ${malformedHeading}`));
+});
+
+test("rejects a missing required Kanban column", () => {
+  const withoutVerify = board().replace('<section data-column="verify"></section>', "");
+  const errors = validateTracking({
+    todoMarkdown: todo,
+    doneMarkdown: done,
+    kanbanHtml: withoutVerify,
+    repoRoot: "C:/repo",
+    fileExists: () => true,
+  });
+
+  assert.ok(errors.includes("Kanban column must appear exactly once: verify (found 0)"));
+});
+
+test("rejects a duplicate required Kanban column", () => {
+  const duplicateDone = board().replace(
+    '<section data-column="done"></section>',
+    '<section data-column="done"></section><section data-column="done"></section>',
+  );
+  const errors = validateTracking({
+    todoMarkdown: todo,
+    doneMarkdown: done,
+    kanbanHtml: duplicateDone,
+    repoRoot: "C:/repo",
+    fileExists: () => true,
+  });
+
+  assert.ok(errors.includes("Kanban column must appear exactly once: done (found 2)"));
 });

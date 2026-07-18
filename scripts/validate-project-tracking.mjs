@@ -4,9 +4,11 @@ import { fileURLToPath } from "node:url";
 
 const modulePath = fileURLToPath(import.meta.url);
 const defaultRepoRoot = path.resolve(path.dirname(modulePath), "..");
-const taskHeadingPattern = /^## (HCL-[A-Za-z0-9-]+) — (.+)$/gm;
+const taskHeadingPattern = /^## (HCL-[A-Za-z0-9-]+) — (\S(?:.*\S)?)\s*$/gm;
+const hclHeadingPattern = /^## HCL-[^\r\n]*$/gm;
 
-const allowedStatuses = new Set(["backlog", "ready", "in_progress", "verify", "done"]);
+const requiredColumns = ["backlog", "ready", "in_progress", "verify", "done"];
+const allowedStatuses = new Set(requiredColumns);
 const allowedPriorities = new Set(["P0", "P1", "P2", "P3"]);
 const allowedTypes = new Set(["feature", "bug", "design", "research", "chore"]);
 const requiredTodoFields = ["status", "priority", "type", "updated"];
@@ -52,6 +54,20 @@ function unwrap(value) {
 
 function headingMatches(markdown) {
   return [...String(markdown).matchAll(taskHeadingPattern)];
+}
+
+function malformedTaskHeadings(markdown) {
+  return [...String(markdown).matchAll(hclHeadingPattern)]
+    .map(([heading]) => heading)
+    .filter((heading) => !/^## HCL-[A-Za-z0-9-]+ — \S(?:.*\S)?\s*$/.test(heading));
+}
+
+function kanbanColumnCounts(html) {
+  const counts = new Map(requiredColumns.map((status) => [status, 0]));
+  for (const match of String(html).matchAll(/\bdata-column\s*=\s*["']([^"']+)["']/gi)) {
+    if (counts.has(match[1])) counts.set(match[1], counts.get(match[1]) + 1);
+  }
+  return counts;
 }
 
 function metadataFrom(source, matches, index) {
@@ -142,6 +158,18 @@ export function validateTracking({
     cards = parseKanbanCards(kanbanHtml);
   } catch (error) {
     return [error.message];
+  }
+
+  for (const heading of malformedTaskHeadings(todoMarkdown)) {
+    errors.push(`Malformed TODO task heading: ${heading}`);
+  }
+  for (const heading of malformedTaskHeadings(doneMarkdown)) {
+    errors.push(`Malformed DONE task heading: ${heading}`);
+  }
+  for (const [status, count] of kanbanColumnCounts(kanbanHtml)) {
+    if (count !== 1) {
+      errors.push(`Kanban column must appear exactly once: ${status} (found ${count})`);
+    }
   }
 
   for (const id of duplicateIds(todoTasks)) errors.push(`Duplicate TODO ID: ${id}`);
