@@ -48,3 +48,27 @@ This report records the ownership and ignore policy for the local repository bas
 - `git status --short` showed only those three allowed tracked changes staged; the approved `123` Track candidates remained untracked for Task 3.
 - `git check-ignore -v .superpowers/sdd/task-1-report.md` confirmed that the Task 1 correction is ignored by `.gitignore:13:.superpowers/` and is not committed.
 - No application, fixture, preview, design source, or generated schema content is staged by Task 2.
+
+## Task 3 baseline inclusion
+
+- All `123` intended project files were added in two scoped commits: `75` application/config files in `d7eba6a` and `48` fixture/design/preview files in `2c5f120`.
+- Tracked paths from the forbidden local/generated groups are `0`; `.superpowers/`, generated Tauri schemas, dependency trees, and build output remain excluded.
+- `npx vitest run docs/design/card-data-contract-mock.test.ts` exited `0` with `5/5` focused design tests passing.
+- The Task 3 full gate exited `0`: project tracking tests `15/15`, Vitest `6/6`, TypeScript/Vite build success, and Rust `cargo check` success.
+- The Task 3 read-only review returned **Spec Approved** and **Quality Approved**, with one Minor concern and no Critical or Important findings.
+- Minor follow-up: `docs/handoff-ui-design.md:7` contains a machine-local absolute path. It is preserved unchanged because correcting handoff content is outside this baseline audit.
+
+## Concurrent owned variance
+
+- `preview/hearthstone-workbench-foundation.html` has a later unstaged semantic edit owned by the active Codex task `기본 UI 흐름 구체화` (thread `019f6d00-4282-70d1-aa1d-917d11b2b5df`).
+- That owned edit is excluded from every HCL-004 staging operation and commit. Its presence is an explicit variance from the plan's clean-worktree expectation, not an unexpected or unowned project file.
+- HCL-004 preserves the preview diff byte-for-byte and does not stage, restore, format, or otherwise modify it.
+
+## Final closeout verification
+
+- `git ls-files --others --exclude-standard` returned `0` paths.
+- `git status --short` showed exactly the three allowed HCL-004 management files plus the owned unstaged preview edit.
+- `npm run tracking:check` exited `0` with `Project tracking OK: 8 active cards, 2 archived tasks.`
+- `npm run check` exited `0`: project tracking tests `15/15`, Vitest `6/6`, TypeScript/Vite build success, and Rust `cargo check` success.
+- `git diff --check` restricted to the three allowed management files exited `0` with no whitespace errors.
+- The preview diff hash remained `e79fe7bfe27544cdc438385e992ffba4a940189a` before and after the closeout edits, confirming that HCL-004 did not change the active UI task's work.

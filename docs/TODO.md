@@ -42,7 +42,7 @@ The user approved Git-tracked main-only tracking files, HCL sequential IDs, the 
 
 ## HCL-004 — 현재 저장소 기준선 감사·정리
 
-- Status: `in_progress`
+- Status: `done`
 - Priority: `P0`
 - Type: `chore`
 - Updated: `2026-07-18`
@@ -52,7 +52,7 @@ The user approved Git-tracked main-only tracking files, HCL sequential IDs, the 
 - Depends on: `HCL-003`
 - Spec: `—`
 - Plan: `docs/superpowers/plans/2026-07-18-hcl-004-repository-baseline-audit.md`
-- Next gate: classify all 129 currently untracked files as project, generated, or local-only
+- Next gate: start HCL-005 approved product/design workflow
 - Blocked: `—`
 
 ### Goal
@@ -61,15 +61,15 @@ Establish a verified Git baseline without absorbing unrelated user changes.
 
 ### Progress
 
-Main-worktree baseline exception approved because the untracked source files do not exist in a separate worktree. Inventory found 129 untracked files across the app scaffold, Tauri package, fixtures, design artifacts, previews, and local agent state.
+The audit classified 129 original untracked files, committed all 123 intended project files in two scoped commits (75 application/config and 48 fixture/design/preview), and kept all 6 local/generated candidates ignored. Forbidden tracked paths remain at 0. A later preview edit owned by the active UI task is explicitly excluded and remains unstaged.
 
 ### Verification
 
-Planning gate in progress. `npm run check` passed immediately before the audit; authority synchronization is verified after this update.
+Focused design tests passed 5/5. The Task 3 full gate passed with tracking tests 15/15, Vitest 6/6, TypeScript/Vite build success, and Rust check success. Read-only review returned Spec Approved and Quality Approved with one Minor follow-up for the machine-local path in `docs/handoff-ui-design.md:7`; there were no Critical or Important findings.
 
 ## HCL-005 — 기본 UI와 사용자 흐름 설계
 
-- Status: `backlog`
+- Status: `ready`
 - Priority: `P1`
 - Type: `design`
 - Updated: `2026-07-18`
@@ -80,7 +80,7 @@ Planning gate in progress. `npm run check` passed immediately before the audit; 
 - Spec: `—`
 - Plan: `—`
 - Next gate: run the approved GStack product and design workflow
-- Blocked: `HCL-004 baseline must be established first`
+- Blocked: `—`
 
 ### Goal
 
@@ -103,11 +103,11 @@ Not started.
 - Codex: `—`
 - Branch: `—`
 - Worktree: `—`
-- Depends on: `HCL-004`
+- Depends on: `HCL-005`
 - Spec: `—`
 - Plan: `—`
 - Next gate: research the current official endpoint and freeze fixture contracts
-- Blocked: `HCL-004 baseline must be established first`
+- Blocked: `HCL-005 design approval is required before runtime implementation`
 
 ### Goal
 
