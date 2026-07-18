@@ -267,4 +267,3 @@ Expected: HCL-004 appears in Done, HCL-005 in Ready, HCL-006 in Backlog, and eve
 - Spec coverage: The plan covers all current untracked top-level groups, local/generated exclusions, secret scanning, explicit staging, reproducibility, review, and queue advancement.
 - Placeholder scan: The plan contains no TBD, deferred implementation, or unspecified test step.
 - Type consistency: The exact task IDs, statuses, commands, file paths, and required column values match the HCL tracking contract.
-
