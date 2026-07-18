@@ -235,3 +235,27 @@ test("rejects a duplicate required Kanban column", () => {
 
   assert.ok(errors.includes("Kanban column must appear exactly once: done (found 2)"));
 });
+
+test("ignores Kanban column lookalikes outside real HTML start tags", () => {
+  const decoys = {
+    comment: '<!-- data-column="done" -->',
+    script: '<script>const decoy = \'data-column="done"\';</script>',
+    style: '<style>[data-column="done"] { display: block; }</style>',
+  };
+
+  for (const [source, decoy] of Object.entries(decoys)) {
+    const withoutRealDone = board().replace('<section data-column="done"></section>', decoy);
+    const errors = validateTracking({
+      todoMarkdown: todo,
+      doneMarkdown: done,
+      kanbanHtml: withoutRealDone,
+      repoRoot: "C:/repo",
+      fileExists: () => true,
+    });
+
+    assert.ok(
+      errors.includes("Kanban column must appear exactly once: done (found 0)"),
+      `${source} content must not count as a real Kanban column`,
+    );
+  }
+});

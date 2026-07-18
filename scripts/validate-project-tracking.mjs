@@ -64,8 +64,13 @@ function malformedTaskHeadings(markdown) {
 
 function kanbanColumnCounts(html) {
   const counts = new Map(requiredColumns.map((status) => [status, 0]));
-  for (const match of String(html).matchAll(/\bdata-column\s*=\s*["']([^"']+)["']/gi)) {
-    if (counts.has(match[1])) counts.set(match[1], counts.get(match[1]) + 1);
+  const markup = String(html)
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, "")
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, "");
+  for (const [startTag] of markup.matchAll(/<[A-Za-z][^>]*>/g)) {
+    for (const match of startTag.matchAll(/\sdata-column\s*=\s*["']([^"']+)["']/gi)) {
+      if (counts.has(match[1])) counts.set(match[1], counts.get(match[1]) + 1);
+    }
   }
   return counts;
 }
