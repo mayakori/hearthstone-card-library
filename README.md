@@ -32,7 +32,7 @@ npm run dev
 npm run test        # 프론트엔드 테스트
 npm run build       # TypeScript 검사 + Vite production build
 npm run rust:check  # Rust/Tauri 컴파일 검사
-npm run check       # 위 세 검사를 순서대로 실행
+npm run check       # 작업 추적 테스트·동기화 검사 후 위 세 검사를 실행
 ```
 
 데스크톱 실행 파일과 설치 번들을 만들 때는 다음을 사용한다.

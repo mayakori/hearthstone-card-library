@@ -15,7 +15,7 @@
 
 ## HCL-003 — 칸반 기반 프로젝트 관리 도입
 
-- Status: `in_progress`
+- Status: `done`
 - Priority: `P0`
 - Type: `chore`
 - Updated: `2026-07-18`
@@ -25,7 +25,7 @@
 - Depends on: `—`
 - Spec: `docs/superpowers/specs/2026-07-17-hcl-003-kanban-project-tracking-design.md`
 - Plan: `docs/superpowers/plans/2026-07-18-hcl-003-kanban-project-tracking.md`
-- Next gate: tracking validator, canonical files, and repository workflow integration
+- Next gate: start HCL-004 repository baseline audit
 - Blocked: `—`
 
 ### Goal
@@ -38,7 +38,7 @@ The user approved Git-tracked main-only tracking files, HCL sequential IDs, the 
 
 ### Verification
 
-Design committed as `8530985`; implementation verification remains.
+`npm run check` and `git diff --check` passed. The local Kanban passed search, type, priority, active-only, detail-link, 390px responsive, and console smoke checks.
 
 ## HCL-004 — 현재 저장소 기준선 감사·정리
 
