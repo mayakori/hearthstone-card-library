@@ -42,17 +42,17 @@ The user approved Git-tracked main-only tracking files, HCL sequential IDs, the 
 
 ## HCL-004 — 현재 저장소 기준선 감사·정리
 
-- Status: `ready`
+- Status: `in_progress`
 - Priority: `P0`
 - Type: `chore`
 - Updated: `2026-07-18`
-- Codex: `—`
-- Branch: `—`
-- Worktree: `—`
+- Codex: `HCL-004 · 현재 저장소 기준선 감사·정리`
+- Branch: `main`
+- Worktree: `main`
 - Depends on: `HCL-003`
 - Spec: `—`
-- Plan: `—`
-- Next gate: audit ownership and verification state of every untracked project file
+- Plan: `docs/superpowers/plans/2026-07-18-hcl-004-repository-baseline-audit.md`
+- Next gate: classify all 129 currently untracked files as project, generated, or local-only
 - Blocked: `—`
 
 ### Goal
@@ -61,11 +61,11 @@ Establish a verified Git baseline without absorbing unrelated user changes.
 
 ### Progress
 
-The app scaffold, fixtures, previews, and project instructions exist locally but most are not tracked.
+Main-worktree baseline exception approved because the untracked source files do not exist in a separate worktree. Inventory found 129 untracked files across the app scaffold, Tauri package, fixtures, design artifacts, previews, and local agent state.
 
 ### Verification
 
-Not started.
+Planning gate in progress. `npm run check` passed immediately before the audit; authority synchronization is verified after this update.
 
 ## HCL-005 — 기본 UI와 사용자 흐름 설계
 
