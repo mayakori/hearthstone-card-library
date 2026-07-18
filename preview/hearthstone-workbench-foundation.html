@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hearth Index · Deck Workbench Foundation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas:#f7f7f4; --canvas-soft:#fafaf7; --surface:#fff; --surface-strong:#e6e5e0;
+      --hairline:#e6e5e0; --hairline-soft:#efeee8; --hairline-strong:#cfcdc4;
+      --ink:#26251e; --body:#5a5852; --muted:#807d72; --muted-soft:#a09c92;
+      --primary:#f54e00; --primary-active:#d04200; --on-primary:#fff;
+      --success:#1f8a65; --error:#cf2d56; --thinking:#dfa88f; --grep:#9fc9a2;
+      --read:#9fbbe0; --edit:#c0a8dd; --done:#c08532;
+      --sans:"CursorGothic","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif;
+      --mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+      --deck-width:clamp(340px,22vw,480px); --app-gap:clamp(12px,1vw,20px);
+      --app-pad:clamp(12px,1vw,20px); --topbar-h:clamp(56px,5.4vh,78px);
+      --ui-font:clamp(12px,.7vw,16px); --deck-row-h:clamp(32px,3.05vh,42px);
+      --ease:cubic-bezier(.2,.8,.2,1);
+    }
+    html[data-theme="ink"] {
+      color-scheme:dark; --canvas:#1f1f1b; --canvas-soft:#24241f; --surface:#292923;
+      --surface-strong:#3a3932; --hairline:#3a3932; --hairline-soft:#32312b;
+      --hairline-strong:#535148; --ink:#f0efe7; --body:#c4c1b6;
+      --muted:#9b988e; --muted-soft:#77746c;
+    }
+    * { box-sizing:border-box }
+    html,body { margin:0; min-width:320px; min-height:100% }
+    body { background:var(--canvas); color:var(--ink); font:var(--ui-font)/1.45 var(--sans); overflow:hidden }
+    button,input,select { font:inherit }
+    button { color:inherit }
+    button:focus-visible,input:focus-visible,select:focus-visible { outline:2px solid var(--primary); outline-offset:2px }
+    h1,h2,h3,p { margin:0 }
+    .app { height:100vh; height:100dvh; min-height:0; display:grid; grid-template-rows:var(--topbar-h) minmax(0,1fr) }
+    .topbar {
+      border-bottom:1px solid var(--hairline); background:var(--canvas); padding:0 clamp(16px,1.35vw,28px);
+      display:grid; grid-template-columns:minmax(190px,1fr) auto minmax(190px,1fr);
+      align-items:center; gap:20px; position:relative; z-index:10;
+    }
+    .brand { display:flex; align-items:center; gap:11px; min-width:0 }
+    .brand-mark {
+      width:28px; height:28px; display:grid; place-items:center; border-radius:7px;
+      color:#fff; background:var(--primary); font:600 12px/1 var(--mono); letter-spacing:-.05em;
+    }
+    .brand-title { font-size:14px; font-weight:600 }
+    .brand-sub { color:var(--muted); font:9px/1.4 var(--mono); letter-spacing:.04em }
+    .tabs { display:flex; gap:2px; padding:3px; border-radius:9px; background:var(--surface-strong) }
+    .tab {
+      border:0; border-radius:7px; background:transparent; color:var(--muted);
+      font-size:12px; font-weight:600; padding:7px 12px; cursor:pointer;
+    }
+    .tab[aria-selected="true"] { color:var(--ink); background:var(--surface) }
+    .top-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px }
+    .button,.icon-button,.mini-button {
+      height:36px; border:1px solid var(--hairline-strong); border-radius:8px;
+      padding:0 13px; background:var(--surface); display:inline-flex; align-items:center;
+      justify-content:center; gap:7px; cursor:pointer; white-space:nowrap; transition:120ms var(--ease);
+    }
+    .button:hover,.icon-button:hover,.mini-button:hover { border-color:var(--ink) }
+    .button.primary { color:#fff; background:var(--primary); border-color:var(--primary); font-weight:600 }
+    .button.primary:hover { background:var(--primary-active); border-color:var(--primary-active) }
+    .icon-button { width:36px; padding:0; font-family:var(--mono) }
+    .mini-button { height:28px; padding:0 9px; border-radius:6px; font-size:11px }
+    .screen { min-height:0 }
+    .screen[hidden] { display:none!important }
+
+    /* Hearthstone deck-editor spatial memory, without the ornate skin. */
+    .workbench {
+      min-height:0; display:grid; grid-template-columns:minmax(0,1fr) var(--deck-width);
+      gap:var(--app-gap); padding:var(--app-pad);
+    }
+    .panel {
+      min-width:0; min-height:0; background:var(--surface); border:1px solid var(--hairline);
+      border-radius:12px; overflow:hidden;
+    }
+    .library { display:grid; grid-template-rows:auto minmax(0,1fr) auto }
+    .panel-head { padding:17px 20px 14px; display:flex; align-items:center; justify-content:space-between; gap:20px }
+    .eyebrow { color:var(--muted); font:600 9px/1.3 var(--mono); letter-spacing:.1em; text-transform:uppercase }
+    .title-row { display:flex; align-items:baseline; gap:10px; margin-top:4px }
+    .panel-title { font-size:26px; line-height:1.2; font-weight:400; letter-spacing:-.02em }
+    .result-count { color:var(--muted); font:10px/1 var(--mono) }
+    .head-tools { display:flex; align-items:center; gap:8px }
+    .search {
+      width:min(360px,32vw); height:38px; display:flex; align-items:center; gap:9px;
+      padding:0 12px; border:1px solid var(--hairline-strong); border-radius:8px; background:var(--canvas-soft);
+    }
+    .search svg { width:16px; flex:0 0 auto; color:var(--muted) }
+    .search input { min-width:0; width:100%; border:0; outline:0; color:var(--ink); background:transparent }
+    .search input::placeholder { color:var(--muted-soft) }
+    .keycap { color:var(--muted); border:1px solid var(--hairline); border-radius:4px; padding:1px 5px; font:9px/1.4 var(--mono) }
+    .quickbar {
+      border-block:1px solid var(--hairline-soft); padding:9px 20px; display:flex;
+      align-items:center; gap:12px; overflow-x:auto; scrollbar-width:thin;
+    }
+    .filter-set { flex:0 0 auto; display:flex; align-items:center; gap:5px }
+    .filter-label { color:var(--muted); font:9px/1 var(--mono); text-transform:uppercase; letter-spacing:.08em; margin-right:3px }
+    .mana {
+      width:28px; height:28px; border:1px solid var(--hairline); border-radius:7px;
+      background:var(--surface); color:var(--body); cursor:pointer; font:600 11px/1 var(--mono);
+    }
+    .mana:hover { border-color:var(--hairline-strong); color:var(--ink) }
+    .mana.active { color:var(--canvas); background:var(--ink); border-color:var(--ink) }
+    .select-chip {
+      height:28px; padding:0 8px; border:1px solid var(--hairline); border-radius:7px;
+      background:var(--canvas-soft); color:var(--body); font-size:11px;
+    }
+    .divider { flex:0 0 auto; width:1px; height:22px; background:var(--hairline) }
+    .query-status { margin-left:auto; color:var(--muted); font:9px/1.4 var(--mono); white-space:nowrap }
+    .browser { min-height:0; overflow:auto; padding:15px 20px 22px; scrollbar-width:thin }
+    .card-grid { display:grid; grid-template-columns:repeat(4,minmax(145px,1fr)); gap:clamp(9px,.65vw,14px) }
+    .card-tile {
+      min-width:0; position:relative; overflow:hidden; cursor:pointer; background:var(--canvas-soft);
+      border:1px solid var(--hairline); border-radius:12px; transition:120ms var(--ease);
+    }
+    .card-tile:hover { border-color:var(--hairline-strong); transform:translateY(-1px) }
+    .card-tile.selected { border-color:var(--ink) }
+    .art {
+      position:relative; aspect-ratio:1.4/1; display:grid; place-items:center; overflow:hidden;
+      background:linear-gradient(180deg,var(--canvas-soft),var(--surface));
+    }
+    .art:after { content:""; position:absolute; inset:auto 0 0; height:38%; background:linear-gradient(transparent,var(--surface)) }
+    .art img {
+      height:178%; max-width:116%; object-fit:contain; transform:translateY(-18%);
+      filter:saturate(.92) contrast(.98); transition:180ms var(--ease);
+    }
+    .card-tile:hover .art img { transform:translateY(-20%) scale(1.025); filter:saturate(1) }
+    .mana-badge {
+      position:absolute; z-index:2; top:8px; left:8px; min-width:28px; height:28px;
+      padding:0 7px; display:grid; place-items:center; color:var(--canvas); background:var(--ink);
+      border-radius:7px; font:600 11px/1 var(--mono);
+    }
+    .add-card {
+      position:absolute; z-index:3; top:8px; right:8px; width:28px; height:28px;
+      display:grid; place-items:center; color:var(--ink); background:var(--surface);
+      border:1px solid var(--hairline-strong); border-radius:7px; cursor:pointer;
+      opacity:1; transform:none; transition:120ms var(--ease);
+    }
+    .related-only {
+      position:absolute; z-index:3; top:8px; right:8px; padding:6px 7px;
+      color:var(--surface); background:rgba(17,17,17,.72); border:1px solid rgba(255,255,255,.22);
+      border-radius:7px; font:600 8px/1 var(--mono); letter-spacing:.08em;
+    }
+    .card-tile:hover .add-card,.card-tile:focus-within .add-card { opacity:1; transform:none }
+    .empty { display:none; grid-column:1/-1; padding:48px 20px; color:var(--muted); text-align:center }
+
+    .filter-dock {
+      margin:0 16px 16px; overflow:hidden; background:var(--canvas-soft);
+      border:1px solid var(--hairline-strong); border-radius:12px;
+    }
+    .dock-head { min-height:42px; padding:7px 11px; display:flex; align-items:center; gap:9px; cursor:pointer; user-select:none }
+    .dock-title { display:flex; align-items:center; gap:8px; white-space:nowrap; font-size:11px; font-weight:600 }
+    .provisional { color:var(--muted); border:1px solid var(--hairline); border-radius:999px; padding:2px 7px; font:8px/1.4 var(--mono); letter-spacing:.04em }
+    .dock-summary { min-width:0; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:9px/1.4 var(--mono) }
+    .dock-actions { margin-left:auto; display:flex; align-items:center; gap:7px }
+    .chevron { transition:150ms var(--ease) }
+    .filter-dock[data-open="true"] .chevron { transform:rotate(180deg) }
+    .dock-body { display:none; border-top:1px solid var(--hairline); padding:10px 11px 11px }
+    .filter-dock[data-open="true"] .dock-body { display:grid; grid-template-columns:auto 1fr auto 1fr auto; gap:8px; align-items:stretch }
+    .logic { align-self:center; color:var(--muted); font:600 9px/1 var(--mono); letter-spacing:.07em; text-transform:uppercase }
+    .clause-group {
+      min-width:0; padding:7px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;
+      background:var(--surface); border:1px solid var(--hairline); border-radius:8px;
+    }
+    .group-mode { color:var(--muted); font:600 8px/1.3 var(--mono); text-transform:uppercase; margin-right:2px }
+    .clause {
+      height:25px; padding:0 7px; display:inline-flex; align-items:center; gap:5px;
+      background:var(--canvas-soft); border:1px solid var(--hairline); border-radius:6px;
+      white-space:nowrap; font:9px/1 var(--mono);
+    }
+    .clause strong { color:var(--ink); font-weight:600 }
+    .clause em { color:var(--muted); font-style:normal }
+    .clause.not { border-color:color-mix(in srgb,var(--error) 34%,var(--hairline)) }
+    .add-clause { align-self:center; width:29px; height:29px; border:1px dashed var(--hairline-strong); border-radius:7px; background:transparent; cursor:pointer }
+
+    .deck { display:grid; grid-template-rows:auto minmax(0,1fr) auto }
+    .deck-head { padding:17px 15px 13px; border-bottom:1px solid var(--hairline-soft) }
+    .deck-title-line { display:flex; align-items:flex-start; justify-content:space-between; gap:12px }
+    .deck-name { margin-top:4px; font-size:22px; line-height:1.25; font-weight:400; letter-spacing:-.015em }
+    .deck-meta { display:flex; gap:5px; flex-wrap:wrap; margin-top:9px }
+    .badge { padding:4px 8px; color:var(--body); background:var(--surface-strong); border-radius:999px; font:9px/1 var(--mono) }
+    .deck-list { min-height:0; overflow-y:auto; padding:clamp(8px,.55vw,12px); scrollbar-width:thin }
+    .section-label { padding:7px 4px 6px; display:flex; justify-content:space-between; color:var(--muted); font:8px/1.2 var(--mono); text-transform:uppercase; letter-spacing:.08em }
+    .deck-row {
+      position:relative; height:var(--deck-row-h); margin-bottom:clamp(3px,.28vh,5px); overflow:hidden; display:grid;
+      grid-template-columns:30px minmax(0,1fr) auto; align-items:center; background:var(--canvas-soft);
+      border:1px solid var(--hairline-strong); border-radius:6px;
+    }
+    .deck-row:before { content:""; position:absolute; z-index:4; inset:0 auto 0 0; width:3px; background:var(--surface-strong) }
+    .deck-row.legendary:before { background:var(--done) }
+    .deck-row.flash { animation:flash 650ms var(--ease) }
+    @keyframes flash { 0%{background:color-mix(in srgb,var(--primary) 15%,var(--surface))} 100%{background:var(--canvas-soft)} }
+    .deck-art {
+      position:absolute; z-index:0; inset:0; background-image:
+        linear-gradient(90deg,rgba(24,23,19,.84) 0%,rgba(24,23,19,.22) 48%,rgba(24,23,19,.78) 100%),
+        var(--crop); background-size:cover; background-position:center; filter:saturate(.9) contrast(.98);
+    }
+    .deck-mana { position:relative; z-index:2; height:100%; display:grid; place-items:center; background:color-mix(in srgb,var(--surface) 94%,transparent); border-right:1px solid var(--hairline); font:600 10px/1 var(--mono) }
+    .deck-card-name { position:relative; z-index:2; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 9px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.72); font-size:clamp(11px,.62vw,14px); font-weight:600 }
+    .deck-count { position:relative; z-index:2; min-width:30px; height:100%; display:grid; place-items:center; background:rgba(24,23,19,.7); border-left:1px solid rgba(255,255,255,.14); color:#fff; font:600 clamp(11px,.65vw,14px)/1 var(--mono) }
+    .deck-footer { padding:12px 13px 13px; border-top:1px solid var(--hairline); background:var(--canvas-soft) }
+    .deck-progress-line { display:flex; align-items:baseline; justify-content:space-between; gap:10px }
+    .deck-total { font-size:20px; font-weight:400; letter-spacing:-.02em }
+    .deck-total span { color:var(--muted) }
+    .validation { color:var(--success); font:9px/1.4 var(--mono) }
+    .track { height:3px; margin:8px 0 10px; overflow:hidden; background:var(--surface-strong); border-radius:999px }
+    .fill { width:86.66%; height:100%; background:var(--ink); transition:220ms var(--ease) }
+    .curve {
+      position:relative; height:64px; margin-bottom:7px; display:grid;
+      grid-template-columns:repeat(8,minmax(0,1fr)); gap:3px;
+    }
+    .curve::after {
+      content:""; position:absolute; z-index:2; right:0; bottom:13px; left:0;
+      height:1px; background:var(--hairline-strong); pointer-events:none;
+    }
+    .curve-column {
+      min-width:0; display:grid; grid-template-rows:9px 38px 9px;
+      row-gap:4px; align-items:end;
+    }
+    .curve-count,
+    .curve-label {
+      color:var(--muted); text-align:center; font:8px/1 var(--mono);
+      font-variant-numeric:tabular-nums;
+    }
+    .curve-bar {
+      min-width:0; width:100%; height:var(--curve-height); min-height:2px;
+      align-self:end; background:var(--ink); border-radius:1px 1px 0 0;
+    }
+    .deck-actions { display:grid; grid-template-columns:1fr 1.35fr; gap:8px }
+
+    /* Foundation and layout-decision pages */
+    .scroll-screen { overflow:auto; padding:40px max(24px,calc((100vw - 1200px)/2)) 72px }
+    .page-intro { display:grid; grid-template-columns:1fr minmax(280px,420px); align-items:end; gap:56px; margin-bottom:48px }
+    .page-kicker { color:var(--primary); font:600 9px/1.3 var(--mono); letter-spacing:.1em; text-transform:uppercase }
+    .page-title { max-width:820px; margin-top:10px; font-size:clamp(40px,5vw,64px); line-height:1.04; letter-spacing:-.035em; font-weight:400 }
+    .page-lede { color:var(--body); font-size:16px; line-height:1.6 }
+    .section { margin-top:56px; padding-top:20px; border-top:1px solid var(--hairline-strong) }
+    .section-heading { display:flex; justify-content:space-between; align-items:baseline; gap:24px; margin-bottom:20px }
+    .section-title { font-size:26px; line-height:1.25; letter-spacing:-.015em; font-weight:400 }
+    .section-note { max-width:430px; color:var(--muted); text-align:right; font:9px/1.55 var(--mono) }
+    .swatches { display:grid; grid-template-columns:repeat(5,minmax(120px,1fr)); gap:10px }
+    .swatch { overflow:hidden; background:var(--surface); border:1px solid var(--hairline); border-radius:12px }
+    .swatch-color { height:72px; border-bottom:1px solid var(--hairline) }
+    .swatch-copy { padding:10px }
+    .swatch-name { font-size:12px; font-weight:600 }
+    .token { color:var(--muted); font:8px/1.5 var(--mono) }
+    .type-grid { display:grid; grid-template-columns:1.2fr 1fr; overflow:hidden; border:1px solid var(--hairline); border-radius:12px }
+    .type-cell { min-height:180px; padding:24px; background:var(--surface) }
+    .type-cell+.type-cell { border-left:1px solid var(--hairline) }
+    .type-display { font-size:36px; line-height:1.15; letter-spacing:-.02em; font-weight:400 }
+    .type-body { max-width:560px; margin-top:14px; color:var(--body); font-size:16px }
+    .type-mono { color:var(--body); font:13px/1.7 var(--mono) }
+    .component-grid,.decision-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px }
+    .component-card,.decision-card { min-height:176px; padding:18px; background:var(--surface); border:1px solid var(--hairline); border-radius:12px }
+    .component-title { margin:7px 0 18px; font-size:16px; font-weight:600 }
+    .component-demo { display:flex; align-items:center; flex-wrap:wrap; gap:8px }
+    .demo-input { width:100%; height:40px; padding:0 12px; color:var(--ink); background:var(--canvas-soft); border:1px solid var(--hairline-strong); border-radius:8px }
+    .timeline-pill { padding:5px 9px; border-radius:999px; color:#26251e; font:600 8px/1 var(--mono); letter-spacing:.07em; text-transform:uppercase }
+    .mini-query { width:100%; padding:9px; display:flex; flex-wrap:wrap; gap:6px; background:var(--canvas-soft); border:1px solid var(--hairline); border-radius:8px }
+    .decision-card.recommended { border-color:var(--ink) }
+    .decision-status { display:inline-block; margin-bottom:18px; color:var(--muted); font:600 8px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase }
+    .decision-card.recommended .decision-status { color:var(--primary) }
+    .decision-card h3 { margin-bottom:9px; font-size:20px; font-weight:400 }
+    .decision-card p { color:var(--body) }
+    .layout-map { height:92px; margin-top:14px; display:grid; grid-template-columns:1fr 62px; gap:5px }
+    .layout-main { display:grid; grid-template-rows:1fr 28px; gap:4px }
+    .layout-box { display:grid; place-items:center; color:var(--muted); background:var(--canvas-soft); border:1px solid var(--hairline-strong); border-radius:5px; font:8px/1 var(--mono) }
+    .space-list { display:grid; gap:9px }
+    .space-row { display:grid; grid-template-columns:42px 1fr 30px; align-items:center; gap:10px; color:var(--muted); font:8px/1 var(--mono) }
+    .space-bar { height:7px; background:var(--ink); border-radius:2px }
+    .toast {
+      position:fixed; z-index:100; left:50%; bottom:22px; transform:translate(-50%,12px);
+      padding:9px 12px; color:var(--canvas); background:var(--ink); border-radius:8px;
+      opacity:0; pointer-events:none; font:10px/1.4 var(--mono); transition:160ms var(--ease);
+    }
+    .toast.visible { opacity:1; transform:translate(-50%,0) }
+
+    @media (min-width:1680px) {
+      .card-grid { grid-template-columns:repeat(5,minmax(155px,1fr)) }
+      .panel-head { padding:clamp(18px,1.2vw,26px) clamp(20px,1.35vw,30px) clamp(14px,.9vw,20px) }
+      .browser { padding:clamp(16px,1vw,24px) clamp(20px,1.35vw,30px) clamp(22px,1.5vw,34px) }
+    }
+    @media (min-width:2300px) {
+      .card-grid { grid-template-columns:repeat(6,minmax(170px,1fr)) }
+    }
+    @media (max-width:1180px) {
+      :root { --deck-width:330px }
+      .card-grid { grid-template-columns:repeat(3,minmax(140px,1fr)) }
+      .filter-dock[data-open="true"] .dock-body { grid-template-columns:auto 1fr }
+      .swatches { grid-template-columns:repeat(3,1fr) }
+    }
+    @media (max-width:860px) {
+      body { overflow:auto }
+      .app { height:auto; min-height:100vh; display:block }
+      .topbar { min-height:64px; grid-template-columns:1fr auto; padding-block:10px }
+      .tabs { order:3; grid-column:1/-1 }
+      .tab { flex:1 }
+      .top-actions .button:not(.primary) { display:none }
+      .workbench { grid-template-columns:1fr }
+      .library { min-height:920px }
+      .deck { min-height:760px }
+      .page-intro { grid-template-columns:1fr; gap:20px }
+      .component-grid,.decision-grid { grid-template-columns:1fr 1fr }
+      .scroll-screen { padding:30px 18px 64px }
+    }
+    @media (max-width:620px) {
+      .brand-sub,.top-actions .icon-button { display:none }
+      .topbar { padding-inline:12px; gap:8px }
+      .workbench { padding:8px; gap:8px }
+      .panel-head { align-items:flex-start; flex-direction:column; padding:15px 13px 12px }
+      .head-tools,.search { width:100% }
+      .quickbar { padding-inline:13px }
+      .browser { padding-inline:11px }
+      .card-grid { grid-template-columns:repeat(2,minmax(128px,1fr)); gap:8px }
+      .filter-dock { margin-inline:8px }
+      .filter-dock[data-open="true"] .dock-body { grid-template-columns:1fr }
+      .dock-summary { display:none }
+      .component-grid,.decision-grid,.type-grid,.swatches { grid-template-columns:1fr }
+      .type-cell+.type-cell { border-left:0; border-top:1px solid var(--hairline) }
+      .section-heading { display:block }
+      .section-note { margin-top:8px; text-align:left }
+      .page-title { font-size:38px }
+    }
+
+    /* Seamless workbench pass: one canvas, hairlines, full-card thumbnails. */
+    :root { --deck-width:clamp(320px,20vw,430px) }
+    .topbar {
+      padding:0 0 0 clamp(16px,1.35vw,28px); gap:0; background:var(--surface);
+    }
+    .tabs {
+      align-self:stretch; gap:0; padding:0; overflow:hidden;
+      border:0; border-inline:1px solid var(--hairline); border-radius:0; background:transparent;
+    }
+    .tab {
+      position:relative; height:100%; min-height:32px; padding:0 12px; border-left:1px solid var(--hairline);
+      border-radius:0; background:transparent; transition:background 120ms var(--ease),color 120ms var(--ease);
+    }
+    .tab:first-child { border-left:0 }
+    .tab:hover { color:var(--ink); background:var(--canvas-soft) }
+    .tab[aria-selected="true"] { background:var(--canvas-soft); box-shadow:inset 0 -2px 0 var(--ink) }
+    .tab[aria-selected="true"]:after { content:none }
+    .button,.icon-button,.mini-button {
+      border-radius:0; background:transparent; box-shadow:none;
+      transition:background 120ms var(--ease),color 120ms var(--ease);
+    }
+    .button:hover,.icon-button:hover,.mini-button:hover {
+      border-color:var(--hairline-strong); color:var(--ink); background:var(--canvas-soft);
+    }
+    .button.primary { color:var(--on-primary); background:var(--primary); border-color:var(--primary) }
+    .button.primary:hover { color:var(--on-primary); background:var(--primary-active); border-color:var(--primary-active) }
+    .top-actions {
+      width:max-content; align-self:stretch; justify-self:end; justify-content:flex-start; gap:0; overflow:hidden;
+      border:0; border-left:1px solid var(--hairline); background:transparent;
+    }
+    .top-actions > .button,.top-actions > .icon-button {
+      height:100%; border:0; border-left:1px solid var(--hairline); border-radius:0;
+    }
+    .top-actions > :first-child { border-left:0 }
+    .workbench { gap:0; padding:0; background:var(--surface) }
+    .panel { border:0; border-radius:0; background:transparent }
+    .library { border-right:1px solid var(--hairline); grid-template-rows:auto minmax(0,1fr) auto }
+    .panel-head {
+      min-height:44px; padding:0; border-bottom:1px solid var(--hairline); background:var(--surface);
+    }
+    .panel-title { padding:0 16px; font-size:17px; font-weight:500 }
+    .library-head-filters {
+      align-self:stretch; margin-left:auto; display:flex; align-items:stretch;
+      border-left:1px solid var(--hairline); overflow:hidden;
+    }
+    .library-head-filters .filter-label {
+      padding:0 9px; display:flex; align-items:center; margin:0; border-right:1px solid var(--hairline);
+    }
+    .header-cost { display:flex; align-items:stretch; border-right:1px solid var(--hairline) }
+    .header-cost .segmented-control { height:100% }
+    .header-cost .mana { width:27px; min-height:0; height:100% }
+    .header-type { min-width:112px; height:100%; border:0; padding:0 9px }
+    .quickbar {
+      min-height:38px; align-items:stretch; gap:0; padding:0;
+      border-top:0; border-bottom:1px solid var(--hairline); background:var(--surface);
+    }
+    .filter-set { align-items:stretch; gap:0; border-right:1px solid var(--hairline) }
+    .filter-label {
+      margin:0; padding:0 10px; display:flex; align-items:center;
+      border-right:1px solid var(--hairline);
+    }
+    .segmented-control {
+      flex:0 0 auto; display:flex; align-items:stretch; gap:0; overflow:visible;
+      border:0; background:transparent;
+    }
+    .mana,.select-chip { height:100%; min-height:37px; border-radius:0; background:transparent }
+    .segmented-control > .mana,.segmented-control > .select-chip {
+      border:0; border-left:1px solid var(--hairline); border-radius:0;
+    }
+    .segmented-control > :first-child { border-left:0 }
+    .mana:hover,.select-chip:hover { color:var(--ink); background:var(--canvas-soft) }
+    .mana.active { color:var(--canvas); background:var(--ink) }
+    .quickbar > .divider { display:none }
+    .query-status {
+      margin-left:auto; padding:0 14px; align-self:stretch; display:flex; align-items:center;
+      border-left:1px solid var(--hairline);
+    }
+    .browser { padding:12px 16px 18px; background:var(--surface) }
+    .card-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px 7px; align-items:start }
+    .card-tile {
+      overflow:visible; border:0; border-radius:0; background:transparent; cursor:copy;
+      transition:none; outline:none;
+    }
+    .card-tile:hover { border-color:transparent; transform:none }
+    .card-tile:focus-visible { outline:1px solid var(--ink); outline-offset:4px }
+    .card-tile.selected { border-color:transparent }
+    .art { aspect-ratio:404/558; overflow:visible; background:transparent }
+    .art:after,.mana-badge,.add-card { display:none }
+    .art img {
+      width:100%; height:100%; max-width:none; object-fit:contain; transform:none;
+      filter:saturate(.94) contrast(.98); transition:140ms var(--ease); user-select:none;
+    }
+    .card-tile:hover .art img { transform:translateY(-2px); filter:saturate(1) contrast(1) }
+    .card-tile.added .art img { animation:card-added 420ms var(--ease) }
+    @keyframes card-added { 0%{filter:saturate(1) drop-shadow(0 0 0 rgba(245,78,0,0))} 45%{filter:saturate(1.12) drop-shadow(0 0 10px rgba(245,78,0,.44))} 100%{filter:saturate(.94) drop-shadow(0 0 0 rgba(245,78,0,0))} }
+    .related-only { top:5px; right:5px; border:0; border-radius:2px; background:rgba(24,23,19,.78) }
+    .filter-dock { margin:0; border:0; border-top:1px solid var(--hairline); border-radius:0; background:var(--surface) }
+    .dock-body { display:block; padding:0; border-top:0 }
+    .filter-command-row {
+      min-height:38px; display:grid; grid-template-columns:58px minmax(220px,1fr) auto;
+      border-bottom:1px solid var(--hairline);
+    }
+    .filter-mode {
+      display:grid; place-items:center; color:var(--canvas); background:var(--ink);
+      border-right:1px solid var(--hairline); font:600 9px/1 var(--mono); letter-spacing:.08em;
+    }
+    .filter-command {
+      min-width:0; display:flex; align-items:center; gap:8px; padding:0 12px;
+    }
+    .filter-command svg { width:15px; flex:0 0 auto; color:var(--muted) }
+    .filter-command input {
+      min-width:0; width:100%; height:100%; padding:0; border:0; outline:0;
+      color:var(--ink); background:transparent;
+    }
+    .filter-command input::placeholder { color:var(--muted-soft) }
+    .filter-command-row .mini-button {
+      height:100%; padding:0 13px; border:0; border-left:1px solid var(--hairline);
+      border-radius:0; background:transparent; white-space:nowrap;
+    }
+    .active-filter-groups { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) }
+    .filter-bucket {
+      min-width:0; min-height:39px; padding:6px 8px; display:grid;
+      grid-template-columns:auto minmax(0,1fr); align-items:center; gap:7px;
+      border-right:1px solid var(--hairline); background:transparent;
+    }
+    .filter-bucket:last-child { border-right:0 }
+    .filter-bucket[data-active="true"] { background:var(--canvas-soft) }
+    .filter-bucket-head {
+      display:flex; align-items:center; gap:5px;
+      color:var(--muted); font:600 8px/1 var(--mono); letter-spacing:.08em;
+    }
+    .filter-bucket[data-active="true"] .filter-bucket-head { color:var(--ink) }
+    .filter-count { font-weight:400 }
+    .filter-clause-list { min-height:25px; display:flex; align-items:center; gap:5px; flex-wrap:wrap }
+    .clause { border-radius:3px; background:transparent }
+    .deck-head {
+      padding:0; display:grid; grid-template-columns:minmax(0,1fr) 42px;
+      border-bottom:1px solid var(--hairline);
+    }
+    .deck-head-copy { min-width:0; padding:13px 14px 12px }
+    .deck-head-command {
+      width:42px; height:100%; border:0; border-left:1px solid var(--hairline); border-radius:0;
+    }
+    .deck-list { padding:0 12px }
+    .deck-row { margin:0; border-width:0 0 1px; border-radius:0; background:transparent }
+    .deck-row:hover,.deck-row:focus-visible { background:var(--canvas-soft) }
+    .deck-row:before { width:2px }
+    .deck-hover-preview {
+      position:fixed; z-index:60; width:clamp(190px,16vw,240px); aspect-ratio:404/558;
+      pointer-events:none; animation:deck-preview-in 100ms var(--ease);
+    }
+    .deck-hover-preview[hidden] { display:none }
+    .deck-hover-preview img {
+      display:block; width:100%; height:100%; object-fit:contain;
+      filter:drop-shadow(0 14px 22px rgba(0,0,0,.34));
+    }
+    @keyframes deck-preview-in { from{opacity:0;transform:translateX(5px)} to{opacity:1;transform:translateX(0)} }
+    .deck-footer { padding:0; background:var(--surface) }
+    .deck-footer-main { padding:12px 13px 11px }
+    .deck-actions {
+      gap:0; overflow:hidden; border:0; border-top:1px solid var(--hairline); background:transparent;
+    }
+    .deck-actions > .button {
+      height:40px; border:0; border-left:1px solid var(--hairline); border-radius:0;
+    }
+    .deck-actions > :first-child { border-left:0 }
+
+    .card-detail-modal {
+      position:fixed; z-index:200; inset:0; display:grid; place-items:center;
+      padding:clamp(22px,4vh,58px); background:rgba(21,20,17,.68); backdrop-filter:blur(2px);
+    }
+    .card-detail-modal[hidden] { display:none }
+    .card-detail-stage { position:relative; display:grid; justify-items:center; gap:10px; max-height:100% }
+    .card-detail-image {
+      display:block; width:auto; height:min(76vh,760px); max-width:min(74vw,520px); object-fit:contain;
+      filter:drop-shadow(0 18px 28px rgba(0,0,0,.42)); transform-origin:center;
+      animation:detail-in 150ms var(--ease);
+    }
+    @keyframes detail-in { from{opacity:0;transform:scale(.94) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .card-detail-caption {
+      min-width:min(360px,74vw); padding-top:9px; display:grid; grid-template-columns:1fr auto;
+      gap:3px 18px; border-top:1px solid rgba(255,255,255,.34); color:#fff;
+      text-shadow:0 1px 2px rgba(0,0,0,.7);
+    }
+    .card-detail-name { font-size:14px; font-weight:600 }
+    .card-detail-meta,.card-detail-tags { color:rgba(255,255,255,.72); font:9px/1.4 var(--mono) }
+    .card-detail-tags { grid-column:1/-1 }
+    .card-detail-close {
+      position:fixed; top:20px; right:22px; width:40px; height:40px; border:1px solid rgba(255,255,255,.45);
+      border-radius:0; color:#fff; background:rgba(20,19,16,.28); cursor:pointer; font-size:20px;
+    }
+    .swatches,.component-grid,.decision-grid { gap:1px; padding:1px; background:var(--hairline) }
+    .swatch,.component-card,.decision-card { border:0; border-radius:0 }
+    .type-grid,.mini-query,.layout-box { border-radius:0 }
+
+    @media (min-width:1680px) {
+      .card-grid { grid-template-columns:repeat(7,minmax(0,1fr)) }
+      .panel-head { padding:0 }
+      .browser { padding:14px 20px 22px }
+    }
+    @media (min-width:2300px) {
+      .card-grid { grid-template-columns:repeat(9,minmax(0,1fr)) }
+    }
+    @media (max-width:1180px) {
+      :root { --deck-width:300px }
+      .card-grid { grid-template-columns:repeat(4,minmax(0,1fr)) }
+      .header-cost .mana { width:25px }
+    }
+    @media (max-width:620px) {
+      .card-grid { grid-template-columns:repeat(3,minmax(0,1fr)) }
+      .card-detail-image { height:min(70vh,620px); max-width:88vw }
+      .panel-head { overflow-x:auto }
+      .panel-title { flex:0 0 auto }
+      .filter-command-row { grid-template-columns:52px minmax(180px,1fr) auto }
+      .active-filter-groups { grid-template-columns:1fr }
+      .filter-bucket { border-right:0; border-bottom:1px solid var(--hairline) }
+      .filter-bucket:last-child { border-bottom:0 }
+      .deck-hover-preview { display:none!important }
+    }
+    @media (prefers-reduced-motion:reduce) { *,*:before,*:after { animation:none!important; transition:none!important } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">HI</div>
+        <div><div class="brand-title">Hearth Index</div><div class="brand-sub">ADAPTIVE 16:9 / 720P · 1080P · 1440P</div></div>
+      </div>
+      <nav class="tabs" aria-label="프리뷰 화면">
+        <button class="tab" data-target="workbench" aria-selected="true">Workbench</button>
+        <button class="tab" data-target="foundation" aria-selected="false">Foundation</button>
+        <button class="tab" data-target="decisions" aria-selected="false">Layout notes</button>
+      </nav>
+      <div class="top-actions" role="toolbar" aria-label="덱 명령">
+        <button class="button" id="importButton">덱 불러오기</button>
+        <button class="icon-button" id="themeButton" aria-label="색상 모드 전환">◐</button>
+        <button class="button primary" id="exportButton">덱 코드 내보내기</button>
+      </div>
+    </header>
+
+    <main class="screen workbench" data-screen="workbench">
+      <section class="panel library" aria-label="카드 라이브러리">
+        <div class="panel-head">
+          <h1 class="panel-title">카드 라이브러리</h1>
+          <div class="library-head-filters" aria-label="빠른 카드 필터">
+            <div class="header-cost" id="manaFilters">
+              <span class="filter-label">cost</span>
+              <div class="segmented-control" role="group" aria-label="마나 비용">
+                <button class="mana active" data-mana="all">∞</button>
+                <button class="mana" data-mana="0">0</button><button class="mana" data-mana="1">1</button>
+                <button class="mana" data-mana="2">2</button><button class="mana" data-mana="3">3</button>
+                <button class="mana" data-mana="4">4</button><button class="mana" data-mana="5">5</button>
+                <button class="mana" data-mana="6">6</button><button class="mana" data-mana="7">7</button>
+                <button class="mana" data-mana="8">8+</button>
+              </div>
+            </div>
+            <select class="select-chip header-type" id="typeFilter" aria-label="카드 종류">
+              <option value="all">모든 종류</option><option value="minion">하수인</option>
+              <option value="spell">주문</option><option value="power">영웅 능력</option>
+            </select>
+          </div>
+        </div>
+        <div class="browser"><div class="card-grid" id="cardGrid"><div class="empty" id="emptyState">조건에 맞는 카드가 없습니다.</div></div></div>
+        <section class="filter-dock" id="filterDock" aria-label="고급 조건 편집기">
+          <div class="dock-body">
+            <div class="filter-command-row">
+              <span class="filter-mode" id="filterMode" data-mode="and" aria-live="polite">AND</span>
+              <label class="filter-command">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+                <input id="cardSearch" type="text" placeholder="AND 조건 입력 · 예: 비용이 5인 하수인" aria-label="고급 필터 조건 입력" autocomplete="off">
+              </label>
+              <button class="mini-button" id="saveQuery" aria-label="현재 쿼리를 템플릿으로 저장">템플릿 저장</button>
+            </div>
+            <div class="active-filter-groups" aria-label="활성 필터">
+              <section class="filter-bucket" data-filter-group="and" data-active="true">
+                <div class="filter-bucket-head"><span>AND</span><span class="filter-count">3</span></div>
+                <div class="filter-clause-list" aria-live="polite"><span class="clause">비용 = 5</span><span class="clause">유형 = 하수인</span><span class="clause">종족 = 야수</span></div>
+              </section>
+              <section class="filter-bucket" data-filter-group="or" data-active="false">
+                <div class="filter-bucket-head"><span>OR</span><span class="filter-count">2</span></div>
+                <div class="filter-clause-list" aria-live="polite"><span class="clause">비용 = 홀수</span><span class="clause">공격력 = 홀수</span></div>
+              </section>
+              <section class="filter-bucket" data-filter-group="not" data-active="false">
+                <div class="filter-bucket-head"><span>NOT</span><span class="filter-count">1</span></div>
+                <div class="filter-clause-list" aria-live="polite"><span class="clause not">세트 = 야생</span></div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="panel deck" aria-label="현재 덱">
+        <div class="deck-head">
+          <div class="deck-head-copy">
+            <div class="eyebrow">Current deck</div><h2 class="deck-name">Odd Menagerie</h2>
+            <div class="deck-meta"><span class="badge">야생</span><span class="badge">사냥꾼</span><span class="badge">v.07</span><span class="badge">사용자 카드풀</span></div>
+          </div>
+          <button class="icon-button deck-head-command" aria-label="덱 메뉴">•••</button>
+        </div>
+        <div class="deck-list" id="deckList">
+          <div class="section-label"><span>Cards · mana order</span><span>13 unique</span></div>
+        </div>
+        <div class="deck-footer">
+          <div class="deck-footer-main">
+            <div class="deck-progress-line"><div class="deck-total"><strong id="deckCount">26</strong><span> / 30</span></div><div class="validation" id="validation">FORMAT VALID · 4 OPEN</div></div>
+            <div class="track"><div class="fill" id="progressFill"></div></div>
+            <div class="curve" aria-label="마나 커브">
+              <div class="curve-column" style="--curve-height:52%" aria-label="0 마나 4장"><span class="curve-count" aria-hidden="true">4</span><span class="curve-bar" aria-hidden="true"></span><span class="curve-label" aria-hidden="true">0</span></div>
+              <div class="curve-column" style="--curve-height:76%" aria-label="1 마나 6장"><span class="curve-count" aria-hidden="true">6</span><span class="curve-bar" aria-hidden="true"></span><span class="curve-label" aria-hidden="true">1</span></div>
+              <div class="curve-column" style="--curve-height:100%" aria-label="2 마나 8장"><span class="curve-count" aria-hidden="true">8</span><span class="curve-bar" aria-hidden="true"></span><span class="curve-label" aria-hidden="true">2</span></div>
+              <div class="curve-column" style="--curve-height:38%" aria-label="3 마나 3장"><span class="curve-count" aria-hidden="true">3</span><span class="curve-bar" aria-hidden="true"></span><span class="curve-label" aria-hidden="true">3</span></div>
+              <div class="curve-column" style="--curve-height:63%" aria-label="4 마나 5장"><span class="curve-count" aria-hidden="true">5</span><span class="curve-bar" aria-hidden="true"></span><span class="curve-label" aria-hidden="true">4</span></div>
+              <div class="curve-column" style="--curve-height:26%" aria-label="5 마나 2장"><span class="curve-count" aria-hidden="true">2</span><span class="curve-bar" aria-hidden="true"></span><span class="curve-label" aria-hidden="true">5</span></div>
+              <div class="curve-column" style="--curve-height:13%" aria-label="6 마나 1장"><span class="curve-count" aria-hidden="true">1</span><span class="curve-bar" aria-hidden="true"></span><span class="curve-label" aria-hidden="true">6</span></div>
+              <div class="curve-column" style="--curve-height:26%" aria-label="7 마나 이상 2장"><span class="curve-count" aria-hidden="true">2</span><span class="curve-bar" aria-hidden="true"></span><span class="curve-label" aria-hidden="true">7+</span></div>
+            </div>
+          </div>
+          <div class="deck-actions" role="toolbar" aria-label="덱 작업"><button class="button" id="analyzeButton">덱 분석</button><button class="button primary" id="codeButton">덱 코드 복사</button></div>
+        </div>
+        <div class="deck-hover-preview" id="deckHoverPreview" aria-hidden="true" hidden>
+          <img id="deckHoverImage" src="images/57217.png" alt="">
+        </div>
+      </aside>
+    </main>
+
+    <main class="screen scroll-screen" data-screen="foundation" hidden>
+      <div class="page-intro">
+        <div><div class="page-kicker">Foundation 02</div><h1 class="page-title">Quiet tools.<br>Colorful cards.</h1></div>
+        <p class="page-lede">카드 아트가 시각적 주인공입니다. 앱은 하나의 warm cream 캔버스를 hairline으로만 나누며, 별도 패널처럼 보이는 표면을 만들지 않습니다. Orange는 내보내기처럼 중요한 1차 행동에만 씁니다.</p>
+      </div>
+      <section class="section">
+        <div class="section-heading"><h2 class="section-title">Color tokens</h2><p class="section-note">Cursor 계열 기준을 사용하되 timeline pastel은 일반 시스템 상태색으로 확장하지 않습니다.</p></div>
+        <div class="swatches">
+          <div class="swatch"><div class="swatch-color" style="background:#f7f7f4"></div><div class="swatch-copy"><div class="swatch-name">Canvas</div><div class="token">--canvas · #F7F7F4</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#fff"></div><div class="swatch-copy"><div class="swatch-name">Surface</div><div class="token">--surface · #FFFFFF</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#26251e"></div><div class="swatch-copy"><div class="swatch-name">Warm ink</div><div class="token">--ink · #26251E</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#e6e5e0"></div><div class="swatch-copy"><div class="swatch-name">Hairline</div><div class="token">--hairline · #E6E5E0</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#f54e00"></div><div class="swatch-copy"><div class="swatch-name">Primary</div><div class="token">--primary · #F54E00</div></div></div>
+        </div>
+      </section>
+      <section class="section">
+        <div class="section-heading"><h2 class="section-title">Typography</h2><p class="section-note">화면 제목은 400 weight, 데이터·조건·카운트는 mono. 굵기보다 크기와 간격으로 위계를 만듭니다.</p></div>
+        <div class="type-grid">
+          <div class="type-cell"><div class="eyebrow">Display / CursorGothic fallback</div><div class="type-display">덱의 조건을<br>눈으로 읽는다.</div><p class="type-body">분석 도구이지만 IDE처럼 어둡거나 과밀하지 않게. 제목은 편집물처럼 차분하게 유지합니다.</p></div>
+          <div class="type-cell"><div class="eyebrow">Data / JetBrains Mono fallback</div><div class="type-mono">QUERY / GROUP A / ALL<br>COST == 5<br>TYPE == MINION<br>TRIBE == BEAST<br>RESULTS 12 · DECK 26/30</div></div>
+        </div>
+      </section>
+      <section class="section">
+        <div class="section-heading"><h2 class="section-title">Atomic widgets</h2><p class="section-note">기초 FE 구성의 최소 원자. 영역은 반경 없이 hairline으로 나누고, 작은 입력 요소에만 최대 3px 반경을 허용합니다.</p></div>
+        <div class="component-grid">
+          <article class="component-card"><div class="eyebrow">01 · Actions</div><h3 class="component-title">Buttons</h3><div class="component-demo"><button class="button primary">덱 코드 내보내기</button><button class="button">덱 분석</button><button class="icon-button">•••</button></div></article>
+          <article class="component-card"><div class="eyebrow">02 · Input</div><h3 class="component-title">Search field</h3><div class="component-demo"><input class="demo-input" value="비용이 5인 무작위 하수인" aria-label="검색 예시"></div></article>
+          <article class="component-card"><div class="eyebrow">03 · Filters</div><h3 class="component-title">Quick selectors</h3><div class="component-demo"><button class="mana">3</button><button class="mana active">5</button><select class="select-chip"><option>하수인</option></select><span class="badge">야수</span></div></article>
+          <article class="component-card"><div class="eyebrow">04 · Boolean query</div><h3 class="component-title">Clause chips</h3><div class="mini-query"><span class="clause"><strong>비용</strong><em>=</em>5</span><span class="clause"><strong>종족</strong><em>=</em>야수</span><span class="clause not"><strong>NOT</strong><em>세트</em>야생</span></div></article>
+          <article class="component-card"><div class="eyebrow">05 · Deck item</div><h3 class="component-title">Official crop row</h3><div class="deck-row legendary" style="--crop:url('crops/48158.jpg')"><span class="deck-art" aria-hidden="true"></span><span class="deck-mana">9</span><span class="deck-card-name">달을 삼킨 구렁이 바쿠</span><span class="deck-count">◆</span></div></article>
+          <article class="component-card"><div class="eyebrow">06 · Product-only palette</div><h3 class="component-title">Analysis stages</h3><div class="component-demo"><span class="timeline-pill" style="background:var(--thinking)">parse</span><span class="timeline-pill" style="background:var(--grep)">match</span><span class="timeline-pill" style="background:var(--read)">trace</span><span class="timeline-pill" style="background:var(--edit)">compare</span><span class="timeline-pill" style="background:var(--done);color:#fff">done</span></div></article>
+          <article class="component-card"><div class="eyebrow">07 · Spacing</div><h3 class="component-title">4px base scale</h3><div class="space-list"><div class="space-row"><span>xs</span><span class="space-bar" style="width:12.5%"></span><span>4</span></div><div class="space-row"><span>sm</span><span class="space-bar" style="width:25%"></span><span>8</span></div><div class="space-row"><span>base</span><span class="space-bar" style="width:50%"></span><span>16</span></div><div class="space-row"><span>xl</span><span class="space-bar" style="width:100%"></span><span>32</span></div></div></article>
+          <article class="component-card"><div class="eyebrow">08 · Shape</div><h3 class="component-title">Canvas before containers</h3><div class="component-demo"><span class="badge" style="border-radius:0">region · 0</span><span class="badge" style="border-radius:2px">row · 2</span><span class="badge" style="border-radius:3px">input · 3</span><span class="badge" style="border-radius:0">panel · none</span></div></article>
+          <article class="component-card"><div class="eyebrow">09 · Elevation</div><h3 class="component-title">Hairline only</h3><p style="color:var(--body)">drop-shadow 0<br>shared canvas 1<br>region divider 1px</p></article>
+        </div>
+      </section>
+    </main>
+
+    <main class="screen scroll-screen" data-screen="decisions" hidden>
+      <div class="page-intro">
+        <div><div class="page-kicker">Layout review</div><h1 class="page-title">Structure is set.<br>One dock is not.</h1></div>
+        <p class="page-lede">하스스톤 덱 편집기에서 가져온 것은 왼쪽 탐색과 오른쪽 덱의 직접적인 관계입니다. 장식은 가져오지 않습니다. 고급 필터 위치는 아직 가설이며 실제 작업 흐름을 본 뒤 확정합니다.</p>
+      </div>
+      <section class="section">
+        <div class="section-heading"><h2 class="section-title">Current decisions</h2><p class="section-note">이 페이지는 승인 상태를 보이기 위한 설계 메모이며 구현 명세가 아닙니다.</p></div>
+        <div class="decision-grid">
+          <article class="decision-card recommended"><span class="decision-status">Accepted direction</span><h3>Library left, deck right</h3><p>카드를 찾는 동안 덱이 항상 보입니다. 추가 결과와 덱 상태를 한 시야에서 확인합니다.</p><div class="layout-map"><div class="layout-main"><div class="layout-box">CARD LIBRARY</div><div class="layout-box">FILTER DOCK</div></div><div class="layout-box">DECK</div></div></article>
+          <article class="decision-card"><span class="decision-status">Provisional</span><h3>Advanced filter at bottom</h3><p>빠른 검색을 먼저 두고 복합 조건은 필요할 때 펼칩니다. 세로 공간 비용은 검증이 필요합니다.</p><div class="layout-map"><div class="layout-main"><div class="layout-box">CARDS</div><div class="layout-box">COLLAPSIBLE QUERY</div></div><div class="layout-box">DECK</div></div></article>
+          <article class="decision-card"><span class="decision-status">Rejected</span><h3>Nintendo 2001 console skin</h3><p>하드웨어 베젤, 슬롯, CRT 조명과 장식 chrome은 폐기합니다. 분석 밀도와 카드 아트가 주도합니다.</p><div class="layout-map" style="opacity:.48"><div class="layout-main"><div class="layout-box">NO CONSOLE FRAME</div><div class="layout-box">NO SLOT UI</div></div><div class="layout-box">×</div></div></article>
+        </div>
+      </section>
+      <section class="section">
+        <div class="section-heading"><h2 class="section-title">Safe choices / risks</h2><p class="section-note">Safe는 즉시 이해하는 구조, risk는 이 제품만의 얼굴입니다.</p></div>
+        <div class="decision-grid">
+          <article class="decision-card"><span class="decision-status">Safe</span><h3>Game-native spatial memory</h3><p>하스스톤 사용자에게 왼쪽 카드, 오른쪽 덱은 학습 비용이 거의 없습니다.</p></article>
+          <article class="decision-card"><span class="decision-status">Risk</span><h3>Editorial light surface</h3><p>게임 툴의 어두운 chrome 대신 밝고 조용한 편집 도구처럼 보입니다. 가독성을 얻고 게임 판타지는 줄입니다.</p></article>
+          <article class="decision-card"><span class="decision-status">Risk</span><h3>Query is visible syntax</h3><p>AND/OR/NOT을 숨긴 폼 대신 읽을 수 있는 절과 그룹으로 드러냅니다. 복합 조건을 검증하기 쉽습니다.</p></article>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="card-detail-modal" id="cardDetailModal" role="dialog" aria-modal="true" aria-labelledby="cardDetailName" hidden>
+    <button class="card-detail-close" id="cardDetailClose" aria-label="카드 상세 닫기">×</button>
+    <div class="card-detail-stage">
+      <img class="card-detail-image" id="cardDetailImage" src="images/57217.png" alt="에펙시스 폭발 카드 전체 이미지">
+      <div class="card-detail-caption">
+        <div class="card-detail-name" id="cardDetailName"></div>
+        <div class="card-detail-meta" id="cardDetailMeta"></div>
+        <div class="card-detail-tags" id="cardDetailTags"></div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const $ = (s, r=document) => r.querySelector(s);
+      const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+      const cards = [
+        {id:57217,mana:5,name:"에펙시스 폭발",stat:"SPELL",tags:"하수인 없음 · 비용 5 생성",search:"주문 무작위 하수인 생성 덱에 하수인이 없음"},
+        {id:59609,mana:5,name:"잔다이스 바로브",stat:"2 / 1",tags:"전투의 함성 · 비용 5 생성",search:"하수인 전투의 함성 무작위 생성"},
+        {id:63347,mana:5,name:"홀수에 맞서서",stat:"SPELL",tags:"공격력 홀수 · 광역 처치",search:"주문 공격력 홀수 모든 하수인 처치"},
+        {id:110889,mana:5,name:"대지의 수호",stat:"SPELL",tags:"방어도 · 비용 5 생성 · 도발",search:"주문 방어도 무작위 하수인 생성 도발"},
+        {id:86722,mana:10,name:"괴수 타디우스",stat:"11 / 11",tags:"도발 · 홀수/짝수 비용 감소",search:"하수인 도발 홀수 짝수 비용 감소"},
+        {id:117596,mana:1,name:"희한한 지도",stat:"SPELL",tags:"공격력 홀수 야수 · 발견",search:"주문 야수 발견 공격력 홀수 카드풀"},
+        {id:48445,mana:3,name:"검은 고양이",stat:"3 / 3",tags:"야수 · 홀수 덱 · 주문 공격력",search:"하수인 야수 주문 공격력 홀수 덱"},
+        {id:48158,mana:9,name:"달을 삼킨 구렁이 바쿠",stat:"7 / 8",tags:"야수 · 홀수 덱 · 영웅 능력",search:"하수인 야수 개전 홀수 덱 영웅 능력"},
+        {id:91872,mana:6,name:"구닥다리",stat:"5 / 5",tags:"죽음의 메아리 · 과거 카드풀",search:"하수인 죽음의 메아리 과거 무작위 생성"},
+        {id:120944,mana:2,name:"위험한 변신수",stat:"1 / 1",tags:"변신 · 비용 5 무작위 하수인",search:"하수인 무작위 비용 5 변신 생성"},
+        {id:110780,mana:3,name:"예약석",stat:"SPELL",tags:"손 강화 · 하수인 조건",search:"주문 손 하수인 강화 비용 감소"},
+        {id:116296,mana:1,name:"괴물 모기",stat:"1 / 2",tags:"야수 · 아군 공격력 시너지",search:"하수인 야수 공격력 강화 시너지"},
+        {id:9107,mana:4,name:"으스스한 석상",stat:"7 / 7",tags:"단독 하수인 · 공격 조건",search:"하수인 다른 하수인이 없음 공격 가능"},
+        {id:120481,mana:1,name:"급속 빙결된 용사",stat:"2 / 1",tags:"죽음의 메아리 · 전설 생성",search:"하수인 죽음의 메아리 무작위 전설 비용 감소"},
+        {id:2737,mana:2,name:"흉포한 변신",stat:"POWER",tags:"공격력 · 방어도",search:"영웅 능력 방어도 공격력"},
+        {id:2738,mana:2,name:"쇠뇌 사격",stat:"POWER",tags:"적 영웅 · 피해 3",search:"영웅 능력 적 영웅 피해"},
+        {id:2739,mana:2,name:"강화된 화염 작렬",stat:"POWER",tags:"대상 · 피해 2",search:"영웅 능력 피해"},
+        {id:2740,mana:2,name:"은빛 성기사단",stat:"POWER",tags:"신병 · 둘 소환",search:"영웅 능력 은빛 성기사단 신병 소환"},
+        {id:2742,mana:2,name:"토템 지배",stat:"POWER",tags:"선택 · 토템 소환",search:"영웅 능력 토템 선택 소환"},
+        {id:2743,mana:2,name:"독 묻은 단검",stat:"POWER",tags:"무기 · 2/2",search:"영웅 능력 무기 장착"},
+        {id:2744,mana:2,name:"영혼 전환",stat:"POWER",tags:"카드 뽑기",search:"영웅 능력 카드 뽑기"},
+        {id:2745,mana:2,name:"방어도 상승!",stat:"POWER",tags:"방어도 +4",search:"영웅 능력 방어도"},
+        {id:60483,mana:1,name:"악마의 이빨",stat:"POWER",tags:"이번 턴 · 공격력 +2",search:"영웅 능력 공격력"}
+      ];
+      const deckCards = [
+        [116296,1,"괴물 모기","×2"],[117596,1,"희한한 지도","×2"],[120481,1,"급속 빙결된 용사","×2"],
+        [120944,2,"위험한 변신수","×2"],[57217,5,"에펙시스 폭발","×2"],[48445,3,"검은 고양이","×2"],
+        [110780,3,"예약석","×2"],[9107,4,"으스스한 석상","×2"],[110889,5,"대지의 수호","×2"],
+        [63347,5,"홀수에 맞서서","×2"],[91872,6,"구닥다리","×1"],[48158,9,"달을 삼킨 구렁이 바쿠","◆"],
+        [86722,10,"괴수 타디우스","◆"]
+      ];
+      const grid = $("#cardGrid");
+      const empty = $("#emptyState");
+      const cardById = new Map(cards.map(card => [String(card.id),card]));
+      cards.forEach(card => {
+        const tile = document.createElement("article");
+        tile.className = "card-tile";
+        tile.dataset.id = card.id; tile.dataset.name = card.name; tile.dataset.mana = card.mana; tile.dataset.search = card.search;
+        tile.dataset.type = card.stat === "SPELL" ? "spell" : card.stat === "POWER" ? "power" : "minion";
+        tile.tabIndex = 0;
+        tile.setAttribute("role","button");
+        tile.setAttribute("aria-label",card.name+" · 왼쪽 클릭 덱 추가, 오른쪽 클릭 카드 정보");
+        const cardAction = card.stat === "POWER"
+          ? '<span class="related-only" aria-label="관련 카드 전용">RELATED</span>'
+          : '';
+        tile.innerHTML = '<div class="art">'+cardAction+'<img src="images/'+card.id+'.png" alt="'+card.name+' 카드"></div>';
+        grid.insertBefore(tile,empty);
+      });
+      const deckList = $("#deckList");
+      const deckHoverPreview = $("#deckHoverPreview");
+      const deckHoverImage = $("#deckHoverImage");
+      function showDeckHoverPreview(row) {
+        const id = row.dataset.id;
+        if (!id) return;
+        deckHoverImage.src = "images/"+id+".png";
+        deckHoverImage.alt = row.dataset.name+" 카드 전체 이미지";
+        deckHoverPreview.hidden = false;
+        const rowRect = row.getBoundingClientRect();
+        const deckRect = $(".deck").getBoundingClientRect();
+        const previewHeight = deckHoverPreview.getBoundingClientRect().height;
+        const top = Math.max(64,Math.min(innerHeight-previewHeight-12,rowRect.top+(rowRect.height-previewHeight)/2));
+        deckHoverPreview.style.top = top+"px";
+        deckHoverPreview.style.right = innerWidth-deckRect.left+12+"px";
+      }
+      function hideDeckHoverPreview() { deckHoverPreview.hidden = true }
+      function bindDeckHoverPreview(row) {
+        row.tabIndex = 0;
+        row.setAttribute("aria-label",row.dataset.name+" · 카드 정보 미리보기");
+        row.addEventListener("mouseenter",() => showDeckHoverPreview(row));
+        row.addEventListener("mouseleave",hideDeckHoverPreview);
+        row.addEventListener("focus",() => showDeckHoverPreview(row));
+        row.addEventListener("blur",hideDeckHoverPreview);
+      }
+      function deckRow(id,mana,name,count,flash=false) {
+        const row = document.createElement("div");
+        row.className = "deck-row" + (count === "◆" ? " legendary" : "") + (flash ? " flash" : "");
+        row.dataset.id = id; row.dataset.name = name;
+        row.style.setProperty("--crop",'url("crops/'+id+'.jpg")');
+        row.innerHTML = '<span class="deck-art" aria-hidden="true"></span><span class="deck-mana">'+mana+'</span><span class="deck-card-name">'+name+'</span><span class="deck-count">'+count+'</span>';
+        bindDeckHoverPreview(row);
+        return row;
+      }
+      deckCards.forEach(item => deckList.appendChild(deckRow(...item)));
+      deckList.addEventListener("scroll",hideDeckHoverPreview,{passive:true});
+      let selectedMana = "all";
+      let deckCount = 26;
+      let timer;
+      function toast(message) {
+        $("#toast").textContent = message; $("#toast").classList.add("visible");
+        clearTimeout(timer); timer = setTimeout(() => $("#toast").classList.remove("visible"),1800);
+      }
+      function setScreen(name) {
+        hideDeckHoverPreview();
+        $$(".screen").forEach(s => s.hidden = s.dataset.screen !== name);
+        $$(".tab").forEach(t => t.setAttribute("aria-selected",String(t.dataset.target === name)));
+      }
+      $$(".tab").forEach(t => t.addEventListener("click",() => setScreen(t.dataset.target)));
+      $("#themeButton").addEventListener("click",() => {
+        const next = document.documentElement.dataset.theme === "light" ? "ink" : "light";
+        document.documentElement.dataset.theme = next; toast(next === "light" ? "Warm cream mode" : "Warm ink mode");
+      });
+      const filterInput = $("#cardSearch");
+      const filterModes = ["and","or","not"];
+      let filterModeIndex = 0;
+      function activeFilterBucket(mode=filterModes[filterModeIndex]) {
+        return $(`.filter-bucket[data-filter-group="${mode}"]`);
+      }
+      function updateFilterCounts() {
+        filterModes.forEach(mode => {
+          const bucket = activeFilterBucket(mode);
+          const count = $$(".clause",bucket).length;
+          $(".filter-count",bucket).textContent = count;
+        });
+      }
+      function setFilterMode(index) {
+        filterModeIndex = (index+filterModes.length)%filterModes.length;
+        const mode = filterModes[filterModeIndex];
+        const label = mode.toUpperCase();
+        const indicator = $("#filterMode");
+        indicator.dataset.mode = mode;
+        indicator.textContent = label;
+        filterInput.placeholder = `${label} 조건 입력 · Tab 모드 전환 · Enter 추가`;
+        $$(".filter-bucket[data-filter-group]").forEach(bucket => {
+          bucket.dataset.active = String(bucket.dataset.filterGroup === mode);
+        });
+      }
+      function addActiveFilter() {
+        const value = filterInput.value.trim();
+        if (!value) return;
+        const mode = filterModes[filterModeIndex];
+        const clause = document.createElement("span");
+        clause.className = `clause${mode === "not" ? " not" : ""}`;
+        clause.textContent = value;
+        $(".filter-clause-list",activeFilterBucket()).appendChild(clause);
+        filterInput.value = "";
+        updateFilterCounts();
+        filterCards();
+        toast(`${mode.toUpperCase()} · ${value}`);
+      }
+      function removeActiveFilter() {
+        const bucket = activeFilterBucket();
+        const clauses = $$(".clause",bucket);
+        const last = clauses.at(-1);
+        if (!last) return toast(`${filterModes[filterModeIndex].toUpperCase()} 조건이 없습니다.`);
+        const value = last.textContent;
+        last.remove();
+        updateFilterCounts();
+        toast(`${value} · 제거됨`);
+      }
+      function filterCards() {
+        const query = filterInput.value.trim().toLowerCase();
+        const selectedType = $("#typeFilter").value;
+        let visible = 0;
+        $$(".card-tile").forEach(tile => {
+          const mana = Number(tile.dataset.mana);
+          const manaMatch = selectedMana === "all" || (selectedMana === "8" ? mana >= 8 : String(mana) === selectedMana);
+          const typeMatch = selectedType === "all" || tile.dataset.type === selectedType;
+          const textMatch = (tile.dataset.name+" "+tile.dataset.search).toLowerCase().includes(query);
+          tile.hidden = !(manaMatch && typeMatch && textMatch); if (!tile.hidden) visible++;
+        });
+        empty.style.display = visible ? "none" : "block";
+      }
+      filterInput.addEventListener("input",filterCards);
+      filterInput.addEventListener("keydown",event => {
+        if (event.key === "Tab") {
+          event.preventDefault();
+          setFilterMode(filterModeIndex+(event.shiftKey ? -1 : 1));
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          addActiveFilter();
+        } else if (event.key === "Backspace" && !filterInput.value) {
+          event.preventDefault();
+          removeActiveFilter();
+        }
+      });
+      document.addEventListener("keydown",event => {
+        if (event.key === "/" && document.activeElement !== filterInput) {
+          event.preventDefault();
+          filterInput.focus();
+        }
+      });
+      $("#typeFilter").addEventListener("change",filterCards);
+      $$(".mana[data-mana]").forEach(button => button.addEventListener("click",() => {
+        selectedMana = button.dataset.mana;
+        $$(".mana[data-mana]").forEach(item => item.classList.toggle("active",item === button));
+        filterCards();
+      }));
+      function addToDeck(tile) {
+        if (deckCount >= 30) return toast("덱이 30장으로 가득 찼습니다.");
+        deckCount++;
+        $("#deckCount").textContent = deckCount;
+        $("#progressFill").style.width = (deckCount/30*100)+"%";
+        const open = 30-deckCount;
+        $("#validation").textContent = open ? "FORMAT VALID · "+open+" OPEN" : "FORMAT VALID · COMPLETE";
+        let row = $$(".deck-row",deckList).find(item => item.dataset.name === tile.dataset.name);
+        if (row) {
+          const count = $(".deck-count",row);
+          const current = Number((count.textContent.match(/\d+/)||["1"])[0]);
+          count.textContent = "×"+Math.min(current+1,2);
+        } else {
+          row = deckRow(tile.dataset.id,tile.dataset.mana,tile.dataset.name,"×1",true);
+          deckList.appendChild(row);
+        }
+        row.classList.add("flash"); setTimeout(() => row.classList.remove("flash"),700);
+        tile.classList.remove("added"); void tile.offsetWidth; tile.classList.add("added");
+        setTimeout(() => tile.classList.remove("added"),450);
+        toast(tile.dataset.name+" · 덱에 추가됨");
+      }
+      const detailModal = $("#cardDetailModal");
+      function openCardDetail(tile) {
+        const card = cardById.get(tile.dataset.id);
+        if (!card) return;
+        $("#cardDetailImage").src = "images/"+card.id+".png";
+        $("#cardDetailImage").alt = card.name+" 카드 전체 이미지";
+        $("#cardDetailName").textContent = card.name;
+        $("#cardDetailMeta").textContent = card.mana+" MANA · "+card.stat;
+        $("#cardDetailTags").textContent = card.tags;
+        detailModal.hidden = false;
+        $("#cardDetailClose").focus();
+      }
+      function closeCardDetail() { detailModal.hidden = true }
+      $$(".card-tile").forEach(tile => {
+        tile.addEventListener("click",() => {
+          const card = cardById.get(tile.dataset.id);
+          if (card?.stat === "POWER") return toast("관련 카드 · 우클릭으로 정보를 확인하세요");
+          addToDeck(tile);
+        });
+        tile.addEventListener("contextmenu",event => { event.preventDefault(); openCardDetail(tile) });
+        tile.addEventListener("keydown",event => {
+          if (event.key === "Enter" || event.key === " ") { event.preventDefault(); tile.click() }
+          if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) { event.preventDefault(); openCardDetail(tile) }
+        });
+      });
+      $("#cardDetailClose").addEventListener("click",closeCardDetail);
+      detailModal.addEventListener("click",event => { if (event.target === detailModal) closeCardDetail() });
+      document.addEventListener("keydown",event => {
+        if (event.key !== "Escape") return;
+        if (!detailModal.hidden) closeCardDetail();
+        hideDeckHoverPreview();
+      });
+      $("#saveQuery").addEventListener("click",() => toast("현재 조건을 쿼리 템플릿으로 저장했습니다."));
+      $("#importButton").addEventListener("click",() => toast("덱 코드 입력 흐름 · 다음 설계 단계"));
+      $("#exportButton").addEventListener("click",() => toast("내보내기 전 유효성 확인"));
+      $("#codeButton").addEventListener("click",() => toast("AAEB… 프리뷰 코드가 복사되었습니다"));
+      $("#analyzeButton").addEventListener("click",() => toast("덱 분석 화면 · 다음 설계 단계"));
+      setFilterMode(0);
+      updateFilterCounts();
+      filterCards();
+    })();
+  </script>
+</body>
+</html>

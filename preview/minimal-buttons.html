@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hearth Index · Minimal Button Specimen</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas:#f7f7f4;
+      --surface:#ffffff;
+      --ink:#26251e;
+      --body:#5a5852;
+      --muted:#8a877e;
+      --line:#d8d6ce;
+      --line-strong:#aaa79d;
+      --accent:#f54e00;
+      --accent-active:#d94300;
+      --danger:#bd284b;
+      --font:"Segoe UI","Noto Sans KR",sans-serif;
+      --mono:"JetBrains Mono",Consolas,monospace;
+    }
+    * { box-sizing:border-box }
+    body {
+      margin:0; min-height:100vh; display:grid; place-items:center;
+      color:var(--ink); background:var(--canvas); font:13px/1.5 var(--font);
+    }
+    main { width:min(920px,calc(100vw - 40px)); background:var(--surface); border:1px solid var(--line) }
+    header { padding:22px 24px; border-bottom:1px solid var(--line) }
+    h1 { margin:0; font-size:20px; font-weight:550; letter-spacing:-.02em }
+    header p { margin:5px 0 0; color:var(--muted); font:10px/1.5 var(--mono) }
+    section { display:grid; grid-template-columns:150px 1fr; min-height:104px; border-bottom:1px solid var(--line) }
+    section:last-child { border-bottom:0 }
+    .label { padding:20px 18px; border-right:1px solid var(--line); color:var(--muted); font:9px/1.4 var(--mono); letter-spacing:.08em; text-transform:uppercase }
+    .demo { padding:18px 22px; display:flex; align-items:center; flex-wrap:wrap; gap:8px }
+    button {
+      --button-bg:transparent;
+      --button-border:var(--line-strong);
+      --button-color:var(--ink);
+      height:36px; padding:0 14px; border:1px solid var(--button-border); border-radius:0;
+      color:var(--button-color); background:var(--button-bg); box-shadow:none;
+      font:550 12px/1 var(--font); letter-spacing:-.01em; cursor:pointer;
+      transition:background-color 80ms linear,color 80ms linear,border-color 80ms linear;
+    }
+    button:hover { --button-bg:var(--ink); --button-border:var(--ink); --button-color:var(--surface) }
+    button:active { --button-bg:#11110e; --button-border:#11110e }
+    button:focus-visible { outline:2px solid var(--ink); outline-offset:2px }
+    button:disabled { opacity:.38; cursor:not-allowed }
+    button:disabled:hover { --button-bg:transparent; --button-border:var(--line-strong); --button-color:var(--ink) }
+    .ink { --button-bg:var(--ink); --button-border:var(--ink); --button-color:var(--surface) }
+    .ink:hover { --button-bg:#11110e; --button-border:#11110e }
+    .accent { --button-bg:var(--accent); --button-border:var(--accent); --button-color:#fff }
+    .accent:hover { --button-bg:var(--accent-active); --button-border:var(--accent-active) }
+    .danger { --button-border:color-mix(in srgb,var(--danger) 58%,var(--line)); --button-color:var(--danger) }
+    .danger:hover { --button-bg:var(--danger); --button-border:var(--danger); --button-color:#fff }
+    .small { height:30px; padding:0 10px; font-size:11px }
+    .icon { width:36px; padding:0; display:inline-grid; place-items:center; font:15px/1 var(--mono) }
+    .icon.small { width:30px }
+    .split { display:inline-flex }
+    .split button+button { margin-left:-1px }
+    .split button[aria-pressed="true"] { position:relative; --button-bg:var(--ink); --button-border:var(--ink); --button-color:#fff }
+    .token { color:var(--muted); font:9px/1.5 var(--mono) }
+    @media (max-width:620px) {
+      main { width:calc(100vw - 20px) }
+      section { grid-template-columns:1fr }
+      .label { padding:12px 16px; border-right:0; border-bottom:1px solid var(--line) }
+      .demo { padding:16px }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>사각형 버튼 시스템</h1>
+      <p>radius 0 · border 1px · shadow 0 · motion 80ms</p>
+    </header>
+    <section>
+      <div class="label">Hierarchy</div>
+      <div class="demo">
+        <button type="button">덱 불러오기</button>
+        <button class="ink" type="button">덱 분석</button>
+        <button class="accent" type="button">덱 코드 내보내기</button>
+        <button class="danger" type="button">덱 비우기</button>
+      </div>
+    </section>
+    <section>
+      <div class="label">Compact</div>
+      <div class="demo">
+        <button class="small" type="button">쿼리 저장</button>
+        <button class="small ink" type="button">적용</button>
+        <button class="icon small" type="button" aria-label="추가">+</button>
+        <button class="icon small" type="button" aria-label="더 보기">•••</button>
+        <span class="token">30px · list / filter actions</span>
+      </div>
+    </section>
+    <section>
+      <div class="label">Segmented</div>
+      <div class="demo">
+        <div class="split" role="group" aria-label="보기 모드">
+          <button class="small" type="button" aria-pressed="true">카드</button>
+          <button class="small" type="button" aria-pressed="false">목록</button>
+          <button class="small" type="button" aria-pressed="false">분석</button>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="label">State</div>
+      <div class="demo">
+        <button type="button">Default / hover me</button>
+        <button type="button" disabled>Disabled</button>
+        <span class="token">focus: 2px outline · active: darker fill</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

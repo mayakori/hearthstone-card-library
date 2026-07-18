@@ -1,0 +1,623 @@
+{
+  "schema_version": 2,
+  "captured_at_utc": "2026-07-18T06:26:06Z",
+  "purpose": "Design-only shared samples for the Rust cache/domain layer and the frontend IPC wire contract.",
+  "live_evidence": {
+    "card_list": {
+      "url": "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=24&set=escape-from-violet-hold&textFilter=%EA%B3%B5%ED%97%88&sort=dateadded%3Adesc",
+      "status": 200,
+      "etag": "W/\"100f-Fcvu31Rlj0L9OniaPQEf+xWoNbY\"",
+      "card_count": 5,
+      "page_count": 1,
+      "page": 1
+    },
+    "standard_probe": {
+      "url": "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=3&set=standard&sort=dateadded%3Adesc",
+      "status": 200,
+      "etag": "W/\"903-K3K9gM62xuEriHNTc/l1/L26vMU\"",
+      "card_count": 1152,
+      "page_count": 384,
+      "page": 1
+    },
+    "metadata": {
+      "url": "https://hearthstone.blizzard.com/ko-kr/cards",
+      "status": 200,
+      "etag": "W/\"42190-1ss0YvcIG15ytI6WW3MsWNNLIpA\"",
+      "extraction": "#cardGalleryMount config attribute",
+      "counts": {
+        "sets": 46,
+        "classes": 13,
+        "types": 9,
+        "rarities": 5,
+        "minion_types": 25,
+        "spell_schools": 9,
+        "keywords": 74
+      }
+    },
+    "hot_spring_glider_card_api": {
+      "url": "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=24&set=standard&textFilter=Patrik%20Bjorkstrom&sort=dateadded%3Adesc",
+      "status": 200,
+      "etag": "W/\"467a-Imzlrq3X5pR3hqvII+ixFwdp+uc\"",
+      "card_count": 22,
+      "page_count": 1,
+      "matched_card_id": 117382,
+      "captured_at_utc": "2026-07-18T06:26:06Z"
+    },
+    "hot_spring_glider_page_metadata": {
+      "url": "https://hearthstone.blizzard.com/ko-kr/cards/117382-hot-spring-glider?set=standard&textFilter=Patrik%20Bjorkstrom",
+      "status": 200,
+      "etag": "W/\"42434-6KQes2ay7GLYJ8Vi2+MWQg8t22k\"",
+      "extraction": "#cardGalleryMount config attribute"
+    },
+    "image_heads": [
+      {
+        "card_id": 48158,
+        "variant": "normal",
+        "status": 200,
+        "content_type": "application/octet-stream",
+        "content_length": 90936,
+        "etag": "\"a03a6bf6cb744576a53a711c52c36a68\""
+      },
+      {
+        "card_id": 48158,
+        "variant": "crop",
+        "status": 200,
+        "content_type": "application/octet-stream",
+        "content_length": 17659,
+        "etag": "\"f5f59bf44632eae3dbeeec3c4f7a5721\""
+      },
+      {
+        "card_id": 48158,
+        "variant": "gold",
+        "status": 200,
+        "content_type": "image/png",
+        "content_length": 98560,
+        "etag": "\"3c9d7016879a18a6f51a3b37fc24e07c\"",
+        "cache_control": "max-age=31536000"
+      }
+    ]
+  },
+  "official_raw_samples": {
+    "metadata_subset": {
+      "sets": [
+        {
+          "id": 1988,
+          "slug": "escape-from-violet-hold",
+          "name": "보랏빛 요새 탈출 작전",
+          "collectibleCount": 135,
+          "collectibleRevealedCount": 135
+        }
+      ],
+      "set_groups": [
+        {
+          "slug": "standard",
+          "name": "정규 세트",
+          "cardSets": [
+            "escape-from-violet-hold",
+            "cataclysm",
+            "across-the-timeways",
+            "the-lost-city-of-ungoro",
+            "into-the-emerald-dream",
+            "event",
+            "core"
+          ]
+        }
+      ],
+      "classes": [
+        { "id": 14, "slug": "demonhunter", "name": "악마사냥꾼" },
+        { "id": 4, "slug": "mage", "name": "마법사" }
+      ],
+      "types": [
+        { "id": 4, "slug": "minion", "name": "하수인" },
+        { "id": 5, "slug": "spell", "name": "주문" },
+        { "id": 7, "slug": "weapon", "name": "무기" }
+      ],
+      "rarities": [
+        { "id": 1, "slug": "common", "name": "일반" },
+        { "id": 3, "slug": "rare", "name": "희귀" },
+        { "id": 5, "slug": "legendary", "name": "전설" }
+      ],
+      "minion_types": [
+        { "id": 92, "slug": "naga", "name": "나가" }
+      ],
+      "spell_schools": [
+        { "id": 6, "slug": "shadow", "name": "암흑" }
+      ],
+      "keywords": [
+        { "id": 1, "slug": "taunt", "name": "도발", "text": "적은 반드시 이 하수인부터 공격해야 합니다." },
+        { "id": 8, "slug": "battlecry", "name": "전투의 함성", "text": "카드를 손에서 낼 때 효과가 발동합니다." },
+        { "id": 12, "slug": "deathrattle", "name": "죽음의 메아리", "text": "죽으면 효과가 발동합니다." },
+        { "id": 38, "slug": "lifesteal", "name": "생명력 흡수", "text": "피해를 준만큼 내 영웅의 생명력을 회복시킵니다." },
+        { "id": 64, "slug": "start-of-game", "name": "개전", "text": "첫 번째 턴이 시작하기 전에 효과가 발동합니다." }
+      ]
+    },
+    "card_page": {
+      "cards": [
+        {
+          "id": 126660,
+          "collectible": 1,
+          "slug": "126660-stardust-scythe",
+          "classId": 14,
+          "multiClassIds": [],
+          "cardTypeId": 7,
+          "cardSetId": 1988,
+          "rarityId": 1,
+          "manaCost": 4,
+          "attack": 3,
+          "health": 2,
+          "name": "별가루 낫",
+          "text": "내 영웅이 공격한 후, 공허의 영혼을 얻습니다.",
+          "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/0711ab5a7a698404e2ba1db91bdd153352206ad26ac77660ed6ace9bcfc34f08.png",
+          "imageGold": "",
+          "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/167f29edb75b94710c6de4bbcac0bdc3e1cb471d73c2ef712398e537840337dd.png",
+          "childIds": [126662]
+        },
+        {
+          "id": 126663,
+          "collectible": 1,
+          "slug": "126663-vicious-voidscale",
+          "classId": 14,
+          "multiClassIds": [],
+          "minionTypeId": 92,
+          "cardTypeId": 4,
+          "cardSetId": 1988,
+          "rarityId": 3,
+          "manaCost": 3,
+          "attack": 3,
+          "health": 4,
+          "name": "흉포한 공허비늘",
+          "text": "<b>도발</b>, <b>죽음의 메아리:</b> 공허의 영혼을 얻습니다.",
+          "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/b787d62d5b1504d6bbde7fd1583d77fe406ded885d706806e781fbf4787c2c2e.png",
+          "imageGold": "",
+          "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/60d006cea7a76a0b367106b2c64b563a3f9a8de8c3cc27f712493f5e4139a119.png",
+          "childIds": [126662],
+          "keywordIds": [1, 12]
+        },
+        {
+          "id": 127157,
+          "collectible": 1,
+          "slug": "127157-void-blast",
+          "classId": 14,
+          "multiClassIds": [],
+          "spellSchoolId": 6,
+          "cardTypeId": 5,
+          "cardSetId": 1988,
+          "rarityId": 3,
+          "manaCost": 2,
+          "name": "공허의 폭발",
+          "text": "하수인에게 피해를 3 줍니다. 그 하수인이 죽으면 공허의 영혼을 얻습니다.",
+          "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/3a7e90fe7c52a485d20dadf21be5eff9357f19c65eb09c4cde83e1864e110be0.png",
+          "imageGold": "",
+          "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/cee656478e719635e8080c921b210afc58cc41de924d79f04f9a2b8309af1ee8.png",
+          "childIds": [126662]
+        },
+        {
+          "id": 126662,
+          "collectible": 1,
+          "slug": "126662-void-soul",
+          "classId": 14,
+          "multiClassIds": [],
+          "spellSchoolId": 6,
+          "cardTypeId": 5,
+          "cardSetId": 1988,
+          "rarityId": 3,
+          "manaCost": 1,
+          "name": "공허의 영혼",
+          "text": "비용이 인 무작위 악마를 소환합니다. 미래의 내 공허의 영혼을 개선합니다.",
+          "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/cf012ee8f6146cf02d7e6709d80acbc45ba0c0c60e60baabf134cffaa7db0337.png",
+          "imageGold": "",
+          "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/859bbd2911c79ff49430a437a242b80a0268908ea4c3e9f9f8259d79c81cdb1a.png"
+        },
+        {
+          "id": 126211,
+          "collectible": 1,
+          "slug": "126211-irida-sinseeker",
+          "classId": 14,
+          "multiClassIds": [],
+          "cardTypeId": 4,
+          "cardSetId": 1988,
+          "rarityId": 5,
+          "manaCost": 4,
+          "attack": 7,
+          "health": 5,
+          "name": "이리다 신시커",
+          "text": "<b>생명력 흡수</b>. <b>전투의 함성:</b> 내 덱을 공허로 보냅니다. 내 턴이 시작될 때, 공허에서 카드를 2장 얻습니다.",
+          "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/69568a418ccef8be49a3dc247d0cbd13e9184af14399de687ea743b04cac36ee.png",
+          "imageGold": "",
+          "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/ad454e21544c6742d7f2cf279b3b35831206ee26eba7aeed212a7636fed4834b.png",
+          "keywordIds": [8, 38]
+        }
+      ],
+      "cardCount": 5,
+      "pageCount": 1,
+      "page": 1
+    },
+    "hot_spring_glider": {
+      "id": 117382,
+      "collectible": 1,
+      "slug": "117382-hot-spring-glider",
+      "classId": 5,
+      "multiClassIds": [],
+      "minionTypeId": 14,
+      "cardTypeId": 4,
+      "cardSetId": 1952,
+      "rarityId": 1,
+      "artistName": "Patrik Bjorkstrom",
+      "health": 4,
+      "attack": 2,
+      "manaCost": 3,
+      "name": "온천 활공꾼",
+      "text": "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.",
+      "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/24b93a24160da08bbc9cb8fa7c8a5ac69cdb070f1ae7bd25af7eb5bfee6625af.png",
+      "imageGold": "",
+      "flavorText": "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.",
+      "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/98143e114ea8f2e13305a00dce48b5532e1c6b8b237980a0e0a945f43f3ad1d6.png",
+      "keywordIds": [3, 8, 351],
+      "isZilliaxFunctionalModule": false,
+      "isZilliaxCosmeticModule": false
+    },
+    "hot_spring_glider_metadata_join": {
+      "set": { "id": 1952, "slug": "the-lost-city-of-ungoro", "name": "운고로의 잃어버린 도시" },
+      "class": { "id": 5, "slug": "paladin", "name": "성기사" },
+      "type": { "id": 4, "slug": "minion", "name": "하수인" },
+      "minion_type": { "id": 14, "slug": "murloc", "name": "멀록" },
+      "rarity": {
+        "id": 1,
+        "slug": "common",
+        "name": "일반",
+        "craftingCost": [40, 400],
+        "dustValue": [5, 50]
+      },
+      "keywords": [
+        {
+          "id": 3,
+          "slug": "divine-shield",
+          "name": "천상의 보호막",
+          "refText": "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.",
+          "text": "이 캐릭터는 처음 받는 피해를 무시합니다."
+        },
+        {
+          "id": 8,
+          "slug": "battlecry",
+          "name": "전투의 함성",
+          "refText": "카드를 손에서 낼 때 효과가 발동합니다.",
+          "text": "카드를 손에서 낼 때 효과가 발동합니다."
+        },
+        {
+          "id": 351,
+          "slug": "kindred",
+          "name": "유사",
+          "refText": "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.",
+          "text": "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다."
+        }
+      ],
+      "_normalization_note": "The live battlecry slug ended with a newline and is trimmed by the adapter."
+    },
+    "gold_card": {
+      "id": 48158,
+      "slug": "48158-baku-the-mooneater",
+      "name": "달을 삼킨 구렁이 바쿠",
+      "text": "<b>개전:</b> 내 덱에 비용이 홀수인 카드만 있으면, 내 기본 영웅 능력을 강화합니다.",
+      "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/f0b7f3ddda277057df3dbd6d63058eaef6f8dcbb11d5d3656c367126634e816a.png",
+      "imageGold": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/33560b88e57d51948fe9edc645d0d694b9132e21de1d07fa5115173b4910ea84.png",
+      "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/bc292a0af280d18431799b1e2efe58fbde3c2754cb26f1de8f02bd1c291e3fa4.png",
+      "childIds": [60483, 2737, 2738, 2739, 2740, 2743, 2742, 2744, 2745],
+      "keywordIds": [64],
+      "copyOfCardId": [111687],
+      "bannedFromSideboard": 1
+    }
+  },
+  "disk_cache_mocks": {
+    "manifest": {
+      "format_version": 1,
+      "adapter_version": "official-site-v1",
+      "locale": "ko_KR",
+      "active_catalog": {
+        "version": "2026-07-17T19:36:34Z",
+        "created_at_utc": "2026-07-17T19:36:34Z",
+        "card_count": 1152,
+        "set_count": 7,
+        "metadata_path": "normalized/ko_KR/metadata.json",
+        "set_shard_dir": "normalized/ko_KR/sets"
+      },
+      "resources": {
+        "metadata": {
+          "etag": "W/\"42190-1ss0YvcIG15ytI6WW3MsWNNLIpA\"",
+          "fetched_at_utc": "2026-07-17T19:36:34Z",
+          "stale_after_utc": "2026-07-18T19:36:34Z"
+        },
+        "cards_standard": {
+          "etag": "W/\"903-K3K9gM62xuEriHNTc/l1/L26vMU\"",
+          "fetched_at_utc": "2026-07-17T19:34:35Z",
+          "stale_after_utc": "2026-07-18T19:34:35Z"
+        }
+      },
+      "last_sync": {
+        "state": "succeeded",
+        "started_at_utc": "2026-07-17T19:30:00Z",
+        "finished_at_utc": "2026-07-17T19:36:34Z",
+        "cards_added": 5,
+        "cards_updated": 0,
+        "cards_removed": 0
+      },
+      "_mock_note": "Counts and timestamps illustrate the post-sync manifest; only the live evidence above was fetched in this design pass."
+    },
+    "raw_page_shard": {
+      "format_version": 1,
+      "source": {
+        "url": "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=24&set=escape-from-violet-hold&textFilter=%EA%B3%B5%ED%97%88&sort=dateadded%3Adesc",
+        "locale": "ko_KR",
+        "etag": "W/\"100f-Fcvu31Rlj0L9OniaPQEf+xWoNbY\"",
+        "fetched_at_utc": "2026-07-17T19:36:34Z"
+      },
+      "response_ref": "official_raw_samples.card_page"
+    },
+    "normalized_set_shard": {
+      "format_version": 1,
+      "locale": "ko_KR",
+      "set": { "id": 1952, "slug": "the-lost-city-of-ungoro", "name": "운고로의 잃어버린 도시" },
+      "cards": [
+        {
+          "id": 117382,
+          "slug": "117382-hot-spring-glider",
+          "locale": "ko_KR",
+          "collectible": true,
+          "name": "온천 활공꾼",
+          "effect": {
+            "plain": "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.",
+            "markup": "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.",
+            "format": "blizzard_html"
+          },
+          "mana_cost": 3,
+          "attack": 2,
+          "health": 4,
+          "artist_name": "Patrik Bjorkstrom",
+          "flavor_text": "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.",
+          "class_ids": [5],
+          "type_id": 4,
+          "set_id": 1952,
+          "rarity_id": 1,
+          "minion_type_id": 14,
+          "spell_school_id": null,
+          "keyword_ids": [3, 8, 351],
+          "relations": {
+            "parent_id": null,
+            "child_ids": [],
+            "copy_of_ids": []
+          },
+          "image_sources": {
+            "normal": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/24b93a24160da08bbc9cb8fa7c8a5ac69cdb070f1ae7bd25af7eb5bfee6625af.png",
+            "crop": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/98143e114ea8f2e13305a00dce48b5532e1c6b8b237980a0e0a945f43f3ad1d6.png",
+            "gold": null
+          }
+        }
+      ]
+    }
+  },
+  "ipc_wire_mocks": {
+    "metadata_catalog": {
+      "locale": "ko_KR",
+      "sets": [
+        { "id": 1952, "slug": "the-lost-city-of-ungoro", "name": "운고로의 잃어버린 도시" }
+      ],
+      "classes": [
+        { "id": 5, "slug": "paladin", "name": "성기사" }
+      ],
+      "types": [
+        { "id": 4, "slug": "minion", "name": "하수인" }
+      ],
+      "minion_types": [
+        { "id": 14, "slug": "murloc", "name": "멀록" }
+      ],
+      "spell_schools": [
+      ],
+      "rarities": [
+        {
+          "id": 1,
+          "slug": "common",
+          "name": "일반",
+          "crafting_cost": { "normal": 40, "golden": 400 },
+          "dust_value": { "normal": 5, "golden": 50 }
+        }
+      ],
+      "keywords": [
+        {
+          "id": 3,
+          "slug": "divine-shield",
+          "name": "천상의 보호막",
+          "ref_text": "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.",
+          "text": "이 캐릭터는 처음 받는 피해를 무시합니다."
+        },
+        {
+          "id": 8,
+          "slug": "battlecry",
+          "name": "전투의 함성",
+          "ref_text": "카드를 손에서 낼 때 효과가 발동합니다.",
+          "text": "카드를 손에서 낼 때 효과가 발동합니다."
+        },
+        {
+          "id": 351,
+          "slug": "kindred",
+          "name": "유사",
+          "ref_text": "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.",
+          "text": "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다."
+        }
+      ],
+      "catalog_version": "2026-07-18T06:26:06Z"
+    },
+    "card_summary": {
+      "id": 117382,
+      "slug": "117382-hot-spring-glider",
+      "name": "온천 활공꾼",
+      "text_plain": "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.",
+      "mana_cost": 3,
+      "attack": 2,
+      "health": 4,
+      "collectible": true,
+      "class_ids": [5],
+      "type_id": 4,
+      "set_id": 1952,
+      "rarity_id": 1,
+      "keyword_ids": [3, 8, 351],
+      "image": {
+        "normal": { "state": "cached", "cache_key": "ko_KR/normal/117382" },
+        "crop": { "state": "cached", "cache_key": "ko_KR/crop/117382" },
+        "gold": { "state": "unavailable", "cache_key": null }
+      }
+    },
+    "card_detail": {
+      "summary": {
+        "id": 117382,
+        "slug": "117382-hot-spring-glider",
+        "name": "온천 활공꾼",
+        "text_plain": "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.",
+        "mana_cost": 3,
+        "attack": 2,
+        "health": 4,
+        "collectible": true,
+        "class_ids": [5],
+        "type_id": 4,
+        "set_id": 1952,
+        "rarity_id": 1,
+        "keyword_ids": [3, 8, 351],
+        "image": {
+          "normal": { "state": "cached", "cache_key": "ko_KR/normal/117382" },
+          "crop": { "state": "cached", "cache_key": "ko_KR/crop/117382" },
+          "gold": { "state": "unavailable", "cache_key": null }
+        }
+      },
+      "text_markup": "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.",
+      "artist_name": "Patrik Bjorkstrom",
+      "flavor_text": "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.",
+      "taxonomy": {
+        "classes": [
+          { "id": 5, "slug": "paladin", "name": "성기사" }
+        ],
+        "type": { "id": 4, "slug": "minion", "name": "하수인" },
+        "minion_type": { "id": 14, "slug": "murloc", "name": "멀록" },
+        "spell_school": null,
+        "set": { "id": 1952, "slug": "the-lost-city-of-ungoro", "name": "운고로의 잃어버린 도시" },
+        "rarity": { "id": 1, "slug": "common", "name": "일반" }
+      },
+      "economy": {
+        "crafting_cost": { "normal": 40, "golden": 400 },
+        "dust_value": { "normal": 5, "golden": 50 }
+      },
+      "keywords": [
+        {
+          "id": 3,
+          "slug": "divine-shield",
+          "name": "천상의 보호막",
+          "ref_text": "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.",
+          "text": "이 캐릭터는 처음 받는 피해를 무시합니다."
+        },
+        {
+          "id": 8,
+          "slug": "battlecry",
+          "name": "전투의 함성",
+          "ref_text": "카드를 손에서 낼 때 효과가 발동합니다.",
+          "text": "카드를 손에서 낼 때 효과가 발동합니다."
+        },
+        {
+          "id": 351,
+          "slug": "kindred",
+          "name": "유사",
+          "ref_text": "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.",
+          "text": "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다."
+        }
+      ],
+      "relations": {
+        "parent_id": null,
+        "child_ids": [],
+        "copy_of_ids": []
+      },
+      "flags": {
+        "banned_from_sideboard": false,
+        "zilliax_functional_module": false,
+        "zilliax_cosmetic_module": false
+      }
+    },
+    "card_query": {
+      "locale": "ko_KR",
+      "where": {
+        "kind": "group",
+        "operator": "and",
+        "children": [
+          { "kind": "condition", "field": "set_id", "operator": "eq", "value": 1988 },
+          {
+            "kind": "group",
+            "operator": "or",
+            "children": [
+              { "kind": "condition", "field": "name", "operator": "contains", "value": "공허" },
+              { "kind": "condition", "field": "text_plain", "operator": "contains", "value": "공허" }
+            ]
+          }
+        ]
+      },
+      "sort": [
+        { "field": "date_added", "direction": "desc" },
+        { "field": "name", "direction": "asc" }
+      ],
+      "cursor": null,
+      "limit": 24
+    },
+    "card_page": {
+      "items": [
+        { "id": 126660, "slug": "126660-stardust-scythe", "name": "별가루 낫", "text_plain": "내 영웅이 공격한 후, 공허의 영혼을 얻습니다.", "mana_cost": 4, "attack": 3, "health": 2, "collectible": true, "class_ids": [14], "type_id": 7, "set_id": 1988, "rarity_id": 1, "keyword_ids": [] },
+        { "id": 126663, "slug": "126663-vicious-voidscale", "name": "흉포한 공허비늘", "text_plain": "도발, 죽음의 메아리: 공허의 영혼을 얻습니다.", "mana_cost": 3, "attack": 3, "health": 4, "collectible": true, "class_ids": [14], "type_id": 4, "set_id": 1988, "rarity_id": 3, "keyword_ids": [1, 12] },
+        { "id": 127157, "slug": "127157-void-blast", "name": "공허의 폭발", "text_plain": "하수인에게 피해를 3 줍니다. 그 하수인이 죽으면 공허의 영혼을 얻습니다.", "mana_cost": 2, "attack": null, "health": null, "collectible": true, "class_ids": [14], "type_id": 5, "set_id": 1988, "rarity_id": 3, "keyword_ids": [] },
+        { "id": 126662, "slug": "126662-void-soul", "name": "공허의 영혼", "text_plain": "비용이 인 무작위 악마를 소환합니다. 미래의 내 공허의 영혼을 개선합니다.", "mana_cost": 1, "attack": null, "health": null, "collectible": true, "class_ids": [14], "type_id": 5, "set_id": 1988, "rarity_id": 3, "keyword_ids": [] },
+        { "id": 126211, "slug": "126211-irida-sinseeker", "name": "이리다 신시커", "text_plain": "생명력 흡수. 전투의 함성: 내 덱을 공허로 보냅니다. 내 턴이 시작될 때, 공허에서 카드를 2장 얻습니다.", "mana_cost": 4, "attack": 7, "health": 5, "collectible": true, "class_ids": [14], "type_id": 4, "set_id": 1988, "rarity_id": 5, "keyword_ids": [8, 38] }
+      ],
+      "total": 5,
+      "next_cursor": null,
+      "catalog_version": "2026-07-17T19:36:34Z",
+      "from_cache": true,
+      "stale": false
+    },
+    "library_status": {
+      "locale": "ko_KR",
+      "catalog_state": "ready",
+      "catalog_version": "2026-07-17T19:36:34Z",
+      "card_count": 1152,
+      "last_success_at_utc": "2026-07-17T19:36:34Z",
+      "stale_after_utc": "2026-07-18T19:36:34Z",
+      "stale": false,
+      "sync_state": "idle",
+      "last_error": null,
+      "_mock_note": "Illustrative ready-state wire object based on the live standard count."
+    },
+    "sync_request": {
+      "locale": "ko_KR",
+      "force": false
+    },
+    "sync_status": {
+      "run_id": "sync-20260717T193634Z",
+      "state": "syncing",
+      "phase": "fetching_cards",
+      "completed_pages": 1,
+      "total_pages": 384,
+      "cards_seen": 3,
+      "images_downloaded": { "normal": 3, "crop": 3, "gold": 0 },
+      "started_at_utc": "2026-07-17T19:36:34Z",
+      "last_error": null
+    },
+    "image_request": {
+      "card_id": 48158,
+      "locale": "ko_KR",
+      "variant": "gold"
+    },
+    "image_asset": {
+      "card_id": 48158,
+      "locale": "ko_KR",
+      "variant": "gold",
+      "state": "ready",
+      "cache_key": "ko_KR/gold/48158",
+      "relative_path": "images/ko_KR/gold/48158.png",
+      "mime_type": "image/png",
+      "byte_length": 98560,
+      "etag": "\"3c9d7016879a18a6f51a3b37fc24e07c\"",
+      "downloaded_now": true
+    }
+  }
+}

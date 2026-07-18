@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>하스스톤 카드 상세 샘플</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #17120e; color: #f5eadc; font-family: "Malgun Gothic", sans-serif; }
+    header { padding: 32px 20px 20px; text-align: center; }
+    h1 { margin: 0 0 8px; color: #f0bd66; }
+    header p { margin: 0; color: #b8a998; }
+    main { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 1200px; margin: auto; padding: 20px; }
+    .card { width: 100%; padding: 0; overflow: hidden; border: 1px solid #4b3929; border-radius: 16px; background: #251c15; color: inherit; text-align: left; cursor: pointer; }
+    .card:hover { border-color: #c08b4c; transform: translateY(-2px); }
+    .card img { display: block; width: 100%; height: 340px; object-fit: contain; background: #0e0b09; }
+    .info { padding: 16px; }
+    h2 { margin: 0 0 10px; font-size: 19px; }
+    .effect { min-height: 66px; margin: 0; color: #dfd2c2; line-height: 1.5; }
+    .stats { margin-top: 14px; color: #c7a979; font-size: 13px; }
+    dialog { width: min(1000px, calc(100% - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid #654a32; border-radius: 18px; background: #1d1611; color: #f5eadc; }
+    dialog::backdrop { background: rgba(0, 0, 0, .78); }
+    .close { position: sticky; top: 12px; z-index: 2; float: right; margin: 12px; width: 38px; height: 38px; border: 1px solid #6a513d; border-radius: 50%; background: #2c2119; color: white; cursor: pointer; }
+    .detail { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; gap: 24px; padding: 26px; }
+    .detail > img { width: 100%; max-height: 520px; object-fit: contain; }
+    .detail h2 { color: #f0bd66; font-size: 28px; }
+    .detail-text { color: #eadfce; line-height: 1.6; }
+    dl { display: grid; grid-template-columns: minmax(150px, 210px) 1fr; gap: 7px 12px; }
+    dt { color: #ad9984; }
+    dd { margin: 0; }
+    blockquote { margin: 18px 0; padding: 13px 15px; border-left: 3px solid #a97a43; background: #261c15; color: #cbbb9f; }
+    .related-section { padding: 0 26px 30px; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+    .related { padding: 10px; border: 1px solid #483628; border-radius: 12px; background: #241a14; }
+    .related img { width: 100%; height: 200px; object-fit: contain; }
+    .related strong { display: block; margin: 7px 0; color: #efc77e; }
+    .related p { margin: 0; color: #cfc0af; font-size: 13px; line-height: 1.45; }
+    .none { color: #9e8e7d; }
+    @media (max-width: 720px) { .detail { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>하스스톤 카드 상세 샘플</h1>
+    <p id="summary"></p>
+  </header>
+  <main id="cards"></main>
+  <dialog id="detail-dialog">
+    <button class="close" type="button" aria-label="닫기">×</button>
+    <section class="detail">
+      <img id="detail-image" alt="">
+      <div>
+        <h2 id="detail-name"></h2>
+        <p id="detail-text" class="detail-text"></p>
+        <dl id="detail-fields"></dl>
+        <blockquote id="detail-flavor"></blockquote>
+      </div>
+    </section>
+    <section class="related-section">
+      <h3>관련 카드</h3>
+      <div id="related-cards" class="related-grid"></div>
+    </section>
+  </dialog>
+  <script>
+    const data = {
+  "cards": [
+    {
+      "id": 9107,
+      "name": "으스스한 석상",
+      "text": "공격할 수 없습니다. 전장에 다른 하수인이 없다면, 공격할 수 있습니다.",
+      "flavorText": "혼자 공격하고 싶습니다. 모두 나가주세요.",
+      "artistName": "Jim Nelson",
+      "manaCost": 4,
+      "attack": 7,
+      "health": 7,
+      "set": "탐험가 연맹",
+      "cardClass": "중립",
+      "rarity": "희귀",
+      "type": "하수인",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/9107.png",
+      "childIds": []
+    },
+    {
+      "id": 48158,
+      "name": "달을 삼킨 구렁이 바쿠",
+      "text": "개전: 내 덱에 비용이 홀수인 카드만 있으면, 내 기본 영웅 능력을 강화합니다.",
+      "flavorText": "달떡이란 걸 뭔가 잘못 이해한 모양이군요.",
+      "artistName": "James Ryman",
+      "manaCost": 9,
+      "attack": 7,
+      "health": 8,
+      "set": "마녀숲",
+      "cardClass": "중립",
+      "rarity": "전설",
+      "type": "하수인",
+      "minionType": "야수",
+      "spellSchool": "",
+      "image": "./images/48158.png",
+      "childIds": [
+        60483,
+        2737,
+        2738,
+        2739,
+        2740,
+        2743,
+        2742,
+        2744,
+        2745
+      ]
+    },
+    {
+      "id": 48445,
+      "name": "검은 고양이",
+      "text": "주문 공격력 +1 전투의 함성: 내 덱에 비용이 홀수인 카드만 있으면, 카드를 뽑습니다.",
+      "flavorText": "이랬다 저랬다 장난꾸러기!",
+      "artistName": "Jakub Kasper",
+      "manaCost": 3,
+      "attack": 3,
+      "health": 3,
+      "set": "마녀숲",
+      "cardClass": "마법사",
+      "rarity": "일반",
+      "type": "하수인",
+      "minionType": "야수",
+      "spellSchool": "",
+      "image": "./images/48445.png",
+      "childIds": []
+    },
+    {
+      "id": 57217,
+      "name": "에펙시스 폭발",
+      "text": "피해를 5 줍니다. 내 덱에 하수인이 없으면, 비용이 5인 무작위 하수인을 소환합니다.",
+      "flavorText": "진정한 마법사라면 혼자서도 빵 터지게 할 수 있어야 하는 법이죠.",
+      "artistName": "Anton Zemskov",
+      "manaCost": 5,
+      "attack": null,
+      "health": null,
+      "set": "황폐한 아웃랜드",
+      "cardClass": "마법사",
+      "rarity": "특급",
+      "type": "주문",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/57217.png",
+      "childIds": []
+    },
+    {
+      "id": 59609,
+      "name": "잔다이스 바로브",
+      "text": "전투의 함성: 비용이 5인 무작위 하수인을 둘 소환합니다. 이 중 피해를 받으면 죽는 하수인을 선택합니다. (비밀)",
+      "flavorText": "부모님이 스칼로맨스를 소유하고 있으니 학생들에게 장난치는 건 불 보듯 뻔합니다.",
+      "artistName": "Arthur Gimaldinov",
+      "manaCost": 5,
+      "attack": 2,
+      "health": 1,
+      "set": "스칼로맨스 아카데미",
+      "cardClass": "중립",
+      "rarity": "전설",
+      "type": "하수인",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/59609.png",
+      "childIds": []
+    },
+    {
+      "id": 63347,
+      "name": "홀수에 맞서서",
+      "text": "공격력이 홀수인 모든 하수인을 처치합니다.",
+      "flavorText": "0도 짝수입니다.",
+      "artistName": "Zoltan Boros",
+      "manaCost": 5,
+      "attack": null,
+      "health": null,
+      "set": "불모의 땅",
+      "cardClass": "사제",
+      "rarity": "특급",
+      "type": "주문",
+      "minionType": "",
+      "spellSchool": "신성",
+      "image": "./images/63347.png",
+      "childIds": []
+    },
+    {
+      "id": 86722,
+      "name": "괴수 타디우스",
+      "text": "도발, 비용이 홀수인 카드들의 비용이 (2) 감소합니다. (다음 턴에 짝수로 바뀝니다!) 도발, 비용이 짝수인 카드들의 비용이 (2) 감소합니다. (다음 턴에 홀수로 바뀝니다!)",
+      "flavorText": "타디우스가 쓰일지에 대한 퓨진과 스탈라그의 견해는 양극으로 엇갈렸습니다.",
+      "artistName": "James Ryman",
+      "manaCost": 10,
+      "attack": 11,
+      "health": 11,
+      "set": "리치 왕의 진군",
+      "cardClass": "중립",
+      "rarity": "전설",
+      "type": "하수인",
+      "minionType": "언데드",
+      "spellSchool": "",
+      "image": "./images/86722.png",
+      "childIds": []
+    },
+    {
+      "id": 91872,
+      "name": "구닥다리",
+      "text": "죽음의 메아리: 비용이 5인 과거의 무작위 하수인을 소환합니다.",
+      "flavorText": "크라켄의 해 시절엔 누구보다 록 정신이 뛰어났었죠. 그 당시에 직관할걸...",
+      "artistName": "Sergey Tsvelykh",
+      "manaCost": 6,
+      "attack": 5,
+      "health": 5,
+      "set": "전설노래자랑",
+      "cardClass": "중립",
+      "rarity": "특급",
+      "type": "하수인",
+      "minionType": "언데드",
+      "spellSchool": "",
+      "image": "./images/91872.png",
+      "childIds": []
+    },
+    {
+      "id": 110780,
+      "name": "예약석",
+      "text": "내 손에 있는 무작위 하수인에게 +4/+4를 부여합니다. 내 손에 다른 하수인이 없다면, 그 하수인의 비용이 (2) 감소합니다.",
+      "flavorText": "두 자리를 예약해야 해서 뿔이 났습니다.",
+      "artistName": "Matt Dixon",
+      "manaCost": 3,
+      "attack": null,
+      "health": null,
+      "set": "극한의 극락",
+      "cardClass": "전사",
+      "rarity": "희귀",
+      "type": "주문",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/110780.png",
+      "childIds": []
+    },
+    {
+      "id": 110889,
+      "name": "대지의 수호",
+      "text": "방어도를 5 얻습니다. 비용이 5인 무작위 하수인을 소환하고 도발을 부여합니다.",
+      "flavorText": "방어가 돌처럼 단단합니다.",
+      "artistName": "Zoltan Boros",
+      "manaCost": 5,
+      "attack": null,
+      "health": null,
+      "set": "에메랄드의 꿈 속으로",
+      "cardClass": "드루이드",
+      "rarity": "일반",
+      "type": "주문",
+      "minionType": "",
+      "spellSchool": "자연",
+      "image": "./images/110889.png",
+      "childIds": []
+    },
+    {
+      "id": 117596,
+      "name": "희한한 지도",
+      "text": "공격력이 홀수인 야수를 발견합니다. 이번 턴에 그 야수를 내면, 나머지 야수 중 하나도 선택합니다.",
+      "flavorText": "어디를 가리키는 건지도 모르겠습니다!",
+      "artistName": "Ramzy Kamen",
+      "manaCost": 1,
+      "attack": null,
+      "health": null,
+      "set": "운고로의 잃어버린 도시",
+      "cardClass": "사냥꾼",
+      "rarity": "일반",
+      "type": "주문",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/117596.png",
+      "childIds": []
+    },
+    {
+      "id": 120944,
+      "name": "위험한 변신수",
+      "text": "내 턴이 시작될 때, 비용이 5인 무작위 하수인으로 변신합니다.",
+      "flavorText": "그보다는 \u003ci>개선된\u003c/i> 변형이라고 불리고 싶은데요.",
+      "artistName": "Matt Dixon",
+      "manaCost": 2,
+      "attack": 1,
+      "health": 1,
+      "set": "시간의 길 너머로",
+      "cardClass": "중립",
+      "rarity": "일반",
+      "type": "하수인",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/120944.png",
+      "childIds": []
+    },
+    {
+      "id": 116296,
+      "name": "괴물 모기",
+      "text": "내 턴이 끝날 때, 내 다른 하수인들에게 공격력을 +1 부여합니다.",
+      "flavorText": "생태계를 이루는 생물은 하나같이 소중하다는 건 알지만, 이놈들은 끔찍합니다.",
+      "artistName": "A. J. Nazzaro",
+      "manaCost": 1,
+      "attack": 1,
+      "health": 2,
+      "set": "에메랄드의 꿈 속으로",
+      "cardClass": "죽음의 기사",
+      "rarity": "일반",
+      "type": "하수인",
+      "minionType": "야수",
+      "spellSchool": "",
+      "collectible": true,
+      "image": "./images/116296.png",
+      "childIds": []
+    },
+    {
+      "id": 120481,
+      "name": "급속 빙결된 용사",
+      "text": "죽음의 메아리: 무작위 전설 하수인을 얻습니다. 그 하수인의 비용이 (1) 감소합니다.",
+      "flavorText": "그런 표정을 지으면 계속 저렇게 얼어 있을 겁니다.",
+      "artistName": "Kevin Sidharta",
+      "manaCost": 1,
+      "attack": 2,
+      "health": 1,
+      "set": "시간의 길 너머로",
+      "cardClass": "죽음의 기사",
+      "rarity": "일반",
+      "type": "하수인",
+      "minionType": "",
+      "spellSchool": "",
+      "collectible": true,
+      "image": "./images/120481.png",
+      "childIds": []
+    }
+  ],
+  "relatedCards": [
+    {
+      "id": 2737,
+      "name": "흉포한 변신",
+      "text": "영웅 능력 방어도를 + d2 얻고, 이번 턴에 공격력을 + a2 얻습니다.",
+      "flavorText": "",
+      "artistName": "",
+      "manaCost": 2,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "드루이드",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/2737.png",
+      "childIds": []
+    },
+    {
+      "id": 2738,
+      "name": "쇠뇌 사격",
+      "text": "영웅 능력 적 영웅에게 피해를 3 줍니다. 영웅 능력 피해를 3 줍니다.",
+      "flavorText": "",
+      "artistName": "",
+      "manaCost": 2,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "사냥꾼",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/2738.png",
+      "childIds": []
+    },
+    {
+      "id": 2739,
+      "name": "강화된 화염 작렬",
+      "text": "영웅 능력 피해를 2 줍니다.",
+      "flavorText": "",
+      "artistName": "",
+      "manaCost": 2,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "마법사",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/2739.png",
+      "childIds": []
+    },
+    {
+      "id": 2740,
+      "name": "은빛 성기사단",
+      "text": "영웅 능력 은빛 성기사단 신병을 2명 소환합니다.",
+      "flavorText": "",
+      "artistName": "",
+      "manaCost": 2,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "성기사",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/2740.png",
+      "childIds": []
+    },
+    {
+      "id": 2742,
+      "name": "토템 지배",
+      "text": "영웅 능력 내가 원하는 토템을 소환합니다.",
+      "flavorText": "",
+      "artistName": "",
+      "manaCost": 2,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "주술사",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/2742.png",
+      "childIds": []
+    },
+    {
+      "id": 2743,
+      "name": "독 묻은 단검",
+      "text": "영웅 능력 2/2 무기를 장착합니다.",
+      "flavorText": "",
+      "artistName": "",
+      "manaCost": 2,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "도적",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/2743.png",
+      "childIds": []
+    },
+    {
+      "id": 2744,
+      "name": "영혼 전환",
+      "text": "영웅 능력 카드를 뽑습니다.",
+      "flavorText": "",
+      "artistName": "",
+      "manaCost": 2,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "흑마법사",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/2744.png",
+      "childIds": []
+    },
+    {
+      "id": 2745,
+      "name": "방어도 상승!",
+      "text": "영웅 능력 방어도를 d4 얻습니다.",
+      "flavorText": "",
+      "artistName": "",
+      "manaCost": 2,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "전사",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/2745.png",
+      "childIds": []
+    },
+    {
+      "id": 60483,
+      "name": "악마의 이빨",
+      "text": "영웅 능력 이번 턴에 공격력을 + a2 얻습니다.",
+      "flavorText": "",
+      "artistName": "Virtuos",
+      "manaCost": 1,
+      "attack": null,
+      "health": null,
+      "set": "고전",
+      "cardClass": "악마사냥꾼",
+      "rarity": "",
+      "type": "영웅 능력",
+      "minionType": "",
+      "spellSchool": "",
+      "image": "./images/60483.png",
+      "childIds": []
+    }
+  ]
+};
+    const relatedById = new Map(data.relatedCards.map((card) => [card.id, card]));
+    const grid = document.querySelector("#cards");
+    const dialog = document.querySelector("#detail-dialog");
+    const value = (item) => item ?? "-";
+    const dustByRarity = {
+      "일반": { craft: [40, 400], disenchant: [5, 50] },
+      "희귀": { craft: [100, 800], disenchant: [20, 100] },
+      "특급": { craft: [400, 1600], disenchant: [100, 400] },
+      "전설": { craft: [1600, 3200], disenchant: [400, 1600] }
+    };
+
+    function dustText(card, kind) {
+      const values = dustByRarity[card.rarity]?.[kind];
+      if (card.collectible === false || !values) {
+        return kind === "craft" ? "제작 불가" : "추출 불가";
+      }
+      return values[0] + " / " + values[1] + " (황금)";
+    }
+
+    document.querySelector("#summary").textContent =
+      "카드를 클릭하면 상세 정보와 관련 카드를 볼 수 있습니다 · " + data.cards.length + "장";
+
+    function addField(list, label, content) {
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = label;
+      description.textContent = value(content);
+      list.append(term, description);
+    }
+
+    function openDetail(card) {
+      const detailImage = document.querySelector("#detail-image");
+      detailImage.src = card.image;
+      detailImage.alt = card.name;
+      document.querySelector("#detail-name").textContent = card.name;
+      document.querySelector("#detail-text").textContent = card.text;
+
+      const fields = document.querySelector("#detail-fields");
+      fields.replaceChildren();
+      for (const [label, content] of [
+        ["종류", card.type], ["하수인 종류", card.minionType],
+        ["주문 속성", card.spellSchool], ["등급", card.rarity],
+        ["세트", card.set], ["직업", card.cardClass],
+        ["제작 비용", dustText(card, "craft")],
+        ["마력 추출 시 획득하는 가루", dustText(card, "disenchant")],
+        ["아티스트", card.artistName],
+        ["수집 여부", card.collectible === false ? "수집 불가" : "수집 가능"],
+        ["카드 ID", card.id], ["마나", card.manaCost],
+        ["공격력", card.attack], ["생명력", card.health]
+      ]) {
+        if (content !== "") addField(fields, label, content);
+      }
+
+      document.querySelector("#detail-flavor").textContent =
+        card.flavorText || "플레이버 텍스트 없음";
+
+      const root = document.querySelector("#related-cards");
+      root.replaceChildren();
+      const related = card.childIds.map((id) => relatedById.get(id)).filter(Boolean);
+      if (!related.length) {
+        const empty = document.createElement("p");
+        empty.className = "none";
+        empty.textContent = "관련 카드가 없습니다.";
+        root.append(empty);
+      } else {
+        for (const child of related) {
+          const item = document.createElement("article");
+          item.className = "related";
+          const image = document.createElement("img");
+          const name = document.createElement("strong");
+          const text = document.createElement("p");
+          image.src = child.image;
+          image.alt = child.name;
+          name.textContent = child.name;
+          text.textContent = child.text;
+          item.append(image, name, text);
+          root.append(item);
+        }
+      }
+      dialog.showModal();
+    }
+
+    for (const card of data.cards) {
+      const article = document.createElement("button");
+      const image = document.createElement("img");
+      const info = document.createElement("div");
+      const name = document.createElement("h2");
+      const effect = document.createElement("p");
+      const stats = document.createElement("div");
+      article.type = "button";
+      article.className = "card";
+      image.src = card.image;
+      image.alt = card.name;
+      info.className = "info";
+      effect.className = "effect";
+      stats.className = "stats";
+      name.textContent = card.name;
+      effect.textContent = card.text;
+      stats.textContent = "마나 " + value(card.manaCost) +
+        " · 공격 " + value(card.attack) + " · 생명력 " + value(card.health);
+      info.append(name, effect, stats);
+      article.append(image, info);
+      article.addEventListener("click", () => openDetail(card));
+      grid.append(article);
+    }
+
+    document.querySelector(".close").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  </script>
+</body>
+</html>

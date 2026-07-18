@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Hearthstone Card Library · 데이터 계약 목업</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --canvas: #0d100f;
+      --panel: #131816;
+      --panel-raised: #18201c;
+      --line: #2a332e;
+      --line-strong: #3d4a43;
+      --ink: #eee8dc;
+      --muted: #9aa59e;
+      --faint: #68736d;
+      --moss: #91b66f;
+      --moss-dark: #22331f;
+      --gold: #d1a957;
+      --gold-dark: #362c19;
+      --blue: #78afc6;
+      --blue-dark: #1c3038;
+      --red: #d57c70;
+      --common: #c7cdc9;
+      --rare: #5ea1df;
+      --legendary: #ef9b3f;
+      --sans: "Noto Sans KR", "Malgun Gothic", sans-serif;
+      --mono: "IBM Plex Mono", Consolas, monospace;
+      --radius: 8px;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--canvas); }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    button, input { font: inherit; }
+
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    [contenteditable="true"]:focus-visible {
+      outline: 2px solid var(--moss);
+      outline-offset: 2px;
+    }
+
+    .topbar {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      display: flex;
+      min-height: 64px;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: 0 var(--space-5);
+      border-bottom: 1px solid var(--line);
+      background: rgba(13, 16, 15, 0.94);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid #806c3d;
+      border-radius: 50%;
+      background: var(--gold-dark);
+      color: var(--gold);
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+
+    .brand h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
+    .brand p { margin: 1px 0 0; color: var(--muted); font: 11px/1.3 var(--mono); }
+
+    .top-status { display: flex; align-items: center; gap: var(--space-3); color: var(--muted); font: 12px var(--mono); }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--moss);
+      box-shadow: 0 0 0 4px rgba(145, 182, 111, 0.12);
+    }
+
+    .shell {
+      display: grid;
+      min-height: calc(100vh - 64px);
+      grid-template-columns: 232px minmax(420px, 1fr) 410px;
+    }
+
+    .sidebar,
+    .inspector { position: sticky; top: 64px; height: calc(100vh - 64px); overflow: auto; }
+
+    .sidebar { padding: var(--space-5) var(--space-3); border-right: 1px solid var(--line); background: #101412; }
+
+    .eyebrow {
+      margin: 0 0 var(--space-2);
+      color: var(--faint);
+      font: 600 10px/1.4 var(--mono);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .nav-group + .nav-group { margin-top: var(--space-5); }
+
+    .nav-button {
+      display: grid;
+      width: 100%;
+      min-height: 44px;
+      grid-template-columns: 24px 1fr auto;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 9px 10px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--muted);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav-button:hover { color: var(--ink); background: #171d1a; }
+    .nav-button[aria-current="page"] { border-color: #42543b; color: var(--ink); background: var(--moss-dark); }
+    .nav-icon { color: var(--faint); font: 11px var(--mono); }
+    .nav-button[aria-current="page"] .nav-icon { color: var(--moss); }
+    .nav-count { color: var(--faint); font: 10px var(--mono); }
+
+    .main { min-width: 0; padding: var(--space-6); }
+
+    .view { display: none; max-width: 1080px; margin: 0 auto; }
+    .view.active { display: block; animation: view-in 160ms ease-out; }
+
+    @keyframes view-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+    .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-5); margin-bottom: var(--space-6); }
+    .page-heading h2 { margin: 0; font-size: clamp(22px, 3vw, 32px); line-height: 1.22; letter-spacing: -0.04em; }
+    .page-heading p { max-width: 720px; margin: var(--space-2) 0 0; color: var(--muted); }
+
+    .source-pill,
+    .state-pill,
+    .type-pill {
+      display: inline-flex;
+      min-height: 26px;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: var(--muted);
+      background: #121714;
+      font: 10px/1 var(--mono);
+      white-space: nowrap;
+    }
+
+    .state-pill.good { border-color: #49653f; color: var(--moss); background: var(--moss-dark); }
+    .state-pill.gold { border-color: #69562f; color: var(--gold); background: var(--gold-dark); }
+    .state-pill.blue { border-color: #355666; color: var(--blue); background: var(--blue-dark); }
+
+    .metric-strip {
+      display: grid;
+      margin-bottom: var(--space-6);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .metric { padding: var(--space-4) var(--space-5); border-left: 1px solid var(--line); }
+    .metric:first-child { border-left: 0; }
+    .metric strong { display: block; font: 600 24px/1.2 var(--mono); letter-spacing: -0.04em; }
+    .metric span { color: var(--muted); font-size: 11px; }
+
+    .section { margin-top: var(--space-6); }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-3); }
+    .section-heading h3 { margin: 0; font-size: 14px; font-weight: 650; }
+    .section-heading p { margin: 0; color: var(--faint); font: 11px var(--mono); }
+
+    .pipeline {
+      display: grid;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .pipeline-step {
+      position: relative;
+      min-height: 132px;
+      padding: var(--space-5);
+      appearance: none;
+      border: 0;
+      border-left: 1px solid var(--line);
+      color: var(--ink);
+      background: var(--panel);
+      text-align: left;
+      cursor: pointer;
+    }
+    .pipeline-step:first-child { border-left: 0; }
+    .pipeline-step:hover, .pipeline-step.selected { background: var(--panel-raised); }
+    .pipeline-step.selected { box-shadow: inset 0 3px var(--moss); }
+    .pipeline-step::after {
+      position: absolute;
+      z-index: 2;
+      top: 48px;
+      right: -7px;
+      width: 12px;
+      height: 12px;
+      border-top: 1px solid var(--line-strong);
+      border-right: 1px solid var(--line-strong);
+      background: var(--panel);
+      content: "";
+      transform: rotate(45deg);
+    }
+    .pipeline-step:last-child::after { display: none; }
+    .step-num { color: var(--faint); font: 10px var(--mono); }
+    .pipeline-step h3 { margin: var(--space-3) 0 var(--space-1); font-size: 14px; }
+    .pipeline-step p { margin: 0; color: var(--muted); font-size: 12px; }
+    .pipeline-step code { display: block; margin-top: var(--space-3); color: var(--moss); font: 10px var(--mono); }
+
+    .card-search { display: flex; margin-bottom: var(--space-3); }
+    .card-search input {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 var(--space-4);
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      color: var(--ink);
+      background: #101412;
+    }
+    .card-search input::placeholder { color: var(--faint); }
+
+    .card-list { display: grid; border-top: 1px solid var(--line); }
+
+    .card-row {
+      display: grid;
+      min-height: 90px;
+      grid-template-columns: 74px minmax(160px, 1.2fr) minmax(220px, 2fr) auto;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-3) var(--space-2);
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .card-row:hover, .card-row.selected { background: #171d1a; }
+    .card-row.selected { box-shadow: inset 3px 0 var(--moss); }
+    .card-art {
+      width: 74px;
+      height: 62px;
+      border: 1px solid var(--line-strong);
+      background: #202824 center 25% / cover no-repeat;
+    }
+    .card-title { min-width: 0; }
+    .card-title strong { display: block; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+    .card-title code { color: var(--faint); font: 10px var(--mono); }
+    .card-effect { color: var(--muted); font-size: 12px; }
+    .statline { display: flex; gap: 10px; color: var(--muted); font: 11px var(--mono); }
+    .statline b { color: var(--ink); }
+
+    .schema-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .schema-item {
+      min-height: 132px;
+      padding: var(--space-5);
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      background: var(--panel);
+      text-align: left;
+      cursor: pointer;
+    }
+    .schema-item:hover, .schema-item.selected { background: var(--panel-raised); }
+    .schema-item.selected { box-shadow: inset 3px 0 var(--blue); }
+    .schema-item header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+    .schema-item h3 { margin: 0; font: 600 13px var(--mono); }
+    .schema-item p { margin: var(--space-3) 0 0; color: var(--muted); font-size: 12px; }
+    .field-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: var(--space-3); }
+    .field-list code { padding: 2px 5px; color: var(--faint); background: #101412; font: 9px var(--mono); }
+
+    .cache-tree { border: 1px solid var(--line-strong); background: var(--panel); font: 12px/1.8 var(--mono); }
+    .cache-line { display: grid; grid-template-columns: 24px 1fr auto; gap: var(--space-2); padding: 6px var(--space-4); border-bottom: 1px solid var(--line); }
+    .cache-line:last-child { border-bottom: 0; }
+    .tree-indent-1 { padding-left: 32px; }
+    .tree-indent-2 { padding-left: 56px; }
+    .cache-line span:first-child { color: var(--faint); }
+    .cache-line small { color: var(--muted); }
+    .cache-line code { color: var(--blue); }
+
+    .query-box { padding: var(--space-5); border: 1px solid var(--line-strong); background: var(--panel); }
+    .query-group { padding-left: var(--space-4); border-left: 2px solid var(--moss); }
+    .query-group.or { margin-top: var(--space-3); margin-left: var(--space-5); border-left-color: var(--gold); }
+    .operator-label { display: inline-flex; min-width: 44px; justify-content: center; padding: 4px 8px; color: var(--moss); background: var(--moss-dark); font: 600 10px var(--mono); }
+    .query-group.or > .operator-label { color: var(--gold); background: var(--gold-dark); }
+    .condition { display: grid; margin-top: var(--space-3); grid-template-columns: 1fr 110px 1.2fr; gap: 1px; background: var(--line); }
+    .condition span { min-height: 38px; padding: 9px 10px; color: var(--muted); background: #111613; font: 11px var(--mono); }
+    .condition span:last-child { color: var(--ink); }
+
+    .detail-layout { display: grid; grid-template-columns: minmax(220px, 0.72fr) minmax(360px, 1.28fr); gap: var(--space-6); align-items: start; }
+    .detail-visual { display: grid; min-height: 420px; place-items: center; border: 1px solid var(--line-strong); background: #101412; }
+    .detail-visual img { display: block; width: min(92%, 330px); max-height: 430px; object-fit: contain; }
+    .detail-content { min-width: 0; }
+    .detail-content h3 { margin: 0; font-size: 25px; letter-spacing: -0.035em; }
+    .detail-flavor { margin: var(--space-2) 0 var(--space-5); color: var(--muted); font-style: italic; }
+    .detail-effect { padding: var(--space-4); border-left: 3px solid var(--moss); background: var(--panel); font-size: 15px; }
+    .detail-effect b { color: var(--moss); }
+    .fact-grid { display: grid; margin-top: var(--space-5); border-top: 1px solid var(--line); border-left: 1px solid var(--line); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .fact { min-height: 68px; padding: var(--space-3); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--panel); }
+    .fact span { display: block; color: var(--faint); font: 10px var(--mono); }
+    .fact strong { display: block; margin-top: var(--space-1); font-size: 13px; }
+    .fact small { color: var(--muted); font-size: 10px; }
+    .keyword-grid { display: grid; border-top: 1px solid var(--line); border-left: 1px solid var(--line); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .keyword-detail { min-height: 130px; padding: var(--space-4); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--panel); }
+    .keyword-detail code { color: var(--blue); font: 10px var(--mono); }
+    .keyword-detail strong { display: block; margin: var(--space-2) 0; }
+    .keyword-detail p { margin: 0; color: var(--muted); font-size: 11px; }
+    .source-map { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+
+    .image-lab { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(300px, 1.2fr); gap: var(--space-5); }
+    .gold-preview { position: relative; display: grid; min-height: 420px; place-items: center; overflow: hidden; border: 1px solid #5e4f31; background: #17140e; }
+    .gold-preview img { display: block; width: min(90%, 300px); max-height: 400px; object-fit: contain; transition: opacity 180ms ease; }
+    .gold-preview.loading img { opacity: 0.22; }
+    .gold-preview .loading-label { position: absolute; display: none; color: var(--gold); font: 12px var(--mono); }
+    .gold-preview.loading .loading-label { display: block; }
+    .image-control { padding: var(--space-5); border: 1px solid var(--line-strong); background: var(--panel); }
+    .image-control h3 { margin: 0 0 var(--space-2); font-size: 16px; }
+    .image-control > p { margin: 0 0 var(--space-5); color: var(--muted); }
+    .lifecycle { margin: 0; padding: 0; list-style: none; }
+    .lifecycle li { display: grid; grid-template-columns: 26px 1fr; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
+    .lifecycle b { display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid var(--line-strong); border-radius: 50%; color: var(--faint); font: 10px var(--mono); }
+    .lifecycle strong { display: block; font-size: 12px; }
+    .lifecycle span { color: var(--muted); font-size: 11px; }
+
+    .primary-button, .ghost-button {
+      min-height: 44px;
+      padding: 0 var(--space-4);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .primary-button { border: 1px solid #6e5b30; color: #f3dfad; background: #493a1d; }
+    .primary-button:hover { background: #594722; }
+    .ghost-button { border: 1px solid var(--line-strong); color: var(--muted); background: transparent; }
+    .ghost-button:hover { color: var(--ink); background: var(--panel-raised); }
+
+    .sync-panel { display: grid; padding: var(--space-5); border: 1px solid var(--line-strong); background: var(--panel); gap: var(--space-5); }
+    .sync-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-5); }
+    .sync-head h3 { margin: 0; font: 600 14px var(--mono); }
+    .sync-head p { margin: var(--space-1) 0 0; color: var(--muted); font-size: 12px; }
+    .progress-track { height: 8px; overflow: hidden; background: #28302c; }
+    .progress-value { width: 0.26%; height: 100%; background: var(--moss); transition: width 400ms ease; }
+    .sync-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+    .sync-cell { padding-top: var(--space-3); }
+    .sync-cell strong { display: block; font: 600 17px var(--mono); }
+    .sync-cell span { color: var(--muted); font-size: 10px; }
+
+    .callout { display: flex; align-items: flex-start; gap: var(--space-3); margin-top: var(--space-4); padding: var(--space-4); border-left: 3px solid var(--gold); color: var(--muted); background: #1b1810; font-size: 12px; }
+    .callout strong { color: var(--gold); }
+
+    .inspector { display: flex; flex-direction: column; border-left: 1px solid var(--line); background: #0a0d0c; }
+    .inspector-head { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); border-bottom: 1px solid var(--line); }
+    .inspector-head h2 { margin: 0; font: 600 13px var(--mono); }
+    .inspector-head p { margin: 3px 0 0; color: var(--faint); font: 10px var(--mono); }
+    .inspector-actions { display: flex; gap: var(--space-2); }
+    .icon-button { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: var(--panel); cursor: pointer; }
+    .icon-button:hover { color: var(--ink); border-color: var(--line-strong); }
+    .json-path { padding: 10px var(--space-4); overflow: hidden; border-bottom: 1px solid var(--line); color: var(--blue); font: 10px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
+    .json-code { flex: 1; margin: 0; padding: var(--space-4); overflow: auto; color: #cbd6cf; background: #0a0d0c; font: 11px/1.7 var(--mono); tab-size: 2; white-space: pre-wrap; word-break: break-word; }
+    .json-key { color: #86b3c6; }
+    .json-string { color: #b6cc91; }
+    .json-number { color: #d2ac75; }
+    .json-boolean { color: #d88b7f; }
+    .json-null { color: #7b8580; }
+
+    .mobile-inspector-toggle { display: none; }
+    .empty-state { display: none; padding: var(--space-6); border: 1px dashed var(--line-strong); color: var(--muted); text-align: center; }
+
+    @media (max-width: 1180px) {
+      .shell { grid-template-columns: 210px minmax(420px, 1fr); }
+      .inspector { position: fixed; z-index: 30; top: 64px; right: 0; width: min(440px, 92vw); transform: translateX(100%); transition: transform 180ms ease; }
+      .inspector.open { transform: translateX(0); box-shadow: -16px 0 50px rgba(0,0,0,0.45); }
+      .mobile-inspector-toggle { display: grid; }
+    }
+
+    @media (max-width: 768px) {
+      .topbar { min-height: 58px; padding: 0 var(--space-3); }
+      .brand p, .top-status span:not(.status-dot) { display: none; }
+      .shell { display: block; min-height: calc(100vh - 58px); }
+      .sidebar { position: sticky; z-index: 15; top: 58px; display: flex; height: auto; overflow-x: auto; padding: var(--space-2); border-right: 0; border-bottom: 1px solid var(--line); }
+      .nav-group { display: contents; }
+      .nav-group + .nav-group { margin: 0; }
+      .eyebrow, .nav-count { display: none; }
+      .nav-button { width: auto; min-width: max-content; grid-template-columns: 20px auto; }
+      .main { padding: var(--space-5) var(--space-3); }
+      .page-heading { display: block; margin-bottom: var(--space-5); }
+      .page-heading .source-pill { margin-top: var(--space-3); }
+      .metric-strip { grid-template-columns: repeat(2, 1fr); }
+      .metric:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
+      .metric:nth-child(4) { border-top: 1px solid var(--line); }
+      .pipeline { grid-template-columns: 1fr; }
+      .pipeline-step { min-height: 0; border-top: 1px solid var(--line); border-left: 0; }
+      .pipeline-step:first-child { border-top: 0; }
+      .pipeline-step::after { top: auto; right: 24px; bottom: -7px; transform: rotate(135deg); }
+      .card-row { grid-template-columns: 64px 1fr auto; }
+      .card-art { width: 64px; height: 58px; }
+      .card-effect { display: none; }
+      .schema-grid { grid-template-columns: 1fr; }
+      .detail-layout { grid-template-columns: 1fr; }
+      .detail-visual { min-height: 360px; }
+      .keyword-grid { grid-template-columns: 1fr; }
+      .image-lab { grid-template-columns: 1fr; }
+      .gold-preview { min-height: 360px; }
+      .condition { grid-template-columns: 1fr; }
+      .query-group.or { margin-left: var(--space-3); }
+      .inspector { top: 58px; height: calc(100vh - 58px); }
+    }
+
+    @media (max-width: 375px) {
+      .brand-mark { width: 30px; height: 30px; }
+      .brand h1 { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .main { padding: var(--space-4) var(--space-3); }
+      .metric { padding: var(--space-3); }
+      .metric strong { font-size: 19px; }
+      .card-row { grid-template-columns: 54px minmax(0, 1fr); }
+      .card-art { width: 54px; height: 54px; }
+      .statline { display: none; }
+      .sync-grid { grid-template-columns: 1fr; gap: var(--space-3); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">HC</div>
+      <div>
+        <h1>Hearthstone Card Library</h1>
+        <p>BACKEND DATA CONTRACT · DESIGN MOCK</p>
+      </div>
+    </div>
+    <div class="top-status" aria-label="카드 라이브러리 상태">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span>ko_KR · 1,152 cards · cache ready</span>
+      <button class="icon-button mobile-inspector-toggle" id="mobileInspectorToggle" type="button" aria-label="JSON 인스펙터 열기" aria-expanded="false">{ }</button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="sidebar" aria-label="데이터 계약 탐색">
+      <div class="nav-group">
+        <p class="eyebrow">Architecture</p>
+        <button class="nav-button" type="button" data-view="overview" aria-current="page"><span class="nav-icon">01</span><span>전체 흐름</span><span class="nav-count">4</span></button>
+        <button class="nav-button" type="button" data-view="raw"><span class="nav-icon">02</span><span>공식 원본</span><span class="nav-count">5</span></button>
+        <button class="nav-button" type="button" data-view="cache"><span class="nav-icon">03</span><span>디스크 캐시</span><span class="nav-count">3</span></button>
+      </div>
+      <div class="nav-group">
+        <p class="eyebrow">Frontend Contract</p>
+        <button class="nav-button" type="button" data-view="ipc"><span class="nav-icon">04</span><span>Tauri IPC</span><span class="nav-count">10</span></button>
+        <button class="nav-button" type="button" data-view="detail"><span class="nav-icon">05</span><span>상세 카드 샘플</span><span class="nav-count">1</span></button>
+        <button class="nav-button" type="button" data-view="query"><span class="nav-icon">06</span><span>AND / OR 쿼리</span><span class="nav-count">1</span></button>
+        <button class="nav-button" type="button" data-view="images"><span class="nav-icon">07</span><span>이미지 캐시</span><span class="nav-count">3</span></button>
+        <button class="nav-button" type="button" data-view="sync"><span class="nav-icon">08</span><span>동기화 상태</span><span class="nav-count">2</span></button>
+      </div>
+    </nav>
+
+    <main class="main">
+      <section class="view active" id="view-overview" aria-labelledby="overview-title">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">Schema overview</p>
+            <h2 id="overview-title">공식 데이터가 프론트 카드가 되기까지</h2>
+            <p data-pretext contenteditable="true">공식 사이트의 변경 가능한 응답은 Rust 어댑터 뒤에 격리하고, 원본 보존용 캐시와 앱 전용 정규화 모델을 분리합니다. 프론트는 안정된 IPC 스키마만 소비합니다.</p>
+          </div>
+          <span class="source-pill">schema v1 · design only</span>
+        </div>
+
+        <div class="metric-strip" aria-label="실데이터 확인 요약">
+          <div class="metric"><strong>1,152</strong><span>정규 카드 탐색 결과</span></div>
+          <div class="metric"><strong>384</strong><span>pageSize 3 기준 페이지</span></div>
+          <div class="metric"><strong>46</strong><span>공식 메타데이터 세트</span></div>
+          <div class="metric"><strong>74</strong><span>공식 키워드</span></div>
+        </div>
+
+        <section class="section" aria-labelledby="pipeline-heading">
+          <div class="section-heading"><h3 id="pipeline-heading">데이터 파이프라인</h3><p>network boundary → frontend</p></div>
+          <div class="pipeline">
+            <button class="pipeline-step schema-select" type="button" data-schema="official_raw_samples.card_page">
+              <span class="step-num">01 · FETCH</span><h3>공식 응답</h3><p>id, slug, locale, ETag와 원본 필드를 그대로 보존</p><code>OfficialCardPage</code>
+            </button>
+            <button class="pipeline-step schema-select" type="button" data-schema="disk_cache_mocks.raw_page_shard">
+              <span class="step-num">02 · CACHE</span><h3>원본 샤드</h3><p>재현과 어댑터 회귀 테스트를 위한 응답 단위 저장</p><code>RawPageShard</code>
+            </button>
+            <button class="pipeline-step schema-select" type="button" data-schema="disk_cache_mocks.normalized_set_shard">
+              <span class="step-num">03 · NORMALIZE</span><h3>정규화 카탈로그</h3><p>세트별 카드 모델과 이미지 소스를 안정된 이름으로 변환</p><code>NormalizedSetShard</code>
+            </button>
+            <button class="pipeline-step schema-select" type="button" data-schema="ipc_wire_mocks.card_page">
+              <span class="step-num">04 · IPC</span><h3>프론트 계약</h3><p>검색·상세·동기화에 필요한 최소 데이터만 전달</p><code>CardPage</code>
+            </button>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="sample-heading">
+          <div class="section-heading"><h3 id="sample-heading">실제 응답으로 재구성한 카드 5장</h3><p>2026-07-17 fetch · 공허 검색</p></div>
+          <div class="card-search"><input id="overviewSearch" type="search" placeholder="이름 또는 효과에서 검색" aria-label="샘플 카드 검색"></div>
+          <div class="card-list" id="overviewCards"></div>
+          <div class="empty-state" id="overviewEmpty">일치하는 카드가 없습니다.</div>
+        </section>
+      </section>
+
+      <section class="view" id="view-raw" aria-labelledby="raw-title">
+        <div class="page-heading"><div><p class="eyebrow">Official source</p><h2 id="raw-title">공식 원본 응답</h2><p>내부 엔드포인트 응답은 안정 API로 가정하지 않습니다. 어댑터에서만 읽고 fixture로 형태 변화를 잡습니다.</p></div><span class="state-pill good">HTTP 200</span></div>
+        <div class="metric-strip"><div class="metric"><strong>5</strong><span>검색 결과</span></div><div class="metric"><strong>1</strong><span>pageCount</span></div><div class="metric"><strong>ko_KR</strong><span>locale</span></div><div class="metric"><strong>ETag</strong><span>조건부 요청 근거</span></div></div>
+        <section class="section"><div class="section-heading"><h3>OfficialCard[]</h3><p>목록 응답에 상세 필드 포함</p></div><div class="card-list" id="rawCards"></div></section>
+        <div class="callout"><div><strong>확인된 제약</strong><br>별도 <code>/api/cards/{slug}</code> 상세 엔드포인트는 404였습니다. 현재는 목록 객체를 상세 원본으로 취급하되 어댑터 테스트로 보호해야 합니다.</div></div>
+      </section>
+
+      <section class="view" id="view-cache" aria-labelledby="cache-title">
+        <div class="page-heading"><div><p class="eyebrow">Disk cache</p><h2 id="cache-title">원본과 정규화 결과를 따로 저장</h2><p>manifest가 현재 활성 카탈로그를 가리킵니다. 새 동기화가 끝나기 전까지 프론트는 이전 카탈로그를 계속 읽을 수 있습니다.</p></div><span class="state-pill good">atomic switch</span></div>
+        <section class="section"><div class="section-heading"><h3>예상 디렉터리 구조</h3><p>AppData/card-library</p></div><div class="cache-tree">
+          <button class="cache-line schema-select" type="button" data-schema="disk_cache_mocks.manifest"><span>▾</span><code>manifest.json</code><small>active pointer</small></button>
+          <div class="cache-line tree-indent-1"><span>▾</span><code>raw/ko_KR/</code><small>원본 보존</small></div>
+          <button class="cache-line tree-indent-2 schema-select" type="button" data-schema="disk_cache_mocks.raw_page_shard"><span>·</span><code>cards/page-0001.json</code><small>ETag + response</small></button>
+          <div class="cache-line tree-indent-1"><span>▾</span><code>normalized/ko_KR/</code><small>앱 모델</small></div>
+          <button class="cache-line tree-indent-2 schema-select" type="button" data-schema="ipc_wire_mocks.metadata_catalog"><span>·</span><code>metadata.json</code><small>filters</small></button>
+          <button class="cache-line tree-indent-2 schema-select" type="button" data-schema="disk_cache_mocks.normalized_set_shard"><span>·</span><code>sets/escape-from-violet-hold.json</code><small>set shard</small></button>
+          <div class="cache-line tree-indent-1"><span>▾</span><code>images/ko_KR/</code><small>binary assets</small></div>
+          <div class="cache-line tree-indent-2"><span>·</span><code>normal/{card_id}.png</code><small>sync time</small></div>
+          <div class="cache-line tree-indent-2"><span>·</span><code>crop/{card_id}.png</code><small>sync time</small></div>
+          <button class="cache-line tree-indent-2" type="button" data-view-link="images"><span>·</span><code>gold/{card_id}.png</code><small>on demand</small></button>
+        </div></section>
+        <div class="callout"><div><strong>다운로드 주기 제안</strong><br>앱 시작마다 전체 재수집하지 않습니다. stale 시 조건부 요청하고, 신규 카드가 확인될 때 카탈로그만 교체합니다. 일반·크롭 이미지는 동기화, 황금 이미지는 열람 시 다운로드합니다.</div></div>
+      </section>
+
+      <section class="view" id="view-ipc" aria-labelledby="ipc-title">
+        <div class="page-heading"><div><p class="eyebrow">Tauri command wire</p><h2 id="ipc-title">프론트가 의존할 스키마</h2><p>화면은 공식 필드명을 직접 알지 않습니다. 카드 목록, 상세, 메타데이터, 동기화와 이미지 요청을 명시된 wire 객체로만 받습니다.</p></div><span class="state-pill blue">frontend stable</span></div>
+        <div class="schema-grid" id="schemaGrid"></div>
+      </section>
+
+      <section class="view" id="view-detail" aria-labelledby="detail-title">
+        <div class="page-heading"><div><p class="eyebrow">Expanded CardDetail</p><h2 id="detail-title">공식 상세 화면을 한 응답으로 재구성</h2><p>카드 원본의 텍스트·작가·플레이버와 메타데이터의 분류·제작 비용·키워드 설명을 Rust에서 조인해 프론트에 전달합니다.</p></div><span class="state-pill good">live sample · #117382</span></div>
+        <div class="detail-layout">
+          <div class="detail-visual"><img src="https://d15f34w2p8l1cc.cloudfront.net/hearthstone/24b93a24160da08bbc9cb8fa7c8a5ac69cdb070f1ae7bd25af7eb5bfee6625af.png" alt="온천 활공꾼 카드"></div>
+          <div class="detail-content">
+            <p class="eyebrow">CardDetail · ko_KR</p>
+            <h3>온천 활공꾼</h3>
+            <p class="detail-flavor">운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.</p>
+            <div class="detail-effect"><b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.</div>
+            <div class="fact-grid" aria-label="카드 상세 속성">
+              <div class="fact"><span>능력치</span><strong>비용 3 · 공격력 2 · 생명력 4</strong><small>card API 직접</small></div>
+              <div class="fact"><span>종류 / 하수인 종류</span><strong>하수인 · 멀록</strong><small>typeId / minionTypeId 조인</small></div>
+              <div class="fact"><span>등급 / 직업</span><strong>일반 · 성기사</strong><small>rarityId / classId 조인</small></div>
+              <div class="fact"><span>세트</span><strong>운고로의 잃어버린 도시</strong><small>cardSetId 조인</small></div>
+              <div class="fact"><span>제작 비용</span><strong>40 / 400 <small>(황금)</small></strong><small>rarity.craftingCost</small></div>
+              <div class="fact"><span>마력 추출 시 획득하는 가루</span><strong>5 / 50 <small>(황금)</small></strong><small>rarity.dustValue</small></div>
+              <div class="fact"><span>아티스트</span><strong>Patrik Bjorkstrom</strong><small>card.artistName</small></div>
+              <div class="fact"><span>수집</span><strong>수집 가능</strong><small>collectible = 1</small></div>
+            </div>
+            <div class="source-map"><button class="state-pill blue schema-select" type="button" data-schema="official_raw_samples.hot_spring_glider">원본 카드 필드</button><button class="state-pill gold schema-select" type="button" data-schema="official_raw_samples.hot_spring_glider_metadata_join">메타데이터 조인</button><button class="state-pill good schema-select" type="button" data-schema="ipc_wire_mocks.card_detail">프론트 self-contained</button></div>
+          </div>
+        </div>
+        <section class="section" aria-labelledby="keyword-detail-title">
+          <div class="section-heading"><h3 id="keyword-detail-title">자세한 내용</h3><p>keywordIds [3, 8, 351] → MetadataCatalog</p></div>
+          <div class="keyword-grid">
+            <article class="keyword-detail"><code>#351 · kindred</code><strong>유사</strong><p>지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.</p></article>
+            <article class="keyword-detail"><code>#8 · battlecry</code><strong>전투의 함성</strong><p>카드를 손에서 낼 때 효과가 발동합니다.</p></article>
+            <article class="keyword-detail"><code>#3 · divine-shield</code><strong>천상의 보호막</strong><p>보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.</p></article>
+          </div>
+        </section>
+        <div class="callout"><div><strong>황금 이미지 상태</strong><br>이 카드의 공식 <code>imageGold</code>는 빈 문자열입니다. 제작 비용 400이 존재해도 황금 이미지 자산이 제공된다는 뜻은 아니므로 <code>gold.state = unavailable</code>로 정규화합니다.</div></div>
+      </section>
+
+      <section class="view" id="view-query" aria-labelledby="query-title">
+        <div class="page-heading"><div><p class="eyebrow">CardQuery</p><h2 id="query-title">중첩 AND / OR를 그대로 전달</h2><p>프론트 필터 빌더와 백엔드 검색 엔진이 동일한 트리 구조를 공유합니다. 의미 검색 조건도 나중에 같은 condition 노드로 확장할 수 있습니다.</p></div><span class="state-pill gold">limit 24</span></div>
+        <div class="query-box schema-select" data-schema="ipc_wire_mocks.card_query" tabindex="0" role="button" aria-label="CardQuery JSON 보기">
+          <div class="query-group"><span class="operator-label">AND</span>
+            <div class="condition"><span>set_id</span><span>eq</span><span>1988 · 보랏빛 요새 탈출 작전</span></div>
+            <div class="query-group or"><span class="operator-label">OR</span>
+              <div class="condition"><span>name</span><span>contains</span><span>공허</span></div>
+              <div class="condition"><span>text_plain</span><span>contains</span><span>공허</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><div><strong>경계</strong><br>UI가 SQL이나 공식 URL 쿼리를 만들지 않습니다. Rust가 <code>CardQuery</code>를 검증하고 로컬 인덱스에 적용합니다.</div></div>
+      </section>
+
+      <section class="view" id="view-images" aria-labelledby="images-title">
+        <div class="page-heading"><div><p class="eyebrow">ImageAsset</p><h2 id="images-title">황금 카드는 열 때 내려받기</h2><p>카드 목록 동기화에서 황금 이미지는 제외합니다. 사용자가 상세 화면에서 황금 보기를 요청한 경우에만 다운로드하고 이후에는 로컬 캐시를 반환합니다.</p></div><span class="state-pill gold">lazy gold</span></div>
+        <div class="image-lab">
+          <div class="gold-preview" id="goldPreview"><img id="goldImage" src="../../preview/images/48158.png" alt="달을 삼킨 구렁이 바쿠 일반 카드"><span class="loading-label">gold asset fetching…</span></div>
+          <div class="image-control">
+            <h3>달을 삼킨 구렁이 바쿠</h3><p>card_id 48158 · imageGold가 실제로 존재하는 검증 샘플</p>
+            <ol class="lifecycle"><li><b>1</b><div><strong>CardDetail 반환</strong><span>gold.state = remote, cache_key는 예약</span></div></li><li><b>2</b><div><strong>사용자가 황금 보기 선택</strong><span>ImageRequest { card_id, locale, variant }</span></div></li><li><b>3</b><div><strong>다운로드 후 원자적 저장</strong><span>ImageAsset { relative_path, etag, byte_length }</span></div></li></ol>
+            <button class="primary-button" id="requestGold" type="button">황금 이미지 요청 시뮬레이션</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-sync" aria-labelledby="sync-title">
+        <div class="page-heading"><div><p class="eyebrow">LibraryStatus · SyncStatus</p><h2 id="sync-title">백그라운드 동기화 상태</h2><p>프론트는 수집 세부 구현 대신 현재 카탈로그 가용 여부와 진행률만 받습니다. 동기화 실패 시에도 마지막 성공 카탈로그는 유지합니다.</p></div><span class="state-pill good">catalog ready</span></div>
+        <div class="sync-panel schema-select" data-schema="ipc_wire_mocks.sync_status" tabindex="0" role="button">
+          <div class="sync-head"><div><h3>sync-20260717T193634Z</h3><p>fetching_cards · 기존 카탈로그는 계속 사용 가능</p></div><span class="state-pill blue">syncing</span></div>
+          <div><div class="progress-track" aria-label="동기화 진행률"><div class="progress-value"></div></div><div class="sync-grid"><div class="sync-cell"><strong>1 / 384</strong><span>completed pages</span></div><div class="sync-cell"><strong>3</strong><span>cards seen</span></div><div class="sync-cell"><strong>0</strong><span>gold downloaded</span></div></div></div>
+        </div>
+        <div class="callout"><div><strong>권장 정책</strong><br>24시간 stale 기준 + 앱 실행 시 조건부 요청으로 시작합니다. 카드 추가 시 즉시 동기화가 필요하면 이후 manifest 버전 비교나 수동 새로고침을 추가할 수 있습니다.</div></div>
+      </section>
+    </main>
+
+    <aside class="inspector" id="inspector" aria-label="선택한 스키마 JSON">
+      <div class="inspector-head"><div><h2 id="inspectorTitle">CardPage</h2><p id="inspectorOrigin">ipc wire mock</p></div><div class="inspector-actions"><button class="icon-button" id="copyJson" type="button" aria-label="JSON 복사">⧉</button><button class="icon-button mobile-inspector-toggle" id="closeInspector" type="button" aria-label="JSON 인스펙터 닫기">×</button></div></div>
+      <div class="json-path" id="jsonPath">ipc_wire_mocks.card_page</div>
+      <pre class="json-code" id="jsonCode" aria-live="polite"></pre>
+    </aside>
+  </div>
+
+  <script>
+    const DATA = {
+      live_evidence: {
+        card_list: { url: "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=24&set=escape-from-violet-hold&textFilter=%EA%B3%B5%ED%97%88&sort=dateadded%3Adesc", status: 200, etag: "W/\"100f-Fcvu31Rlj0L9OniaPQEf+xWoNbY\"", card_count: 5, page_count: 1, page: 1 },
+        standard_probe: { url: "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=3&set=standard&sort=dateadded%3Adesc", status: 200, card_count: 1152, page_count: 384, page: 1 },
+        metadata: { url: "https://hearthstone.blizzard.com/ko-kr/cards", extraction: "#cardGalleryMount config attribute", counts: { sets: 46, classes: 13, types: 9, rarities: 5, minion_types: 25, spell_schools: 9, keywords: 74 } },
+        hot_spring_glider: { captured_at_utc: "2026-07-18T06:26:06Z", card_api_status: 200, card_api_etag: "W/\"467a-Imzlrq3X5pR3hqvII+ixFwdp+uc\"", card_id: 117382, metadata_page_status: 200 }
+      },
+      official_raw_samples: {
+        card_page: {
+          cards: [
+            { id: 126660, collectible: 1, slug: "126660-stardust-scythe", classId: 14, multiClassIds: [], cardTypeId: 7, cardSetId: 1988, rarityId: 1, manaCost: 4, attack: 3, health: 2, name: "별가루 낫", text: "내 영웅이 공격한 후, 공허의 영혼을 얻습니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/0711ab5a7a698404e2ba1db91bdd153352206ad26ac77660ed6ace9bcfc34f08.png", imageGold: "", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/167f29edb75b94710c6de4bbcac0bdc3e1cb471d73c2ef712398e537840337dd.png", childIds: [126662] },
+            { id: 126663, collectible: 1, slug: "126663-vicious-voidscale", classId: 14, multiClassIds: [], minionTypeId: 92, cardTypeId: 4, cardSetId: 1988, rarityId: 3, manaCost: 3, attack: 3, health: 4, name: "흉포한 공허비늘", text: "<b>도발</b>, <b>죽음의 메아리:</b> 공허의 영혼을 얻습니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/b787d62d5b1504d6bbde7fd1583d77fe406ded885d706806e781fbf4787c2c2e.png", imageGold: "", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/60d006cea7a76a0b367106b2c64b563a3f9a8de8c3cc27f712493f5e4139a119.png", childIds: [126662], keywordIds: [1, 12] },
+            { id: 127157, collectible: 1, slug: "127157-void-blast", classId: 14, multiClassIds: [], spellSchoolId: 6, cardTypeId: 5, cardSetId: 1988, rarityId: 3, manaCost: 2, name: "공허의 폭발", text: "하수인에게 피해를 3 줍니다. 그 하수인이 죽으면 공허의 영혼을 얻습니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/3a7e90fe7c52a485d20dadf21be5eff9357f19c65eb09c4cde83e1864e110be0.png", imageGold: "", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/cee656478e719635e8080c921b210afc58cc41de924d79f04f9a2b8309af1ee8.png", childIds: [126662] },
+            { id: 126662, collectible: 1, slug: "126662-void-soul", classId: 14, multiClassIds: [], spellSchoolId: 6, cardTypeId: 5, cardSetId: 1988, rarityId: 3, manaCost: 1, name: "공허의 영혼", text: "비용이 인 무작위 악마를 소환합니다. 미래의 내 공허의 영혼을 개선합니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/cf012ee8f6146cf02d7e6709d80acbc45ba0c0c60e60baabf134cffaa7db0337.png", imageGold: "", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/859bbd2911c79ff49430a437a242b80a0268908ea4c3e9f9f8259d79c81cdb1a.png" },
+            { id: 126211, collectible: 1, slug: "126211-irida-sinseeker", classId: 14, multiClassIds: [], cardTypeId: 4, cardSetId: 1988, rarityId: 5, manaCost: 4, attack: 7, health: 5, name: "이리다 신시커", text: "<b>생명력 흡수</b>. <b>전투의 함성:</b> 내 덱을 공허로 보냅니다. 내 턴이 시작될 때, 공허에서 카드를 2장 얻습니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/69568a418ccef8be49a3dc247d0cbd13e9184af14399de687ea743b04cac36ee.png", imageGold: "", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/ad454e21544c6742d7f2cf279b3b35831206ee26eba7aeed212a7636fed4834b.png", keywordIds: [8, 38] }
+          ], cardCount: 5, pageCount: 1, page: 1
+        },
+        hot_spring_glider: { id: 117382, collectible: 1, slug: "117382-hot-spring-glider", classId: 5, multiClassIds: [], minionTypeId: 14, cardTypeId: 4, cardSetId: 1952, rarityId: 1, artistName: "Patrik Bjorkstrom", health: 4, attack: 2, manaCost: 3, name: "온천 활공꾼", text: "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/24b93a24160da08bbc9cb8fa7c8a5ac69cdb070f1ae7bd25af7eb5bfee6625af.png", imageGold: "", flavorText: "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/98143e114ea8f2e13305a00dce48b5532e1c6b8b237980a0e0a945f43f3ad1d6.png", keywordIds: [3, 8, 351], isZilliaxFunctionalModule: false, isZilliaxCosmeticModule: false },
+        hot_spring_glider_metadata_join: { set: { id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }, class: { id: 5, slug: "paladin", name: "성기사" }, type: { id: 4, slug: "minion", name: "하수인" }, minion_type: { id: 14, slug: "murloc", name: "멀록" }, rarity: { id: 1, slug: "common", name: "일반", craftingCost: [40, 400], dustValue: [5, 50] }, keywords: [{ id: 3, slug: "divine-shield", name: "천상의 보호막", refText: "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.", text: "이 캐릭터는 처음 받는 피해를 무시합니다." }, { id: 8, slug: "battlecry", name: "전투의 함성", refText: "카드를 손에서 낼 때 효과가 발동합니다.", text: "카드를 손에서 낼 때 효과가 발동합니다." }, { id: 351, slug: "kindred", name: "유사", refText: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.", text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다." }] },
+        gold_card: { id: 48158, slug: "48158-baku-the-mooneater", name: "달을 삼킨 구렁이 바쿠", text: "<b>개전:</b> 내 덱에 비용이 홀수인 카드만 있으면, 내 기본 영웅 능력을 강화합니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/f0b7f3ddda277057df3dbd6d63058eaef6f8dcbb11d5d3656c367126634e816a.png", imageGold: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/33560b88e57d51948fe9edc645d0d694b9132e21de1d07fa5115173b4910ea84.png", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/bc292a0af280d18431799b1e2efe58fbde3c2754cb26f1de8f02bd1c291e3fa4.png", keywordIds: [64] }
+      },
+      disk_cache_mocks: {
+        manifest: { format_version: 1, adapter_version: "official-site-v1", locale: "ko_KR", active_catalog: { version: "2026-07-17T19:36:34Z", created_at_utc: "2026-07-17T19:36:34Z", card_count: 1152, set_count: 7, metadata_path: "normalized/ko_KR/metadata.json", set_shard_dir: "normalized/ko_KR/sets" }, resources: { metadata: { etag: "W/\"42190-1ss0YvcIG15ytI6WW3MsWNNLIpA\"", fetched_at_utc: "2026-07-17T19:36:34Z", stale_after_utc: "2026-07-18T19:36:34Z" }, cards_standard: { etag: "W/\"903-K3K9gM62xuEriHNTc/l1/L26vMU\"", fetched_at_utc: "2026-07-17T19:34:35Z", stale_after_utc: "2026-07-18T19:34:35Z" } }, last_sync: { state: "succeeded", started_at_utc: "2026-07-17T19:30:00Z", finished_at_utc: "2026-07-17T19:36:34Z", cards_added: 5, cards_updated: 0, cards_removed: 0 } },
+        raw_page_shard: { format_version: 1, source: { url: "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=24&set=escape-from-violet-hold&textFilter=%EA%B3%B5%ED%97%88&sort=dateadded%3Adesc", locale: "ko_KR", etag: "W/\"100f-Fcvu31Rlj0L9OniaPQEf+xWoNbY\"", fetched_at_utc: "2026-07-17T19:36:34Z" }, response_ref: "official_raw_samples.card_page" },
+        normalized_set_shard: { format_version: 1, locale: "ko_KR", set: { id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }, cards: [{ id: 117382, slug: "117382-hot-spring-glider", locale: "ko_KR", collectible: true, name: "온천 활공꾼", effect: { plain: "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.", markup: "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.", format: "blizzard_html" }, mana_cost: 3, attack: 2, health: 4, artist_name: "Patrik Bjorkstrom", flavor_text: "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.", class_ids: [5], type_id: 4, set_id: 1952, rarity_id: 1, minion_type_id: 14, spell_school_id: null, keyword_ids: [3, 8, 351], relations: { parent_id: null, child_ids: [], copy_of_ids: [] }, image_sources: { normal: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/24b93a24160da08bbc9cb8fa7c8a5ac69cdb070f1ae7bd25af7eb5bfee6625af.png", crop: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/98143e114ea8f2e13305a00dce48b5532e1c6b8b237980a0e0a945f43f3ad1d6.png", gold: null } }] }
+      },
+      ipc_wire_mocks: {
+        metadata_catalog: { locale: "ko_KR", sets: [{ id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }], classes: [{ id: 5, slug: "paladin", name: "성기사" }], types: [{ id: 4, slug: "minion", name: "하수인" }], minion_types: [{ id: 14, slug: "murloc", name: "멀록" }], spell_schools: [], rarities: [{ id: 1, slug: "common", name: "일반", crafting_cost: { normal: 40, golden: 400 }, dust_value: { normal: 5, golden: 50 } }], keywords: [{ id: 3, slug: "divine-shield", name: "천상의 보호막", ref_text: "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.", text: "이 캐릭터는 처음 받는 피해를 무시합니다." }, { id: 8, slug: "battlecry", name: "전투의 함성", ref_text: "카드를 손에서 낼 때 효과가 발동합니다.", text: "카드를 손에서 낼 때 효과가 발동합니다." }, { id: 351, slug: "kindred", name: "유사", ref_text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.", text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다." }], catalog_version: "2026-07-18T06:26:06Z" },
+        card_summary: { id: 117382, slug: "117382-hot-spring-glider", name: "온천 활공꾼", text_plain: "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.", mana_cost: 3, attack: 2, health: 4, collectible: true, class_ids: [5], type_id: 4, set_id: 1952, rarity_id: 1, keyword_ids: [3, 8, 351], image: { normal: { state: "cached", cache_key: "ko_KR/normal/117382" }, crop: { state: "cached", cache_key: "ko_KR/crop/117382" }, gold: { state: "unavailable", cache_key: null } } },
+        card_detail: { summary: { id: 117382, slug: "117382-hot-spring-glider", name: "온천 활공꾼", text_plain: "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.", mana_cost: 3, attack: 2, health: 4, collectible: true, class_ids: [5], type_id: 4, set_id: 1952, rarity_id: 1, keyword_ids: [3, 8, 351], image: { normal: { state: "cached", cache_key: "ko_KR/normal/117382" }, crop: { state: "cached", cache_key: "ko_KR/crop/117382" }, gold: { state: "unavailable", cache_key: null } } }, text_markup: "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.", artist_name: "Patrik Bjorkstrom", flavor_text: "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.", taxonomy: { classes: [{ id: 5, slug: "paladin", name: "성기사" }], type: { id: 4, slug: "minion", name: "하수인" }, minion_type: { id: 14, slug: "murloc", name: "멀록" }, spell_school: null, set: { id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }, rarity: { id: 1, slug: "common", name: "일반" } }, economy: { crafting_cost: { normal: 40, golden: 400 }, dust_value: { normal: 5, golden: 50 } }, keywords: [{ id: 3, slug: "divine-shield", name: "천상의 보호막", ref_text: "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.", text: "이 캐릭터는 처음 받는 피해를 무시합니다." }, { id: 8, slug: "battlecry", name: "전투의 함성", ref_text: "카드를 손에서 낼 때 효과가 발동합니다.", text: "카드를 손에서 낼 때 효과가 발동합니다." }, { id: 351, slug: "kindred", name: "유사", ref_text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.", text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다." }], relations: { parent_id: null, child_ids: [], copy_of_ids: [] }, flags: { banned_from_sideboard: false, zilliax_functional_module: false, zilliax_cosmetic_module: false } },
+        card_query: { locale: "ko_KR", where: { kind: "group", operator: "and", children: [{ kind: "condition", field: "set_id", operator: "eq", value: 1988 }, { kind: "group", operator: "or", children: [{ kind: "condition", field: "name", operator: "contains", value: "공허" }, { kind: "condition", field: "text_plain", operator: "contains", value: "공허" }] }] }, sort: [{ field: "date_added", direction: "desc" }, { field: "name", direction: "asc" }], cursor: null, limit: 24 },
+        card_page: { items: [{ id: 126660, name: "별가루 낫", mana_cost: 4, attack: 3, health: 2 }, { id: 126663, name: "흉포한 공허비늘", mana_cost: 3, attack: 3, health: 4 }, { id: 127157, name: "공허의 폭발", mana_cost: 2, attack: null, health: null }, { id: 126662, name: "공허의 영혼", mana_cost: 1, attack: null, health: null }, { id: 126211, name: "이리다 신시커", mana_cost: 4, attack: 7, health: 5 }], total: 5, next_cursor: null, catalog_version: "2026-07-17T19:36:34Z", from_cache: true, stale: false },
+        library_status: { locale: "ko_KR", catalog_state: "ready", catalog_version: "2026-07-17T19:36:34Z", card_count: 1152, last_success_at_utc: "2026-07-17T19:36:34Z", stale_after_utc: "2026-07-18T19:36:34Z", stale: false, sync_state: "idle", last_error: null },
+        sync_request: { locale: "ko_KR", force: false },
+        sync_status: { run_id: "sync-20260717T193634Z", state: "syncing", phase: "fetching_cards", completed_pages: 1, total_pages: 384, cards_seen: 3, images_downloaded: { normal: 3, crop: 3, gold: 0 }, started_at_utc: "2026-07-17T19:36:34Z", last_error: null },
+        image_request: { card_id: 48158, locale: "ko_KR", variant: "gold" },
+        image_asset: { card_id: 48158, locale: "ko_KR", variant: "gold", state: "ready", cache_key: "ko_KR/gold/48158", relative_path: "images/ko_KR/gold/48158.png", mime_type: "image/png", byte_length: 98560, etag: "\"3c9d7016879a18a6f51a3b37fc24e07c\"", downloaded_now: true }
+      }
+    };
+
+    const SCHEMAS = [
+      { key: "metadata_catalog", title: "MetadataCatalog", type: "response", description: "분류명, 제작·추출 값, 키워드 설명까지 보존하는 조인 사전", fields: ["sets", "classes", "minion_types", "rarity economy", "keyword text"] },
+      { key: "card_summary", title: "CardSummary", type: "response", description: "검색 결과 카드 한 장. 목록 렌더에 필요한 최소 필드", fields: ["id", "name", "text_plain", "stats", "image state"] },
+      { key: "card_detail", title: "CardDetail", type: "response", description: "공식 상세 화면을 단독으로 그릴 수 있는 self-contained 응답", fields: ["summary", "taxonomy", "economy", "keywords", "flavor", "artist"] },
+      { key: "card_query", title: "CardQuery", type: "request", description: "중첩 AND/OR 조건, 정렬, 커서와 limit", fields: ["where", "sort", "cursor", "limit"] },
+      { key: "card_page", title: "CardPage", type: "response", description: "검색 결과와 카탈로그 버전·캐시 신선도", fields: ["items", "total", "next_cursor", "from_cache"] },
+      { key: "library_status", title: "LibraryStatus", type: "response", description: "앱 시작 시 현재 카드 라이브러리를 바로 쓸 수 있는지 확인", fields: ["catalog_state", "card_count", "stale", "sync_state"] },
+      { key: "sync_request", title: "SyncRequest", type: "request", description: "locale 기준 조건부 동기화. force는 수동 복구용", fields: ["locale", "force"] },
+      { key: "sync_status", title: "SyncStatus", type: "event", description: "진행 중인 수집 단계와 카드·이미지 수", fields: ["phase", "completed_pages", "cards_seen", "last_error"] },
+      { key: "image_request", title: "ImageRequest", type: "request", description: "normal, crop, gold 중 필요한 바이너리만 요청", fields: ["card_id", "locale", "variant"] },
+      { key: "image_asset", title: "ImageAsset", type: "response", description: "다운로드 또는 캐시 적중 후 프론트가 받을 로컬 자산", fields: ["state", "relative_path", "etag", "downloaded_now"] }
+    ];
+
+    const titleMap = {
+      "official_raw_samples.card_page": ["OfficialCardPage", "official raw response"],
+      "official_raw_samples.hot_spring_glider": ["OfficialCard", "official raw response"],
+      "official_raw_samples.hot_spring_glider_metadata_join": ["DetailMetadataJoin", "page config subset"],
+      "disk_cache_mocks.manifest": ["CacheManifest", "disk cache mock"],
+      "disk_cache_mocks.raw_page_shard": ["RawPageShard", "disk cache mock"],
+      "disk_cache_mocks.normalized_set_shard": ["NormalizedSetShard", "normalized cache mock"],
+      "ipc_wire_mocks.metadata_catalog": ["MetadataCatalog", "ipc wire mock"],
+      "ipc_wire_mocks.card_summary": ["CardSummary", "ipc wire mock"],
+      "ipc_wire_mocks.card_detail": ["CardDetail", "ipc wire mock"],
+      "ipc_wire_mocks.card_query": ["CardQuery", "ipc wire mock"],
+      "ipc_wire_mocks.card_page": ["CardPage", "ipc wire mock"],
+      "ipc_wire_mocks.library_status": ["LibraryStatus", "ipc wire mock"],
+      "ipc_wire_mocks.sync_request": ["SyncRequest", "ipc wire mock"],
+      "ipc_wire_mocks.sync_status": ["SyncStatus", "ipc event mock"],
+      "ipc_wire_mocks.image_request": ["ImageRequest", "ipc wire mock"],
+      "ipc_wire_mocks.image_asset": ["ImageAsset", "ipc wire mock"]
+    };
+
+    const inspector = document.getElementById("inspector");
+    const inspectorTitle = document.getElementById("inspectorTitle");
+    const inspectorOrigin = document.getElementById("inspectorOrigin");
+    const jsonPath = document.getElementById("jsonPath");
+    const jsonCode = document.getElementById("jsonCode");
+    let currentJson = "";
+
+    function getPath(path) { return path.split(".").reduce((value, key) => value?.[key], DATA); }
+
+    function syntaxHighlight(json) {
+      const escaped = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return escaped.replace(/("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"\s*:|"(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"|\btrue\b|\bfalse\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?)/g, token => {
+        let className = "json-number";
+        if (/^"/.test(token)) className = /:$/.test(token) ? "json-key" : "json-string";
+        else if (/true|false/.test(token)) className = "json-boolean";
+        else if (/null/.test(token)) className = "json-null";
+        return `<span class="${className}">${token}</span>`;
+      });
+    }
+
+    function showSchema(path, overrideValue, reveal = true) {
+      const value = overrideValue ?? getPath(path);
+      if (value === undefined) return;
+      const meta = titleMap[path] || [path.split(".").at(-1), "selected object"];
+      currentJson = JSON.stringify(value, null, 2);
+      inspectorTitle.textContent = meta[0];
+      inspectorOrigin.textContent = meta[1];
+      jsonPath.textContent = path;
+      jsonCode.innerHTML = syntaxHighlight(currentJson);
+      document.querySelectorAll(".schema-select.selected, .schema-item.selected").forEach(el => el.classList.remove("selected"));
+      document.querySelectorAll(`[data-schema="${path}"]`).forEach(el => el.classList.add("selected"));
+      if (reveal && window.innerWidth <= 1180) openInspector();
+    }
+
+    function stripMarkup(value) { const div = document.createElement("div"); div.innerHTML = value; return div.textContent || ""; }
+
+    function rarityName(id) { return ({ 1: "일반", 3: "희귀", 5: "전설" })[id] || `희귀도 ${id}`; }
+
+    function cardRow(card, raw = false) {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "card-row";
+      row.dataset.name = `${card.name} ${stripMarkup(card.text)}`.toLowerCase();
+      row.innerHTML = `<span class="card-art" style="background-image:url('${card.cropImage}')" aria-hidden="true"></span><span class="card-title"><strong>${card.name}</strong><code>#${card.id} · ${rarityName(card.rarityId)}</code></span><span class="card-effect">${stripMarkup(card.text)}</span><span class="statline"><span>비용 <b>${card.manaCost}</b></span>${card.attack != null ? `<span>공격 <b>${card.attack}</b></span>` : ""}${card.health != null ? `<span>생명 <b>${card.health}</b></span>` : ""}</span>`;
+      row.addEventListener("click", () => {
+        document.querySelectorAll(".card-row.selected").forEach(el => el.classList.remove("selected"));
+        row.classList.add("selected");
+        if (raw) showSchema(`official_raw_samples.card_page.cards`, card);
+        else {
+          const summary = { id: card.id, slug: card.slug, name: card.name, text_plain: stripMarkup(card.text), mana_cost: card.manaCost, attack: card.attack ?? null, health: card.health ?? null, collectible: card.collectible === 1, class_ids: [card.classId, ...(card.multiClassIds || [])], type_id: card.cardTypeId, set_id: card.cardSetId, rarity_id: card.rarityId, keyword_ids: card.keywordIds || [], image: { normal: { state: "cached", cache_key: `ko_KR/normal/${card.id}` }, crop: { state: "cached", cache_key: `ko_KR/crop/${card.id}` }, gold: { state: card.imageGold ? "remote" : "unavailable", cache_key: card.imageGold ? `ko_KR/gold/${card.id}` : null } } };
+          showSchema("ipc_wire_mocks.card_summary", summary);
+        }
+      });
+      return row;
+    }
+
+    function renderCards() {
+      const cards = DATA.official_raw_samples.card_page.cards;
+      const overview = document.getElementById("overviewCards");
+      const raw = document.getElementById("rawCards");
+      cards.forEach(card => { overview.appendChild(cardRow(card)); raw.appendChild(cardRow(card, true)); });
+    }
+
+    function renderSchemas() {
+      const grid = document.getElementById("schemaGrid");
+      SCHEMAS.forEach(schema => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "schema-item";
+        button.dataset.schema = `ipc_wire_mocks.${schema.key}`;
+        button.innerHTML = `<header><h3>${schema.title}</h3><span class="type-pill">${schema.type}</span></header><p>${schema.description}</p><div class="field-list">${schema.fields.map(field => `<code>${field}</code>`).join("")}</div>`;
+        button.addEventListener("click", () => showSchema(button.dataset.schema));
+        grid.appendChild(button);
+      });
+    }
+
+    function selectView(viewName) {
+      document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view.id === `view-${viewName}`));
+      document.querySelectorAll(".nav-button").forEach(button => button.setAttribute("aria-current", button.dataset.view === viewName ? "page" : "false"));
+      document.querySelector(".main").scrollTo({ top: 0, behavior: "smooth" });
+      if (viewName === "raw") showSchema("official_raw_samples.card_page", undefined, false);
+      if (viewName === "cache") showSchema("disk_cache_mocks.manifest", undefined, false);
+      if (viewName === "ipc") showSchema("ipc_wire_mocks.card_summary", undefined, false);
+      if (viewName === "detail") showSchema("ipc_wire_mocks.card_detail", undefined, false);
+      if (viewName === "query") showSchema("ipc_wire_mocks.card_query", undefined, false);
+      if (viewName === "images") showSchema("ipc_wire_mocks.image_request", undefined, false);
+      if (viewName === "sync") showSchema("ipc_wire_mocks.sync_status", undefined, false);
+    }
+
+    function openInspector() { inspector.classList.add("open"); document.getElementById("mobileInspectorToggle").setAttribute("aria-expanded", "true"); }
+    function closeInspector() { inspector.classList.remove("open"); document.getElementById("mobileInspectorToggle").setAttribute("aria-expanded", "false"); }
+
+    document.querySelectorAll(".nav-button").forEach(button => button.addEventListener("click", () => selectView(button.dataset.view)));
+    document.querySelectorAll("[data-view-link]").forEach(button => button.addEventListener("click", () => selectView(button.dataset.viewLink)));
+    document.querySelectorAll(".schema-select").forEach(el => {
+      el.addEventListener("click", () => showSchema(el.dataset.schema));
+      el.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); showSchema(el.dataset.schema); } });
+    });
+    document.getElementById("overviewSearch").addEventListener("input", event => {
+      const query = event.target.value.trim().toLowerCase();
+      let visible = 0;
+      document.querySelectorAll("#overviewCards .card-row").forEach(row => { const show = row.dataset.name.includes(query); row.hidden = !show; if (show) visible += 1; });
+      document.getElementById("overviewEmpty").style.display = visible ? "none" : "block";
+    });
+    document.getElementById("mobileInspectorToggle").addEventListener("click", () => inspector.classList.contains("open") ? closeInspector() : openInspector());
+    document.getElementById("closeInspector").addEventListener("click", closeInspector);
+    document.getElementById("copyJson").addEventListener("click", async event => {
+      try { await navigator.clipboard.writeText(currentJson); }
+      catch { const area = document.createElement("textarea"); area.value = currentJson; document.body.appendChild(area); area.select(); document.execCommand("copy"); area.remove(); }
+      event.currentTarget.textContent = "✓";
+      setTimeout(() => event.currentTarget.textContent = "⧉", 900);
+    });
+    document.getElementById("requestGold").addEventListener("click", event => {
+      const preview = document.getElementById("goldPreview");
+      const image = document.getElementById("goldImage");
+      const button = event.currentTarget;
+      preview.classList.add("loading");
+      button.disabled = true;
+      button.textContent = "다운로드 중…";
+      showSchema("ipc_wire_mocks.image_request");
+      const preload = new Image();
+      preload.src = DATA.official_raw_samples.gold_card.imageGold;
+      const complete = () => {
+        image.src = DATA.official_raw_samples.gold_card.imageGold;
+        image.alt = "달을 삼킨 구렁이 바쿠 황금 카드";
+        preview.classList.remove("loading");
+        button.textContent = "캐시된 황금 이미지 표시 중";
+        showSchema("ipc_wire_mocks.image_asset");
+      };
+      preload.onload = () => setTimeout(complete, 500);
+      preload.onerror = () => { preview.classList.remove("loading"); button.disabled = false; button.textContent = "다시 요청"; };
+    });
+
+    renderCards();
+    renderSchemas();
+    const requestedView = window.location.hash.slice(1);
+    if (document.querySelector(`[data-view="${requestedView}"]`)) {
+      selectView(requestedView);
+    } else {
+      showSchema("ipc_wire_mocks.card_page", undefined, false);
+    }
+  </script>
+
+  <!-- FALLBACK: vendored Pretext bundle unavailable, using CDN when online. -->
+  <script type="module">
+    try {
+      const { prepare, layout, setLocale } = await import("https://esm.sh/@chenglou/pretext");
+      setLocale("ko-KR");
+      await document.fonts.ready;
+      const prepared = new Map();
+      const elements = document.querySelectorAll("[data-pretext]");
+      for (const el of elements) prepared.set(el, prepare(el.textContent, getComputedStyle(el).font));
+      const relayout = () => {
+        for (const [el, handle] of prepared) {
+          const lineHeight = parseFloat(getComputedStyle(el).lineHeight);
+          const result = layout(handle, el.clientWidth, lineHeight);
+          el.style.minHeight = `${result.height}px`;
+        }
+      };
+      new ResizeObserver(relayout).observe(document.body);
+      for (const el of elements) new MutationObserver(() => { prepared.set(el, prepare(el.textContent, getComputedStyle(el).font)); relayout(); }).observe(el, { characterData: true, subtree: true, childList: true });
+      relayout();
+    } catch (error) {
+      console.info("Pretext enhancement unavailable; native responsive layout remains active.", error);
+    }
+  </script>
+</body>
+</html>
