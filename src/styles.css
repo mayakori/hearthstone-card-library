@@ -1,0 +1,153 @@
+:root {
+  color: #f6eadc;
+  background: #15100c;
+  font-family: Inter, Pretendard, "Malgun Gothic", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 72% 8%, rgb(83 47 19 / 45%), transparent 30rem),
+    linear-gradient(145deg, #1b130d 0%, #0f0c0a 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.shell {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 72px 0;
+}
+
+.hero {
+  max-width: 790px;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: #e0a655;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3rem, 8vw, 6.6rem);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+}
+
+.lead {
+  max-width: 670px;
+  color: #cdbca9;
+  font-size: clamp(1rem, 2vw, 1.22rem);
+  line-height: 1.75;
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  margin-top: 28px;
+  color: #b9aa9a;
+  font-size: 0.9rem;
+}
+
+.status-row strong {
+  color: #f5e6d5;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #75c47d;
+  box-shadow: 0 0 16px #75c47d;
+}
+
+.setup-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 58px;
+}
+
+.setup-grid article,
+.next-step {
+  border: 1px solid #4f3928;
+  background: rgb(37 26 18 / 78%);
+}
+
+.setup-grid article {
+  min-height: 170px;
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.setup-grid span,
+.next-step p {
+  color: #b58b58;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.setup-grid h2 {
+  margin-top: 48px;
+  margin-bottom: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.next-step {
+  margin-top: 14px;
+  padding: 28px;
+  border-radius: 18px;
+}
+
+.next-step h2 {
+  max-width: 760px;
+  margin-bottom: 0;
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100% - 28px, 1120px);
+    padding: 42px 0;
+  }
+
+  .setup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .setup-grid article {
+    min-height: 130px;
+  }
+
+  .setup-grid h2 {
+    margin-top: 28px;
+  }
+}
