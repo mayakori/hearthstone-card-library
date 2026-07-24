@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hearth Index · UI scaling comparison</title>
+  <style>
+    :root {
+      color-scheme:light;
+      --canvas:#f3f1eb;
+      --surface:#fff;
+      --ink:#171815;
+      --muted:#6d6b62;
+      --line:#d9d6cd;
+      --line-strong:#b9b5aa;
+      --accent:#f54e00;
+      --font-accent:#2f6f8f;
+      --scale-accent:#7656a8;
+      --shadow:0 14px 36px rgba(25,23,18,.11);
+      font-family:Inter,"Noto Sans KR","Segoe UI",sans-serif;
+    }
+    * { box-sizing:border-box }
+    html,body { min-height:100%; margin:0 }
+    body { color:var(--ink); background:var(--canvas) }
+    button,select,input { font:inherit }
+    button,select { color:inherit }
+    .lab { min-height:100vh; display:grid; grid-template-rows:auto 1fr }
+    .lab-head {
+      min-height:64px; padding:0 20px; display:flex; align-items:center; gap:20px;
+      border-bottom:1px solid var(--line); background:var(--surface);
+    }
+    .lab-title { min-width:0 }
+    .lab-title strong { display:block; font-size:16px; font-weight:650 }
+    .lab-title span { display:block; margin-top:3px; color:var(--muted); font-size:12px }
+    .global-controls { margin-left:auto; display:flex; align-items:stretch; align-self:stretch }
+    .control-block { min-width:144px; padding:0 14px; display:flex; align-items:center; gap:9px; border-left:1px solid var(--line) }
+    .control-block label { color:var(--muted); font-size:12px; white-space:nowrap }
+    select { min-width:108px; height:34px; padding:0 28px 0 9px; border:1px solid var(--line); border-radius:0; background:var(--surface) }
+    .theme-toggle { width:92px; border:0; border-left:1px solid var(--line); background:transparent; cursor:pointer }
+    .theme-toggle:hover { background:#f6f4ee }
+    .compare-grid { min-width:0; padding:18px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-content:start }
+    .scenario { min-width:0; overflow:hidden; border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow) }
+    .scenario-head { min-height:52px; padding:9px 12px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line) }
+    .scenario-index { width:28px; height:28px; display:grid; place-items:center; flex:0 0 auto; color:#fff; font-size:12px; font-weight:700 }
+    .font-scenario .scenario-index { background:var(--font-accent) }
+    .scale-scenario .scenario-index { background:var(--scale-accent) }
+    .scenario-title { min-width:0 }
+    .scenario-title strong { display:block; font-size:15px }
+    .scenario-title span { display:block; margin-top:2px; color:var(--muted); font-size:11px }
+    .reset-button { margin-left:auto; height:30px; padding:0 10px; border:1px solid var(--line); border-radius:0; background:transparent; cursor:pointer }
+    .reset-button:hover { border-color:var(--line-strong); background:#f7f5ef }
+    .slider-panel { padding:11px 12px 10px; display:grid; grid-template-columns:auto minmax(140px,1fr) 66px; align-items:center; gap:12px; border-bottom:1px solid var(--line) }
+    .slider-panel label { color:var(--muted); font-size:12px; white-space:nowrap }
+    input[type="range"] { width:100%; margin:0; accent-color:var(--scenario-accent); cursor:pointer }
+    .font-scenario { --scenario-accent:var(--font-accent) }
+    .scale-scenario { --scenario-accent:var(--scale-accent) }
+    .slider-value { height:30px; display:grid; place-items:center; border-left:2px solid var(--scenario-accent); background:var(--canvas); font-size:13px; font-variant-numeric:tabular-nums }
+    .viewport-shell { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:#cbc8bf }
+    .viewport-stage { position:absolute; top:0; left:0; transform-origin:top left; overflow:hidden; background:#fff }
+    .app-frame { position:absolute; top:0; left:0; display:block; border:0; transform-origin:top left; background:#fff }
+    .scenario-foot { min-height:58px; padding:9px 12px; display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; border-top:1px solid var(--line) }
+    .scenario-note { color:var(--muted); font-size:11px; line-height:1.45 }
+    .derived-value { color:var(--scenario-accent); font-size:12px; font-weight:650; font-variant-numeric:tabular-nums; text-align:right }
+    .diagnostic-key { padding:10px 12px; display:flex; gap:14px; border-top:1px solid var(--line); background:#faf9f5 }
+    .diagnostic-key span { color:var(--muted); font-size:11px }
+    .diagnostic-key b { color:var(--ink); font-weight:600 }
+    @media (max-width:1180px) {
+      .compare-grid { grid-template-columns:1fr }
+      .viewport-shell { max-height:none }
+    }
+    @media (max-width:720px) {
+      .lab-head { padding:10px 12px; align-items:flex-start; flex-direction:column; gap:8px }
+      .global-controls { width:100%; margin:0; align-self:auto; border-top:1px solid var(--line) }
+      .control-block { flex:1; border-left:0; padding-left:0 }
+      .compare-grid { padding:8px; gap:8px }
+      .slider-panel { grid-template-columns:1fr 62px }
+      .slider-panel label { grid-column:1/-1 }
+    }
+  </style>
+</head>
+<body>
+  <div class="lab">
+    <header class="lab-head">
+      <div class="lab-title">
+        <strong>UI 크기 변형 비교</strong>
+        <span>글꼴 크기와 앱 배율이 동일한 화면에 주는 영향을 분리해서 확인합니다.</span>
+      </div>
+      <div class="global-controls">
+        <div class="control-block">
+          <label for="targetResolution">기준 화면</label>
+          <select id="targetResolution">
+            <option value="1280x720">1280 × 720</option>
+            <option value="1920x1080" selected>1920 × 1080</option>
+            <option value="2560x1440">2560 × 1440</option>
+          </select>
+        </div>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">다크 보기</button>
+      </div>
+    </header>
+
+    <main class="compare-grid">
+      <section class="scenario font-scenario" aria-labelledby="fontScenarioTitle">
+        <header class="scenario-head">
+          <span class="scenario-index">A</span>
+          <div class="scenario-title">
+            <strong id="fontScenarioTitle">글꼴 크기로 조정</strong>
+            <span>레이아웃 치수는 고정하고 텍스트만 변경</span>
+          </div>
+          <button class="reset-button" id="fontReset" type="button">16px 복원</button>
+        </header>
+        <div class="slider-panel">
+          <label for="fontSizeSlider">기본 글꼴</label>
+          <input id="fontSizeSlider" type="range" min="12" max="20" step="1" value="16">
+          <output class="slider-value" id="fontSizeValue" for="fontSizeSlider">16px</output>
+        </div>
+        <div class="viewport-shell" id="fontViewport">
+          <div class="viewport-stage" id="fontStage">
+            <iframe class="app-frame" id="fontFrame" src="hearthstone-workbench-foundation.html" title="글꼴 크기 시나리오"></iframe>
+          </div>
+        </div>
+        <footer class="scenario-foot">
+          <div class="scenario-note">컨트롤 높이와 카드 배치는 그대로입니다. 줄바꿈, 잘림, 정보 위계 변화가 먼저 드러납니다.</div>
+          <div class="derived-value" id="fontDerived">제목 20px · 커브 12px</div>
+        </footer>
+      </section>
+
+      <section class="scenario scale-scenario" aria-labelledby="scaleScenarioTitle">
+        <header class="scenario-head">
+          <span class="scenario-index">B</span>
+          <div class="scenario-title">
+            <strong id="scaleScenarioTitle">앱 배율로 조정</strong>
+            <span>논리적 캔버스와 콘텐츠 좌표를 유지한 채 전체 확대/축소</span>
+          </div>
+          <button class="reset-button" id="scaleReset" type="button">100% 복원</button>
+        </header>
+        <div class="slider-panel">
+          <label for="appScaleSlider">앱 배율</label>
+          <input id="appScaleSlider" type="range" min="75" max="150" step="5" value="100">
+          <output class="slider-value" id="appScaleValue" for="appScaleSlider">100%</output>
+        </div>
+        <div class="viewport-shell" id="scaleViewport">
+          <div class="viewport-stage" id="scaleStage">
+            <iframe class="app-frame" id="scaleFrame" src="hearthstone-workbench-foundation.html" title="앱 배율 시나리오"></iframe>
+          </div>
+        </div>
+        <footer class="scenario-foot">
+          <div class="scenario-note">카드 열 수, 덱 위치와 반응형 분기는 그대로입니다. 확대 시 재배치되지 않고 가장자리만 창 밖으로 나갑니다.</div>
+          <div class="derived-value" id="scaleDerived">1920 × 1080 레이아웃 유지</div>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const resolution = document.querySelector("#targetResolution");
+      const fontSlider = document.querySelector("#fontSizeSlider");
+      const scaleSlider = document.querySelector("#appScaleSlider");
+      const fontFrame = document.querySelector("#fontFrame");
+      const scaleFrame = document.querySelector("#scaleFrame");
+      const fontStage = document.querySelector("#fontStage");
+      const scaleStage = document.querySelector("#scaleStage");
+      const fontViewport = document.querySelector("#fontViewport");
+      const scaleViewport = document.querySelector("#scaleViewport");
+      let theme = "light";
+
+      function targetSize() {
+        const [width,height] = resolution.value.split("x").map(Number);
+        return {width,height};
+      }
+      function send(frame,type,value) {
+        frame.contentWindow?.postMessage({source:"ui-scaling-comparison",type,value},"*");
+      }
+      function fitStage(stage,viewport,width,height) {
+        const fit = viewport.clientWidth/width;
+        stage.style.width = width+"px";
+        stage.style.height = height+"px";
+        stage.style.transform = `scale(${fit})`;
+      }
+      function updateFontScenario() {
+        const {width,height} = targetSize();
+        const size = Number(fontSlider.value);
+        fontFrame.style.width = width+"px";
+        fontFrame.style.height = height+"px";
+        fontFrame.style.transform = "none";
+        fitStage(fontStage,fontViewport,width,height);
+        document.querySelector("#fontSizeValue").value = size+"px";
+        document.querySelector("#fontDerived").textContent = `제목 ${size+4}px · 커브 ${Math.max(8,size-4)}px`;
+        send(fontFrame,"font-size",size);
+        send(fontFrame,"theme",theme);
+      }
+      function updateScaleScenario() {
+        const {width,height} = targetSize();
+        const scale = Number(scaleSlider.value)/100;
+        scaleFrame.style.width = width+"px";
+        scaleFrame.style.height = height+"px";
+        scaleFrame.style.transform = `scale(${scale})`;
+        fitStage(scaleStage,scaleViewport,width,height);
+        document.querySelector("#appScaleValue").value = Math.round(scale*100)+"%";
+        document.querySelector("#scaleDerived").textContent = `${width} × ${height} 레이아웃 유지`;
+        send(scaleFrame,"theme",theme);
+      }
+      function updateAll() {
+        updateFontScenario();
+        updateScaleScenario();
+      }
+      fontSlider.addEventListener("input",updateFontScenario);
+      scaleSlider.addEventListener("input",updateScaleScenario);
+      resolution.addEventListener("change",updateAll);
+      document.querySelector("#fontReset").addEventListener("click",() => { fontSlider.value = 16; updateFontScenario() });
+      document.querySelector("#scaleReset").addEventListener("click",() => { scaleSlider.value = 100; updateScaleScenario() });
+      document.querySelector("#themeToggle").addEventListener("click",event => {
+        theme = theme === "light" ? "ink" : "light";
+        event.currentTarget.textContent = theme === "light" ? "다크 보기" : "라이트 보기";
+        event.currentTarget.setAttribute("aria-pressed",String(theme === "ink"));
+        updateAll();
+      });
+      fontFrame.addEventListener("load",updateFontScenario);
+      scaleFrame.addEventListener("load",updateScaleScenario);
+      window.addEventListener("resize",updateAll);
+      updateAll();
+    })();
+  </script>
+</body>
+</html>

@@ -3,20 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hearth Index · Deck Workbench Foundation</title>
-  <script>
-    (() => {
-      const params = new URLSearchParams(location.search);
-      if (params.get("responsive") === "off") return;
-      document.documentElement.dataset.responsiveProfile = "a";
-      document.documentElement.dataset.responsivePane = "library";
-      document.documentElement.dataset.responsiveLayout = innerWidth < 824 ? "single" : "split";
-      const deckRowProbe = params.get("deckRow");
-      if (deckRowProbe === "180" || deckRowProbe === "243") {
-        document.documentElement.dataset.deckRowProbe = deckRowProbe;
-      }
-    })();
-  </script>
+  <title>Hearth Index · Component Boundary Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       color-scheme: light;
@@ -34,9 +24,6 @@
       --app-pad:clamp(12px,1vw,20px); --topbar-h:clamp(56px,5.4vh,78px);
       --ui-font:clamp(12px,.7vw,16px); --deck-row-h:clamp(32px,3.05vh,42px);
       --ease:cubic-bezier(.2,.8,.2,1);
-      --scroll-area-size:6px;
-      --scroll-area-thumb:color-mix(in srgb,var(--ink) 19%,transparent);
-      --scroll-area-thumb-active:color-mix(in srgb,var(--ink) 48%,transparent);
     }
     html[data-theme="ink"] {
       color-scheme:dark; --canvas:#1a1612; --canvas-soft:#201a15; --surface:#271f19;
@@ -64,7 +51,6 @@
     button,input,select { font:inherit }
     button { color:inherit }
     button:focus-visible,input:focus-visible,select:focus-visible { outline:2px solid var(--primary); outline-offset:2px }
-    .browser:focus-visible,.deck-list:focus-visible { outline:2px solid var(--primary); outline-offset:-2px }
     h1,h2,h3,p { margin:0 }
     .lucide {
       width:15px; height:15px; flex:0 0 auto; fill:none; stroke:currentColor;
@@ -149,10 +135,7 @@
     }
     .divider { flex:0 0 auto; width:1px; height:22px; background:var(--hairline) }
     .query-status { margin-left:auto; color:var(--muted); font:9px/1.4 var(--mono); white-space:nowrap }
-    .browser {
-      min-height:0; overflow-x:hidden; overflow-y:auto; padding:15px 20px 22px;
-      scrollbar-gutter:stable;
-    }
+    .browser { min-height:0; overflow:auto; padding:15px 20px 22px; scrollbar-width:thin }
     .card-grid { display:grid; grid-template-columns:repeat(4,minmax(145px,1fr)); gap:clamp(9px,.65vw,14px) }
     .card-tile {
       min-width:0; position:relative; overflow:hidden; cursor:pointer; background:var(--canvas-soft);
@@ -218,15 +201,10 @@
     .clause.not { border-color:color-mix(in srgb,var(--error) 34%,var(--hairline)) }
     .add-clause { align-self:center; width:29px; height:29px; border:1px dashed var(--hairline-strong); border-radius:7px; background:transparent; cursor:pointer }
 
-    .deck {
-      container-type:inline-size; display:grid;
-      grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto;
-    }
+    .deck { display:grid; grid-template-rows:auto minmax(0,1fr) auto }
     .deck-head.deck-summary-head {
-      --metric-column-width:calc(1.25em + 5ch);
-      --metric-grid-width:calc(2.5em + 10ch + 3px);
-      min-height:max(104px,6.5em); padding:4px 6px 4px 8px; display:grid;
-      grid-template-columns:max(146px,var(--metric-grid-width)) minmax(116px,1fr); gap:4px;
+      min-height:104px; padding:4px 6px 4px 8px; display:grid;
+      grid-template-columns:minmax(146px,1.1fr) minmax(116px,.9fr); gap:4px;
       border-bottom:1px solid var(--hairline); background:var(--canvas);
     }
     .deck-summary-copy { min-width:0; display:flex; flex-direction:column }
@@ -249,61 +227,30 @@
     .deck-total strong { color:var(--ink); font-weight:600 }
     .valid-dot { width:6px; height:6px; margin-right:2px; border-radius:50%; background:var(--success) }
     .deck-summary-metrics {
-      width:var(--metric-grid-width); max-width:100%; min-width:0; margin-top:2px; display:grid;
-      grid-template-columns:repeat(2,var(--metric-column-width));
-      grid-template-rows:repeat(2,1.3em); gap:1px 3px; color:var(--muted);
+      min-width:0; margin-top:2px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+      grid-template-rows:repeat(2,18px); gap:1px 3px; color:var(--muted);
       font-variant-numeric:tabular-nums;
     }
-    .deck-summary-metrics > span {
-      min-width:0; display:flex; align-items:center; gap:2px; line-height:1.3em; white-space:nowrap;
-    }
+    .deck-summary-metrics > span { min-width:0; display:flex; align-items:center; gap:2px; line-height:18px }
     .deck-summary-metrics strong { color:var(--ink); font-weight:600 }
-    .metric-icon,.metric-lucide { width:1em; height:1em; flex:0 0 1em }
+    .metric-icon,.metric-lucide { width:16px; height:16px; flex:0 0 16px }
     .metric-icon { object-fit:contain }
     .metric-lucide { fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round }
     .badge { padding:4px 8px; color:var(--body); background:var(--surface-strong); border-radius:999px; font:9px/1 var(--mono) }
-    .deck-list {
-      min-height:0; overflow-x:hidden; overflow-y:auto; padding:clamp(8px,.55vw,12px);
-      scrollbar-gutter:stable;
-    }
-    .browser::-webkit-scrollbar,.deck-list::-webkit-scrollbar {
-      width:var(--scroll-area-size); height:var(--scroll-area-size);
-    }
-    .browser::-webkit-scrollbar-track,.deck-list::-webkit-scrollbar-track { background:transparent }
-    .browser::-webkit-scrollbar-thumb,.deck-list::-webkit-scrollbar-thumb {
-      min-height:34px; border:0; border-radius:0; background:var(--scroll-area-thumb);
-    }
-    .browser:hover::-webkit-scrollbar-thumb,
-    .browser:focus-visible::-webkit-scrollbar-thumb,
-    .deck-list:hover::-webkit-scrollbar-thumb,
-    .deck-list:focus-visible::-webkit-scrollbar-thumb {
-      background:var(--scroll-area-thumb-active);
-    }
-    .browser::-webkit-scrollbar-corner,.deck-list::-webkit-scrollbar-corner { background:transparent }
+    .deck-list { min-height:0; overflow-y:auto; padding:clamp(8px,.55vw,12px); scrollbar-width:thin }
     .deck-row {
       position:relative; height:var(--deck-row-h); margin-bottom:clamp(3px,.28vh,5px); overflow:hidden; display:grid;
-      container-type:inline-size;
-      grid-template-columns:30px minmax(0,1fr) auto; align-items:center; background:#2b2822;
+      grid-template-columns:30px minmax(0,1fr) auto; align-items:center; background:var(--canvas-soft);
       border:1px solid var(--hairline-strong); border-radius:6px;
     }
     .deck-row:before { content:""; position:absolute; z-index:4; inset:0 auto 0 0; width:3px; background:var(--surface-strong) }
     .deck-row.legendary:before { background:var(--done) }
     .deck-row.flash { animation:flash 650ms var(--ease) }
-    @keyframes flash { 0%{background:color-mix(in srgb,var(--primary) 22%,#2b2822)} 100%{background:#2b2822} }
+    @keyframes flash { 0%{background:color-mix(in srgb,var(--primary) 15%,var(--surface))} 100%{background:var(--canvas-soft)} }
     .deck-art {
-      position:absolute; z-index:0; top:50%; right:0; width:243px; height:64px;
-      transform:translateY(-50%); background-image:var(--crop); background-repeat:no-repeat;
-      background-size:243px 64px; background-position:right center;
-      -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.28) 8%,#000 20%,#000 100%);
-      mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.28) 8%,#000 20%,#000 100%);
-      filter:saturate(.9) contrast(.98);
-    }
-    .deck-art:after {
-      content:""; position:absolute; inset:0;
-      background:linear-gradient(90deg,rgba(24,23,19,.46) 0%,rgba(24,23,19,.12) 52%,rgba(24,23,19,.62) 100%);
-    }
-    @container (max-width:242px) {
-      .deck-art { right:auto; left:50%; transform:translate(-50%,-50%) }
+      position:absolute; z-index:0; inset:0; background-image:
+        linear-gradient(90deg,rgba(24,23,19,.84) 0%,rgba(24,23,19,.22) 48%,rgba(24,23,19,.78) 100%),
+        var(--crop); background-size:cover; background-position:center; filter:saturate(.9) contrast(.98);
     }
     .deck-mana { position:relative; z-index:2; height:100%; display:grid; place-items:center; background:color-mix(in srgb,var(--surface) 94%,transparent); border-right:1px solid var(--hairline); font:600 10px/1 var(--mono) }
     .deck-card-name { position:relative; z-index:2; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 9px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.72); font-size:clamp(11px,.62vw,14px); font-weight:600 }
@@ -313,9 +260,7 @@
     .deck-total { font-size:20px; font-weight:400; letter-spacing:-.02em }
     .deck-total span { color:var(--muted) }
     .validation { color:var(--success); font:9px/1.4 var(--mono) }
-    .deck-mana-curve {
-      min-width:0; display:grid; grid-template-rows:repeat(8,max(12px,.75em)); gap:0; align-content:center;
-    }
+    .deck-mana-curve { min-width:0; display:grid; grid-template-rows:repeat(8,12px); gap:0; align-content:center }
     .mana-curve-row {
       min-width:0; display:grid; grid-template-columns:18px minmax(0,1fr); align-items:center;
       gap:2px; font:12px/1 var(--mono); font-variant-numeric:tabular-nums;
@@ -328,9 +273,7 @@
     .mana-curve-track { position:relative; grid-column:2; grid-row:1; height:4px; overflow:hidden; background:var(--surface-strong) }
     .mana-curve-fill { position:absolute; inset:0 auto 0 0; width:var(--curve-width); min-width:var(--curve-minimum,0); background:var(--ink) }
     .mana-curve-row.zero .mana-curve-fill { display:none }
-    .deck-actions {
-      display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr); gap:8px;
-    }
+    .deck-actions { display:grid; grid-template-columns:1fr 1.35fr; gap:8px }
     .sr-only { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important }
 
     /* Foundation and layout-decision pages */
@@ -397,7 +340,7 @@
       .filter-dock[data-open="true"] .dock-body { grid-template-columns:auto 1fr }
       .swatches { grid-template-columns:repeat(3,1fr) }
     }
-    @media (max-width:620px) {
+    @media (max-width:860px) {
       body { overflow:auto }
       .app { height:auto; min-height:100vh; display:block }
       .topbar { min-height:64px; grid-template-columns:1fr auto; padding-block:10px }
@@ -431,7 +374,7 @@
     }
 
     /* Seamless workbench pass: one canvas, hairlines, full-card thumbnails. */
-    :root { --deck-width:320px }
+    :root { --deck-width:clamp(320px,20vw,430px) }
     .topbar {
       padding:0; gap:0; background:var(--surface);
       grid-template-columns:minmax(0,1fr) var(--deck-width);
@@ -608,8 +551,8 @@
       box-shadow:inset 2px 0 0 var(--logic-color),inset 0 0 0 1px color-mix(in srgb,var(--logic-color) 48%,transparent);
     }
     .deck-list { padding:0; background:var(--canvas-soft) }
-    .deck-row { margin:0; border:0; border-radius:0; background:#2b2822 }
-    .deck-row:hover,.deck-row:focus-visible { background:#353027 }
+    .deck-row { margin:0; border:0; border-radius:0; background:transparent }
+    .deck-row:hover,.deck-row:focus-visible { background:var(--canvas-soft) }
     .deck-row:before { width:2px }
     .deck-hover-preview {
       position:fixed; z-index:60; width:clamp(190px,16vw,240px); aspect-ratio:404/558;
@@ -700,107 +643,119 @@
     .app { grid-template-rows:minmax(0,1fr) }
     .topbar { display:none }
 
-    /* Responsive profile A: preserve deck-building work, disclose analysis first. */
-    .compact-pane-switch { display:none }
-    html[data-responsive-profile="a"] {
-      --deck-row-h:44px;
-      --deck-content-min-width:243px;
-      --deck-width:max(320px,var(--deck-content-min-width));
+    @media (min-width:1600px) {
+      .deck-head.deck-summary-head { grid-template-columns:minmax(158px,1.05fr) minmax(156px,.95fr) }
     }
-    @media (min-width:761px) and (max-width:1280px) {
-      html[data-responsive-profile="a"] {
-        --deck-width:clamp(var(--deck-content-min-width),calc(100vw - 960px),320px);
-      }
+
+    /* Component boundary inspector. This layer is diagnostic and does not belong to the app UI. */
+    :root {
+      --scrollbar-size:8px;
+      --scrollbar-track:transparent;
+      --scrollbar-thumb:#b8b4aa;
+      --scrollbar-thumb-hover:#77736b;
+      --map-layout:#b87424;
+      --map-card:#2f6f8f;
+      --map-filter:#7656a8;
+      --map-deck:#b4475e;
+      --map-scroll:#1f8a65;
     }
-    html[data-responsive-profile="a"] .card-grid {
-      --responsive-card-base-width:176px;
-      --responsive-card-width:var(--responsive-card-base-width);
-      grid-template-columns:repeat(auto-fill,var(--responsive-card-width));
-      justify-content:space-between;
+    html[data-theme="ink"] {
+      --scrollbar-thumb:#66594d;
+      --scrollbar-thumb-hover:#a79683;
+      --map-layout:#dba05a;
+      --map-card:#75b9ce;
+      --map-filter:#be9bde;
+      --map-deck:#f08399;
+      --map-scroll:#69c79d;
     }
-    html[data-responsive-profile="a"] .card-grid[data-card-columns] {
-      grid-template-columns:repeat(auto-fill,var(--responsive-card-width));
+    .browser,
+    .deck-list {
+      scrollbar-width:thin;
+      scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track);
+      scrollbar-gutter:stable;
+      overscroll-behavior:contain;
     }
-    html[data-responsive-profile="a"][data-deck-row-probe="243"] #deckList .deck-row,
-    html[data-responsive-profile="a"][data-deck-row-probe="180"] #deckList .deck-row {
-      width:var(--deck-row-probe-width);
-      margin-left:auto;
+    .browser::-webkit-scrollbar,
+    .deck-list::-webkit-scrollbar { width:var(--scrollbar-size); height:var(--scrollbar-size) }
+    .browser::-webkit-scrollbar-track,
+    .deck-list::-webkit-scrollbar-track { background:var(--scrollbar-track) }
+    .browser::-webkit-scrollbar-thumb,
+    .deck-list::-webkit-scrollbar-thumb {
+      min-height:32px; border:2px solid transparent; border-radius:0;
+      background:var(--scrollbar-thumb); background-clip:padding-box;
     }
-    html[data-responsive-profile="a"][data-deck-row-probe="243"] { --deck-row-probe-width:243px }
-    html[data-responsive-profile="a"][data-deck-row-probe="180"] { --deck-row-probe-width:180px }
-    @media (max-width:1027px) {
-      html[data-responsive-profile="a"] .panel-title { display:none }
+    .browser::-webkit-scrollbar-thumb:hover,
+    .deck-list::-webkit-scrollbar-thumb:hover { background:var(--scrollbar-thumb-hover); background-clip:padding-box }
+
+    .component-inspector {
+      position:fixed; left:10px; bottom:10px; z-index:600; max-width:calc(100vw - 20px);
+      border:1px solid var(--hairline-strong); background:color-mix(in srgb,var(--surface) 94%,transparent);
+      box-shadow:0 8px 26px rgba(24,20,16,.12); backdrop-filter:blur(10px);
     }
-    @media (max-width:1024px) {
-      html[data-responsive-profile="a"] #saveQuery svg { display:none }
+    .inspector-commandbar { min-height:38px; display:flex; align-items:stretch; overflow-x:auto }
+    .inspector-commandbar > * + * { border-left:1px solid var(--hairline) }
+    .inspector-title,
+    .inspector-command {
+      flex:0 0 auto; min-height:38px; border:0; border-radius:0; background:transparent;
+      color:var(--muted); padding:0 11px; font:600 11px/1 var(--mono); letter-spacing:.015em;
     }
-    @media (max-width:900px) {
-      html[data-responsive-profile="a"] .library-head-filters .filter-label { display:none }
-      html[data-responsive-profile="a"] .header-type { width:110px }
+    .inspector-title { display:flex; align-items:center; color:var(--ink); cursor:pointer }
+    .inspector-title:before { content:""; width:7px; height:7px; margin-right:7px; background:var(--map-layout) }
+    .inspector-command { cursor:pointer }
+    .inspector-command:hover { color:var(--ink); background:var(--canvas-soft) }
+    .inspector-command[aria-pressed="true"] { color:var(--ink); box-shadow:inset 0 -2px 0 currentColor }
+    .inspector-command[data-scope="cards"][aria-pressed="true"] { color:var(--map-card) }
+    .inspector-command[data-scope="filters"][aria-pressed="true"] { color:var(--map-filter) }
+    .inspector-command[data-scope="deck"][aria-pressed="true"] { color:var(--map-deck) }
+    .inspector-command[data-scope="scroll"][aria-pressed="true"] { color:var(--map-scroll) }
+    .inspector-note {
+      position:absolute; left:0; bottom:calc(100% + 6px); width:min(470px,calc(100vw - 20px));
+      padding:7px 9px; border:1px solid var(--hairline); background:var(--surface);
+      color:var(--body); font:500 11px/1.45 var(--sans); pointer-events:none;
     }
-    @container (max-width:299px) {
-      html[data-responsive-profile="a"] .deck-head.deck-summary-head {
-        grid-template-columns:1fr;
-      }
-      html[data-responsive-profile="a"] .deck-mana-curve { display:none }
+    body:not(.component-map-visible) .inspector-note { display:none }
+
+    [data-component] { --component-color:var(--map-layout) }
+    .component-anchor { position:relative }
+    .component-label {
+      display:none!important; position:absolute!important; z-index:460; left:2px; top:2px; max-width:calc(100% - 4px);
+      padding:2px 5px; overflow:hidden; color:#fff; background:var(--component-color);
+      font:600 10px/1.25 var(--mono); letter-spacing:-.02em; white-space:nowrap; text-overflow:ellipsis;
+      pointer-events:none;
     }
-    @container (max-width:239px) {
-      html[data-responsive-profile="a"] .deck-actions {
-        grid-template-columns:minmax(0,.85fr) minmax(0,1.5fr);
-      }
-      html[data-responsive-profile="a"] .deck-actions > .button {
-        min-width:0; padding-inline:4px;
-      }
-      html[data-responsive-profile="a"] .deck-actions .lucide { display:none }
+    body.component-map-visible[data-inspect-scope="layout"] [data-map-groups~="layout"],
+    body.component-map-visible[data-inspect-scope="cards"] [data-map-groups~="cards"],
+    body.component-map-visible[data-inspect-scope="filters"] [data-map-groups~="filters"],
+    body.component-map-visible[data-inspect-scope="deck"] [data-map-groups~="deck"],
+    body.component-map-visible[data-inspect-scope="scroll"] [data-map-groups~="scroll"] {
+      outline:1px solid var(--component-color); outline-offset:-2px;
     }
-    @media (max-height:719px) {
-      html[data-responsive-profile="a"] .filter-clause-list { display:none }
-      html[data-responsive-profile="a"] .active-filter-groups { grid-template-columns:repeat(3,minmax(0,1fr)) }
-      html[data-responsive-profile="a"] .filter-bucket {
-        min-height:30px; padding-block:4px; grid-template-columns:1fr;
-      }
+    body.component-map-visible[data-inspect-scope="layout"] [data-map-groups~="layout"] { --component-color:var(--map-layout) }
+    body.component-map-visible[data-inspect-scope="cards"] [data-map-groups~="cards"] { --component-color:var(--map-card) }
+    body.component-map-visible[data-inspect-scope="filters"] [data-map-groups~="filters"] { --component-color:var(--map-filter) }
+    body.component-map-visible[data-inspect-scope="deck"] [data-map-groups~="deck"] { --component-color:var(--map-deck) }
+    body.component-map-visible[data-inspect-scope="scroll"] [data-map-groups~="scroll"] { --component-color:var(--map-scroll) }
+    body.component-map-visible[data-inspect-scope="layout"] [data-map-groups~="layout"] > .component-label[data-label-group="layout"],
+    body.component-map-visible[data-inspect-scope="cards"] [data-map-groups~="cards"] > .component-label[data-label-group="cards"],
+    body.component-map-visible[data-inspect-scope="filters"] [data-map-groups~="filters"] > .component-label[data-label-group="filters"],
+    body.component-map-visible[data-inspect-scope="deck"] [data-map-groups~="deck"] > .component-label[data-label-group="deck"],
+    body.component-map-visible[data-inspect-scope="scroll"] [data-map-groups~="scroll"] > .component-label[data-label-group="scroll"] { display:block!important }
+    body.component-map-visible[data-inspect-scope="scroll"] .browser,
+    body.component-map-visible[data-inspect-scope="scroll"] .deck-list { box-shadow:inset -9px 0 0 color-mix(in srgb,var(--map-scroll) 10%,transparent) }
+    body.scroll-inspect .card-grid:after {
+      content:"CardGrid · 더 많은 검색 결과"; grid-column:1/-1; height:58vh; padding:16px;
+      border-top:1px dashed color-mix(in srgb,var(--map-scroll) 55%,transparent);
+      color:var(--map-scroll); font:600 11px/1 var(--mono);
     }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] body { overflow:hidden }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .app {
-      height:100vh; height:100dvh; min-height:0; display:grid;
+    body.scroll-inspect .deck-list:after {
+      content:"DeckList · 계속"; display:block; height:36vh; padding:10px;
+      border-top:1px dashed color-mix(in srgb,var(--map-scroll) 55%,transparent);
+      color:var(--map-scroll); font:600 11px/1 var(--mono);
     }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .workbench {
-      height:100%; min-height:0; grid-template:41px minmax(0,1fr)/minmax(0,1fr);
-    }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .compact-pane-switch {
-      grid-column:1; grid-row:1; min-width:0; display:grid; grid-template-columns:1fr 1fr;
-      border-bottom:1px solid var(--hairline); background:var(--surface);
-    }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .compact-pane-switch button {
-      min-width:0; border:0; border-left:1px solid var(--hairline);
-      border-radius:0; background:transparent; cursor:pointer;
-    }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .compact-pane-switch button:first-child { border-left:0 }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .compact-pane-switch button[aria-pressed="true"] {
-      background:var(--canvas-soft); box-shadow:inset 0 -2px 0 var(--primary);
-    }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .library,
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .deck {
-      grid-column:1; grid-row:2; min-width:0; min-height:0;
-    }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .deck {
-      grid-template-columns:minmax(0,1fr); background:var(--surface);
-    }
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .deck > .deck-head,
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .deck > .deck-list,
-    html[data-responsive-profile="a"][data-responsive-layout="single"] .deck > .deck-footer {
-      width:100%; justify-self:stretch;
-    }
-    html[data-responsive-profile="a"][data-responsive-layout="single"][data-responsive-pane="library"] .deck,
-    html[data-responsive-profile="a"][data-responsive-layout="single"][data-responsive-pane="deck"] .library { display:none }
-    @media (max-width:620px) {
-      html[data-responsive-profile="a"] .panel-head {
-        height:41px; min-height:41px; padding:0; align-items:center; flex-direction:row;
-      }
-      html[data-responsive-profile="a"] .library-head-filters {
-        width:100%; margin-left:0; overflow-x:auto;
-      }
-    }
+    @media (max-width:1440px) { .inspector-title,.inspector-command { padding-inline:9px } }
+    @media (max-width:1024px) { .component-inspector { left:6px; bottom:6px; max-width:calc(100vw - 12px) } }
+    @media (max-width:768px) { .inspector-note { display:none } .inspector-title,.inspector-command { min-height:34px; padding-inline:8px } }
+    @media (max-width:375px) { .inspector-title { width:34px; overflow:hidden; padding-inline:9px } }
     @media (prefers-reduced-motion:reduce) { *,*:before,*:after { animation:none!important; transition:none!important } }
   </style>
 </head>
@@ -824,10 +779,6 @@
     </header>
 
     <main class="screen workbench" data-screen="workbench">
-      <div class="compact-pane-switch" role="group" aria-label="작업 영역 전환">
-        <button type="button" data-responsive-pane-target="library" aria-pressed="true">카드 라이브러리</button>
-        <button type="button" data-responsive-pane-target="deck" aria-pressed="false">현재 덱</button>
-      </div>
       <section class="panel library" aria-label="카드 라이브러리">
         <div class="panel-head">
           <h1 class="panel-title">카드 라이브러리</h1>
@@ -849,7 +800,7 @@
             </select>
           </div>
         </div>
-        <div class="browser" tabindex="0" aria-label="카드 라이브러리 목록"><div class="card-grid" id="cardGrid"><div class="empty" id="emptyState">조건에 맞는 카드가 없습니다.</div></div></div>
+        <div class="browser"><div class="card-grid" id="cardGrid"><div class="empty" id="emptyState">조건에 맞는 카드가 없습니다.</div></div></div>
         <section class="filter-dock" id="filterDock" aria-label="고급 조건 편집기">
           <div class="dock-body">
             <div class="active-filter-groups" aria-label="활성 필터">
@@ -872,7 +823,7 @@
                 <svg class="lucide lucide-search" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 <input id="cardSearch" type="text" placeholder="AND 조건 입력 · 예: 비용이 5인 하수인" aria-label="고급 필터 조건 입력" autocomplete="off">
               </label>
-              <button class="mini-button" id="saveQuery" aria-label="현재 쿼리를 템플릿으로 저장"><svg class="lucide lucide-bookmark" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>템플릿 저장</span></button>
+              <button class="mini-button" id="saveQuery" aria-label="현재 쿼리를 템플릿으로 저장">템플릿 저장</button>
             </div>
           </div>
         </section>
@@ -905,7 +856,7 @@
             <div class="mana-curve-row zero"><span class="curve-label">7+</span><span class="mana-curve-track"><i class="mana-curve-fill" style="--curve-width:0%"></i></span><span class="curve-count">0</span></div>
           </div>
         </div>
-        <div class="deck-list" id="deckList" tabindex="0" aria-label="현재 덱 카드 목록">
+        <div class="deck-list" id="deckList">
         </div>
         <div class="deck-footer">
           <div class="validation sr-only" id="validation">FORMAT VALID · 4 OPEN</div>
@@ -978,6 +929,19 @@
       </section>
     </main>
   </div>
+  <aside class="component-inspector" aria-label="컴포넌트 경계 검사기">
+    <div class="inspector-note" id="inspectorNote" data-pretext>
+      앱 루트는 카드 라이브러리와 덱 작업 영역만 소유합니다. 하단 COMPONENTS 바는 이 목업에만 있는 진단 도구입니다.
+    </div>
+    <div class="inspector-commandbar" role="toolbar" aria-label="컴포넌트 표시 범위">
+      <button class="inspector-title" id="componentMapToggle" type="button" aria-pressed="true" title="컴포넌트 경계 표시 전환">COMPONENTS</button>
+      <button class="inspector-command" type="button" data-scope="layout" aria-pressed="true">레이아웃</button>
+      <button class="inspector-command" type="button" data-scope="cards" aria-pressed="false">카드</button>
+      <button class="inspector-command" type="button" data-scope="filters" aria-pressed="false">필터</button>
+      <button class="inspector-command" type="button" data-scope="deck" aria-pressed="false">덱</button>
+      <button class="inspector-command" type="button" data-scope="scroll" aria-pressed="false">스크롤</button>
+    </div>
+  </aside>
   <div class="card-detail-modal" id="cardDetailModal" role="dialog" aria-modal="true" aria-labelledby="cardDetailName" hidden>
     <button class="card-detail-close" id="cardDetailClose" aria-label="카드 상세 닫기"><svg class="lucide lucide-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     <div class="card-detail-stage">
@@ -995,23 +959,6 @@
     (() => {
       const $ = (s, r=document) => r.querySelector(s);
       const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-      const responsiveProfileA = document.documentElement.dataset.responsiveProfile === "a";
-      const responsivePaneButtons = $$("[data-responsive-pane-target]");
-      function setResponsivePane(name) {
-        if (!responsiveProfileA || !["library","deck"].includes(name)) return;
-        document.documentElement.dataset.responsivePane = name;
-        responsivePaneButtons.forEach(button => {
-          button.setAttribute("aria-pressed",String(button.dataset.responsivePaneTarget === name));
-        });
-        window.parent.postMessage({
-          source:"responsive-workbench",
-          type:"pane-change",
-          pane:name
-        },"*");
-      }
-      responsivePaneButtons.forEach(button => {
-        button.addEventListener("click",() => setResponsivePane(button.dataset.responsivePaneTarget));
-      });
       const previewTypographyStyle = document.createElement("style");
       previewTypographyStyle.id = "previewTypographyOverride";
       document.head.appendChild(previewTypographyStyle);
@@ -1029,7 +976,6 @@
           html[data-scaling-preview="font"] .workbench .mana-curve-row,
           html[data-scaling-preview="font"] .workbench .mana-curve-row * { font-size:${curveSize}px!important }
         `;
-        requestAnimationFrame(scheduleResponsiveLayout);
       }
       window.addEventListener("message",event => {
         const message = event.data;
@@ -1180,78 +1126,11 @@
       let cardColumnDelta = 0;
       let cardBaseColumns = 1;
       let cardBaseWidth = 0;
-      let responsiveCardWidth = 176;
-      let responsiveLayoutFrame = 0;
       try {
         const savedDelta = Number(localStorage.getItem(cardColumnStorageKey));
         if (Number.isFinite(savedDelta)) cardColumnDelta = Math.round(savedDelta);
       } catch {}
-      if (responsiveProfileA) cardColumnDelta = 0;
-      function measureDeckContentMinimum() {
-        const names = $$(".deck-card-name",deckList);
-        const sample = names[0];
-        if (!sample) return 180;
-        const style = getComputedStyle(sample);
-        const canvas = measureDeckContentMinimum.canvas ||= document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        context.font = style.font;
-        const namePadding = (parseFloat(style.paddingLeft)||0)+(parseFloat(style.paddingRight)||0);
-        const widestName = Math.max(...names.map(name => context.measureText(name.textContent).width+namePadding));
-        const scrollbarGutter = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--scroll-area-size"))||6;
-        return Math.ceil(widestName+30+30+scrollbarGutter+1);
-      }
-      function measureLibraryThreeColumnMinimum() {
-        const browser = $(".browser");
-        const browserStyle = getComputedStyle(browser);
-        const gridStyle = getComputedStyle(grid);
-        const gap = parseFloat(gridStyle.columnGap)||0;
-        const horizontalPadding = (parseFloat(browserStyle.paddingLeft)||0)+(parseFloat(browserStyle.paddingRight)||0);
-        const scrollbarGutter = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--scroll-area-size"))||6;
-        return Math.ceil(responsiveCardWidth*3+gap*2+horizontalPadding+scrollbarGutter+1);
-      }
-      function updateResponsiveLayout() {
-        if (!responsiveProfileA) return;
-        const deckMinimum = measureDeckContentMinimum();
-        const libraryMinimum = measureLibraryThreeColumnMinimum();
-        const singleBreakpoint = deckMinimum+libraryMinimum;
-        const layout = innerWidth < singleBreakpoint ? "single" : "split";
-        document.documentElement.style.setProperty("--deck-content-min-width",deckMinimum+"px");
-        document.documentElement.dataset.responsiveLayout = layout;
-        window.parent.postMessage({
-          source:"responsive-workbench",
-          type:"layout-change",
-          layout,
-          deckMinimum,
-          singleBreakpoint
-        },"*");
-      }
-      function scheduleResponsiveLayout() {
-        if (!responsiveProfileA) return;
-        cancelAnimationFrame(responsiveLayoutFrame);
-        responsiveLayoutFrame = requestAnimationFrame(updateResponsiveLayout);
-      }
-      function renderCardColumns(announce=false,columnStep=0) {
-        if (responsiveProfileA) {
-          grid.removeAttribute("data-card-columns");
-          grid.style.removeProperty("--card-columns");
-          const gridStyle = getComputedStyle(grid);
-          const baseWidth = parseFloat(gridStyle.getPropertyValue("--responsive-card-base-width"))||176;
-          const gap = parseFloat(gridStyle.columnGap)||0;
-          if (columnStep) {
-            const currentColumns = Math.max(1,gridStyle.gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length);
-            const desiredColumns = Math.min(14,Math.max(2,currentColumns+columnStep));
-            responsiveCardWidth = (grid.clientWidth-gap*(desiredColumns-1))/desiredColumns;
-          }
-          responsiveCardWidth = Math.min(240,Math.max(128,responsiveCardWidth));
-          grid.style.setProperty("--responsive-card-width",responsiveCardWidth+"px");
-          const columns = Math.max(1,Math.floor((grid.clientWidth+gap)/(responsiveCardWidth+gap)));
-          const percentage = Math.round(responsiveCardWidth/baseWidth*100);
-          grid.dataset.cardScale = String(percentage);
-          grid.dataset.visibleColumns = String(columns);
-          if (announce) toast("카드 크기 "+percentage+"% · 한 행 "+columns+"장");
-          scheduleResponsiveLayout();
-          return;
-        }
+      function renderCardColumns(announce=false) {
         const minimumColumns = Math.max(2,Math.ceil(cardBaseColumns/2));
         const maximumColumns = Math.max(cardBaseColumns+1,Math.floor(cardBaseColumns/.7));
         const columns = Math.min(maximumColumns,Math.max(minimumColumns,cardBaseColumns+cardColumnDelta));
@@ -1267,10 +1146,6 @@
       function measureCardBaseGrid() {
         grid.removeAttribute("data-card-columns");
         grid.style.removeProperty("--card-columns");
-        if (responsiveProfileA) {
-          renderCardColumns();
-          return;
-        }
         const tracks = getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).filter(Boolean);
         if (tracks.length) cardBaseColumns = tracks.length;
         const measuredWidth = parseFloat(tracks[0]);
@@ -1278,16 +1153,8 @@
         renderCardColumns();
       }
       function setCardColumnDelta(value) {
-        const nextDelta = Math.round(value);
-        if (responsiveProfileA && nextDelta === 0) {
-          cardColumnDelta = 0;
-          responsiveCardWidth = 176;
-          renderCardColumns(true);
-        } else {
-          const columnStep = nextDelta-cardColumnDelta;
-          cardColumnDelta = nextDelta;
-          renderCardColumns(true,columnStep);
-        }
+        cardColumnDelta = Math.round(value);
+        renderCardColumns(true);
         try { localStorage.setItem(cardColumnStorageKey,String(cardColumnDelta)) } catch {}
       }
       function cardScaleContextActive() {
@@ -1313,7 +1180,6 @@
         cardScaleResizeFrame = requestAnimationFrame(measureCardBaseGrid);
       });
       measureCardBaseGrid();
-      document.fonts?.ready.then(scheduleResponsiveLayout);
       function setScreen(name) {
         hideDeckHoverPreview();
         $$(".screen").forEach(s => s.hidden = s.dataset.screen !== name);
@@ -1538,7 +1404,6 @@
         }
         sortDeckRows();
         updateDeckSummary();
-        scheduleResponsiveLayout();
         row.classList.add("flash"); setTimeout(() => row.classList.remove("flash"),700);
         tile.classList.remove("added"); void tile.offsetWidth; tile.classList.add("added");
         setTimeout(() => tile.classList.remove("added"),450);
@@ -1604,6 +1469,99 @@
       updateFilterCounts();
       filterCards();
     })();
+  </script>
+  <script>
+    (() => {
+      const body = document.body;
+      const note = document.querySelector("#inspectorNote");
+      const toggle = document.querySelector("#componentMapToggle");
+      const scopeButtons = [...document.querySelectorAll(".inspector-command[data-scope]")];
+      const descriptions = {
+        layout:"앱 루트에는 CardLibraryPane과 DeckPane만 있습니다. 전역 TopCommandBar는 두지 않으며, 하단 COMPONENTS 바는 진단 목업 전용입니다.",
+        cards:"카드 탐색 단위입니다. LibraryToolbar와 CardGrid는 분리하고, 반복되는 CardTile은 하나의 컴포넌트로 취급합니다.",
+        filters:"고급 조건 편집 단위입니다. LogicBucket이 AND·OR·NOT 목록을 소유하고 FilterClause는 드래그 가능한 반복 항목입니다.",
+        deck:"덱 기능 단위입니다. DeckSummary의 메트릭은 DeckList에서 파생하며 DeckRow와 ManaCurve는 내부 반복 요소로 둡니다.",
+        scroll:"현재 레이아웃 범위의 독립 ScrollArea 두 곳을 표시합니다. 카드 라이브러리와 덱 목록은 서로 영향을 주지 않고 따로 스크롤합니다."
+      };
+      const definitions = [
+        [".library","CardLibraryPane","layout",true],
+        [".deck","DeckPane","layout",true],
+
+        [".panel-head","LibraryToolbar","cards",true],
+        [".header-cost","ManaMultiSelect","cards",true],
+        [".header-type","CardTypeFilter","cards",false],
+        [".browser","CardGrid · ScrollArea","cards",true],
+
+        [".filter-dock","FilterDock","filters",true],
+        [".filter-bucket","LogicBucket","filters",true],
+        [".filter-command-row","FilterCommandInput","filters",true],
+
+        [".deck-summary-head","DeckSummary","deck",true],
+        [".deck-summary-metrics","DeckMetrics","deck",true],
+        [".deck-mana-curve","ManaCurve","deck",true],
+        [".deck-list","DeckList","deck",true],
+        [".deck-footer","DeckActionBar","deck",true],
+
+        [".browser","ScrollArea · card-library","scroll",true],
+        [".deck-list","ScrollArea · deck-list","scroll",true]
+      ];
+
+      function labelElement(element,name,group,showLabel) {
+        if (!element) return;
+        element.dataset.component = element.dataset.component ? `${element.dataset.component} | ${name}` : name;
+        if (getComputedStyle(element).position === "static") element.classList.add("component-anchor");
+        const groups = new Set((element.dataset.mapGroups || "").split(" ").filter(Boolean));
+        groups.add(group);
+        element.dataset.mapGroups = [...groups].join(" ");
+        if (!showLabel || element.querySelector(`:scope > .component-label[data-label-group="${group}"]`)) return;
+        const label = document.createElement("span");
+        label.className = "component-label";
+        label.dataset.labelGroup = group;
+        label.textContent = name;
+        label.setAttribute("aria-hidden","true");
+        element.prepend(label);
+      }
+
+      function labelRepeatingComponents() {
+        document.querySelectorAll(".card-tile").forEach((element,index) => labelElement(element,"CardTile","cards",index === 0));
+        document.querySelectorAll(".clause").forEach((element,index) => labelElement(element,"FilterClause","filters",index === 0));
+        document.querySelectorAll(".deck-row").forEach((element,index) => labelElement(element,"DeckRow","deck",index === 0));
+      }
+
+      definitions.forEach(([selector,name,group,showLabel]) => {
+        document.querySelectorAll(selector).forEach(element => labelElement(element,name,group,showLabel));
+      });
+      labelRepeatingComponents();
+
+      body.classList.add("component-map-visible");
+      body.dataset.inspectScope = "layout";
+
+      function setScope(scope) {
+        body.dataset.inspectScope = scope;
+        body.classList.toggle("scroll-inspect",scope === "scroll");
+        scopeButtons.forEach(button => button.setAttribute("aria-pressed",String(button.dataset.scope === scope)));
+        note.textContent = descriptions[scope];
+      }
+      scopeButtons.forEach(button => button.addEventListener("click",() => setScope(button.dataset.scope)));
+      toggle.addEventListener("click",() => {
+        const visible = body.classList.toggle("component-map-visible");
+        toggle.setAttribute("aria-pressed",String(visible));
+      });
+      const previewParams = new URLSearchParams(location.search);
+      const requestedScope = previewParams.get("scope");
+      if (descriptions[requestedScope]) setScope(requestedScope);
+    })();
+  </script>
+  <!-- FALLBACK: vendor/pretext.js missing, using CDN. Inspector copy remains usable offline. -->
+  <script type="module">
+    import("https://esm.sh/@chenglou/pretext").then(async ({prepare,layout}) => {
+      await document.fonts.ready;
+      const prepared = new Map();
+      document.querySelectorAll("[data-pretext]").forEach(element => prepared.set(element,prepare(element.textContent,getComputedStyle(element).font)));
+      const relayout = () => prepared.forEach((handle,element) => layout(handle,element.clientWidth,parseFloat(getComputedStyle(element).lineHeight)));
+      new ResizeObserver(relayout).observe(document.body);
+      relayout();
+    }).catch(() => {});
   </script>
 </body>
 </html>

@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hearth Index · Responsive Workbench Lab</title>
+  <style>
+    :root {
+      color-scheme:light;
+      --canvas:#ecebe6;
+      --surface:#fff;
+      --surface-soft:#f7f7f4;
+      --ink:#26251e;
+      --body:#5a5852;
+      --muted:#807d72;
+      --line:#d8d6cf;
+      --line-strong:#a9a69c;
+      --accent:#f54e00;
+      --wide:#2f6f8f;
+      --compact:#7656a8;
+      --pressure:#b66a00;
+      --stack:#b4475e;
+      font-family:"CursorGothic","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif;
+    }
+    * { box-sizing:border-box }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden }
+    body { color:var(--ink); background:var(--canvas) }
+    button,input { font:inherit; color:inherit }
+    button { cursor:pointer }
+    .lab {
+      width:100%; height:100%; min-width:720px; display:grid;
+      grid-template-rows:42px 30px minmax(0,1fr);
+    }
+    .toolbar {
+      min-width:0; display:flex; align-items:stretch;
+      border-bottom:1px solid var(--line); background:var(--surface);
+    }
+    .lab-title {
+      min-width:178px; padding:0 14px; display:flex; align-items:center;
+      border-right:1px solid var(--line); font-size:16px; font-weight:600;
+    }
+    .size-control {
+      display:grid; grid-template-columns:20px 72px 12px 20px 72px;
+      align-items:center; gap:4px; padding:0 10px; border-right:1px solid var(--line);
+    }
+    .size-control label { color:var(--muted); font-size:12px }
+    .size-control span { color:var(--muted); text-align:center }
+    .size-control input {
+      width:72px; height:28px; padding:0 7px; border:1px solid var(--line);
+      border-radius:0; outline:0; background:var(--surface-soft);
+      font-variant-numeric:tabular-nums;
+    }
+    .size-control input:focus { border-color:var(--accent); box-shadow:inset 0 -1px 0 var(--accent) }
+    .command,.preset {
+      min-width:0; height:100%; padding:0 12px; border:0; border-right:1px solid var(--line);
+      background:transparent; white-space:nowrap;
+    }
+    .command:hover,.preset:hover { background:var(--surface-soft) }
+    .preset-group { margin-left:auto; display:flex; align-items:stretch; border-left:1px solid var(--line) }
+    .preset[aria-pressed="true"] { color:var(--accent); background:var(--surface-soft); box-shadow:inset 0 -2px 0 var(--accent) }
+    .diagnostics {
+      min-width:0; display:flex; align-items:stretch;
+      border-bottom:1px solid var(--line); background:var(--surface-soft);
+      font-size:12px;
+    }
+    .band {
+      min-width:190px; padding:0 12px; display:flex; align-items:center; gap:7px;
+      border-right:1px solid var(--line); font-weight:600;
+    }
+    .band:before { content:""; width:7px; height:7px; background:var(--band-color,var(--wide)) }
+    .band[data-band="wide"] { --band-color:var(--wide) }
+    .band[data-band="compact"] { --band-color:var(--compact) }
+    .band[data-band="pressure"] { --band-color:var(--pressure) }
+    .band[data-band="stack"] { --band-color:var(--stack) }
+    .layout-details {
+      min-width:0; padding:0 12px; display:flex; align-items:center;
+      overflow:hidden; color:var(--body); text-overflow:ellipsis; white-space:nowrap;
+    }
+    .boundary-group { margin-left:auto; display:flex; align-items:stretch; border-left:1px solid var(--line) }
+    .boundary-label { padding:0 9px; display:flex; align-items:center; color:var(--muted) }
+    .boundary {
+      min-width:54px; padding:0 9px; border:0; border-left:1px solid var(--line);
+      background:transparent; font-variant-numeric:tabular-nums;
+    }
+    .boundary:hover { color:var(--accent); background:var(--surface) }
+    .row-probe-group { display:flex; align-items:stretch; border-left:1px solid var(--line) }
+    .row-probe-label { padding:0 9px; display:flex; align-items:center; color:var(--muted) }
+    .row-probe {
+      min-width:48px; padding:0 8px; border:0; border-left:1px solid var(--line);
+      background:transparent; font:600 11px/1 "JetBrains Mono",Consolas,monospace;
+    }
+    .row-probe:hover { color:var(--accent); background:var(--surface) }
+    .row-probe[aria-pressed="true"] {
+      color:var(--accent); background:var(--surface); box-shadow:inset 0 -2px 0 var(--accent);
+    }
+    .workspace {
+      min-width:0; min-height:0; overflow:auto; padding:24px;
+      background-color:var(--canvas);
+      background-image:
+        linear-gradient(rgba(38,37,30,.035) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(38,37,30,.035) 1px,transparent 1px);
+      background-size:16px 16px;
+      scrollbar-color:var(--line-strong) transparent;
+      scrollbar-width:thin;
+    }
+    .workspace::-webkit-scrollbar { width:10px; height:10px }
+    .workspace::-webkit-scrollbar-track { background:transparent }
+    .workspace::-webkit-scrollbar-thumb { background:var(--line-strong); border:3px solid var(--canvas) }
+    .viewport-wrap {
+      position:relative; width:1280px; height:720px; min-width:480px; min-height:320px;
+      border:0; outline:1px solid var(--line-strong); background:var(--surface);
+      box-shadow:0 10px 34px rgba(38,37,30,.12);
+    }
+    .app-frame {
+      display:block; width:100%; height:100%; border:0; background:var(--surface);
+    }
+    .size-badge {
+      position:absolute; z-index:8; top:-19px; left:-1px; padding:4px 7px;
+      color:#fff; background:rgba(24,23,19,.78); pointer-events:none;
+      font:600 11px/1.2 "JetBrains Mono",Consolas,monospace;
+    }
+    .resize-handle { position:absolute; z-index:10; border:0; padding:0; background:transparent }
+    .resize-handle:focus-visible { outline:2px solid var(--accent); outline-offset:-2px }
+    .resize-e { top:0; right:-6px; width:12px; height:100%; cursor:ew-resize }
+    .resize-s { bottom:-6px; left:0; width:100%; height:12px; cursor:ns-resize }
+    .resize-se { right:-8px; bottom:-8px; width:18px; height:18px; cursor:nwse-resize }
+    .resize-e:after,.resize-s:after,.resize-se:after {
+      content:""; position:absolute; background:var(--line-strong);
+    }
+    .resize-e:after { top:0; bottom:0; left:5px; width:1px }
+    .resize-s:after { left:0; right:0; top:5px; height:1px }
+    .resize-se:after {
+      right:1px; bottom:1px; width:10px; height:10px; background:var(--accent);
+      clip-path:polygon(100% 0,100% 100%,0 100%);
+    }
+    .viewport-wrap[data-band="pressure"] { outline-color:color-mix(in srgb,var(--pressure) 62%,var(--line-strong)) }
+    .viewport-wrap[data-band="stack"] { outline-color:color-mix(in srgb,var(--stack) 68%,var(--line-strong)) }
+    .is-resizing { user-select:none; cursor:nwse-resize }
+    .is-resizing .app-frame { pointer-events:none }
+    .sr-only {
+      position:absolute!important; width:1px!important; height:1px!important; padding:0!important;
+      margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important;
+      white-space:nowrap!important; border:0!important;
+    }
+  </style>
+</head>
+<body>
+  <div class="lab">
+    <header class="toolbar">
+      <div class="lab-title">Responsive Workbench Lab</div>
+      <div class="size-control" aria-label="목업 뷰포트 크기">
+        <label for="viewportWidth">W</label>
+        <input id="viewportWidth" type="number" min="480" max="3200" step="1" value="1280">
+        <span>×</span>
+        <label for="viewportHeight">H</label>
+        <input id="viewportHeight" type="number" min="320" max="1800" step="1" value="720">
+      </div>
+      <button class="command" id="fitButton" type="button">작업영역 맞춤</button>
+      <button class="command" id="resetButton" type="button">1280 × 720 복원</button>
+      <div class="preset-group" role="group" aria-label="16대9 해상도 프리셋">
+        <button class="preset" type="button" data-width="1280" data-height="720" aria-pressed="true">720p</button>
+        <button class="preset" type="button" data-width="1920" data-height="1080" aria-pressed="false">1080p</button>
+        <button class="preset" type="button" data-width="2560" data-height="1440" aria-pressed="false">1440p</button>
+      </div>
+    </header>
+
+    <div class="diagnostics" aria-live="polite">
+      <div class="band" id="bandStatus" data-band="wide">Wide desktop</div>
+      <div class="layout-details" id="layoutDetails">내부 레이아웃을 읽는 중입니다.</div>
+      <div class="boundary-group" role="group" aria-label="반응형 경계 너비">
+        <span class="boundary-label">경계 W</span>
+        <button class="boundary" type="button" data-boundary="1280">1280</button>
+        <button class="boundary" id="deckMinimumBoundary" type="button" data-boundary="1203">1203</button>
+        <button class="boundary" id="singlePaneBoundary" type="button" data-boundary="824">824</button>
+      </div>
+      <div class="row-probe-group" role="group" aria-label="덱 카드 행 너비 테스트">
+        <span class="row-probe-label">행 W</span>
+        <button class="row-probe" type="button" data-row-probe="auto" aria-pressed="true">AUTO</button>
+        <button class="row-probe" type="button" data-row-probe="243" aria-pressed="false">243</button>
+        <button class="row-probe" type="button" data-row-probe="180" aria-pressed="false">180</button>
+      </div>
+    </div>
+
+    <main class="workspace" id="workspace">
+      <section class="viewport-wrap" id="viewportWrap" data-band="wide" aria-label="크기 조정 가능한 앱 뷰포트">
+        <div class="size-badge" id="sizeBadge">1280 × 720</div>
+        <iframe
+          class="app-frame"
+          id="appFrame"
+          src="hearthstone-workbench-foundation.html?responsive=a&amp;revision=row-tone-c"
+          title="Hearth Index 반응형 A안 목업"
+        ></iframe>
+        <button class="resize-handle resize-e" type="button" data-axis="x" aria-label="가로 크기 조정"></button>
+        <button class="resize-handle resize-s" type="button" data-axis="y" aria-label="세로 크기 조정"></button>
+        <button class="resize-handle resize-se" type="button" data-axis="both" aria-label="가로와 세로 크기 조정"></button>
+      </section>
+    </main>
+    <div class="sr-only" id="resizeAnnouncement" aria-live="polite"></div>
+  </div>
+
+  <script>
+    (() => {
+      const MIN_WIDTH = 480;
+      const MIN_HEIGHT = 320;
+      const MAX_WIDTH = 3200;
+      const MAX_HEIGHT = 1800;
+      const DEFAULT_SIZE = {width:1280,height:720};
+      const viewport = document.querySelector("#viewportWrap");
+      const frame = document.querySelector("#appFrame");
+      const workspace = document.querySelector("#workspace");
+      const widthInput = document.querySelector("#viewportWidth");
+      const heightInput = document.querySelector("#viewportHeight");
+      const sizeBadge = document.querySelector("#sizeBadge");
+      const bandStatus = document.querySelector("#bandStatus");
+      const layoutDetails = document.querySelector("#layoutDetails");
+      const announcement = document.querySelector("#resizeAnnouncement");
+      let resizeState = null;
+      let diagnosticFrame = 0;
+      let rowProbe = "auto";
+      let responsivePane = "library";
+      let responsiveDeckMinimum = 243;
+      let responsiveSingleBreakpoint = 824;
+
+      const clamp = (value,min,max) => Math.min(max,Math.max(min,value));
+
+      function currentSize() {
+        return {
+          width:Math.round(viewport.getBoundingClientRect().width),
+          height:Math.round(viewport.getBoundingClientRect().height)
+        };
+      }
+
+      function widthBand(width) {
+        if (width < responsiveSingleBreakpoint) return {key:"stack",label:"Single-pane mode"};
+        if (width <= 960+responsiveDeckMinimum) return {key:"pressure",label:"Minimum deck width"};
+        if (width <= 1280) return {key:"compact",label:"Deck shrinks first"};
+        return {key:"wide",label:"Wide desktop"};
+      }
+
+      function updatePresetState(width,height) {
+        document.querySelectorAll(".preset").forEach(button => {
+          const active = Number(button.dataset.width) === width && Number(button.dataset.height) === height;
+          button.setAttribute("aria-pressed",String(active));
+        });
+      }
+
+      function scheduleDiagnostics() {
+        cancelAnimationFrame(diagnosticFrame);
+        diagnosticFrame = requestAnimationFrame(() => requestAnimationFrame(readFrameDiagnostics));
+      }
+
+      function setViewportSize(width,height,{announce=false}={}) {
+        const nextWidth = clamp(Math.round(Number(width) || DEFAULT_SIZE.width),MIN_WIDTH,MAX_WIDTH);
+        const nextHeight = clamp(Math.round(Number(height) || DEFAULT_SIZE.height),MIN_HEIGHT,MAX_HEIGHT);
+        viewport.style.width = nextWidth+"px";
+        viewport.style.height = nextHeight+"px";
+        widthInput.value = nextWidth;
+        heightInput.value = nextHeight;
+        sizeBadge.textContent = `${nextWidth} × ${nextHeight}`;
+        const band = widthBand(nextWidth);
+        viewport.dataset.band = band.key;
+        bandStatus.dataset.band = band.key;
+        bandStatus.textContent = band.label;
+        updatePresetState(nextWidth,nextHeight);
+        scheduleDiagnostics();
+        if (announce) announcement.textContent = `뷰포트 ${nextWidth} 곱하기 ${nextHeight} 픽셀`;
+      }
+
+      function readFrameDiagnostics() {
+        const {width,height} = currentSize();
+        try {
+          const doc = frame.contentDocument;
+          const workbench = doc?.querySelector(".workbench");
+          const library = doc?.querySelector(".library");
+          const deck = doc?.querySelector(".deck");
+          const title = doc?.querySelector(".panel-title");
+          const grid = doc?.querySelector(".card-grid");
+          const curve = doc?.querySelector(".deck-mana-curve");
+          const metrics = doc?.querySelector(".deck-summary-metrics");
+          const deckRow = doc?.querySelector("#deckList .deck-row");
+          const deckArt = deckRow?.querySelector(".deck-art");
+          if (!workbench || !library || !deck || !title || !grid || !curve || !metrics || !deckRow || !deckArt) {
+            throw new Error("main screen unavailable");
+          }
+
+          const libraryRect = library.getBoundingClientRect();
+          const deckRect = deck.getBoundingClientRect();
+          const titleRect = title.getBoundingClientRect();
+          const deckRowRect = deckRow.getBoundingClientRect();
+          const deckArtRect = deckArt.getBoundingClientRect();
+          const deckRows = [...doc.querySelectorAll("#deckList .deck-row")];
+          const lastDeckRowRect = deckRows.at(-1)?.getBoundingClientRect();
+          const deckListRect = doc.querySelector("#deckList")?.getBoundingClientRect();
+          const simultaneous = Math.abs(libraryRect.top-deckRect.top) < 2;
+          const columns = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
+          const titleState = titleRect.height > 26 ? "title collision" : "header OK";
+          const curveState = getComputedStyle(curve).display === "none" ? "curve hidden" : "curve visible";
+          const visibleMetrics = [...metrics.children].filter(item => getComputedStyle(item).display !== "none").length;
+          const metricColumns = getComputedStyle(metrics).gridTemplateColumns.split(" ").filter(Boolean).length;
+          const metricRows = getComputedStyle(metrics).gridTemplateRows.split(" ").filter(Boolean).length;
+          const metricState = `metrics ${visibleMetrics} · ${metricColumns}×${metricRows}`;
+          const artCentered = Math.abs((deckRowRect.left+deckRowRect.right-deckArtRect.left-deckArtRect.right)/2) < 1;
+          const artRight = Math.abs(deckRowRect.right-deckArtRect.right) < 1;
+          const cropState = deckRowRect.width < 243 && artCentered ? "crop center" : artRight ? "crop right" : "crop custom";
+          const freeSpace = lastDeckRowRect && deckListRect
+            ? Math.max(0,Math.round(deckListRect.bottom-lastDeckRowRect.bottom))
+            : 0;
+          const overflow = doc.documentElement.scrollWidth > width ? " · horizontal overflow" : "";
+          layoutDetails.textContent =
+            `${simultaneous ? "split" : "stack"} · library ${Math.round(libraryRect.width)} / deck ${Math.round(deckRect.width)}`+
+            ` · cards ${columns} columns · ${curveState} · ${metricState}`+
+            ` · row ${Math.round(deckRowRect.height)}px / free ${freeSpace}px`+
+            ` · ${cropState} / art ${Math.round(deckArtRect.width)}px`+
+            ` · ${titleState}${overflow} · viewport ${width} × ${height}`;
+        } catch (error) {
+          const singlePane = width < responsiveSingleBreakpoint;
+          const deckWidth = singlePane
+            ? responsivePane === "deck" ? width : 0
+            : width <= 1280
+              ? Math.max(responsiveDeckMinimum,Math.min(width-960,Math.max(320,responsiveDeckMinimum)))
+              : 320;
+          const libraryWidth = singlePane
+            ? responsivePane === "library" ? width : 0
+            : width-deckWidth;
+          const baseCardWidth = 176;
+          const gridWidth = Math.max(0,libraryWidth-39);
+          const columns = Math.max(1,Math.floor((gridWidth+7)/(baseCardWidth+7)));
+          const titleState = width <= 1027 ? "title hidden" : "header OK";
+          const curveState = singlePane
+            ? responsivePane === "deck" ? "curve visible" : ""
+            : deckWidth < 300 ? "curve hidden" : "curve visible";
+          const deckHeight = singlePane ? Math.max(0,height-41) : height;
+          const headerHeight = 105;
+          const deckListHeight = Math.max(0,deckHeight-headerHeight-42);
+          const rowHeight = 44;
+          const metricState = "metrics 4 · 2×2";
+          const freeSpace = Math.max(0,Math.round(deckListHeight-rowHeight*13));
+          const probeWidth = rowProbe === "auto" ? Math.max(0,deckWidth-6) : Number(rowProbe);
+          const cropState = probeWidth < 243 ? "crop center" : "crop right";
+          layoutDetails.textContent =
+            `A ${singlePane ? `single pane · ${responsivePane}` : "split"} · library ${libraryWidth ? Math.round(libraryWidth) : "hidden"} / ${deckWidth ? `deck ${Math.round(deckWidth)}` : "deck hidden"}`+
+            `${libraryWidth ? ` · fixed cards ${columns} columns` : ""}${curveState ? ` · ${curveState}` : ""} · ${metricState}`+
+            ` · row ${Math.round(rowHeight)}px / free ${freeSpace}px`+
+            ` · ${cropState} / art 243px`+
+            ` · ${titleState} · viewport ${width} × ${height}`;
+        }
+      }
+
+      function setRowProbe(value,{announce=false}={}) {
+        rowProbe = value === "180" || value === "243" ? value : "auto";
+        document.querySelectorAll("[data-row-probe]").forEach(button => {
+          button.setAttribute("aria-pressed",String(button.dataset.rowProbe === rowProbe));
+        });
+        const nextSource = new URL(frame.getAttribute("src"),location.href);
+        if (rowProbe === "auto") nextSource.searchParams.delete("deckRow");
+        else nextSource.searchParams.set("deckRow",rowProbe);
+        frame.src = nextSource.href;
+        scheduleDiagnostics();
+        if (announce) {
+          announcement.textContent = rowProbe === "auto"
+            ? "덱 카드 행 너비 자동"
+            : `덱 카드 행 너비 ${rowProbe} 픽셀`;
+        }
+      }
+
+      function beginResize(event) {
+        const axis = event.currentTarget.dataset.axis;
+        const {width,height} = currentSize();
+        resizeState = {axis,startX:event.clientX,startY:event.clientY,width,height};
+        document.body.classList.add("is-resizing");
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+      }
+
+      function moveResize(event) {
+        if (!resizeState) return;
+        const width = resizeState.axis === "y" ? resizeState.width : resizeState.width+(event.clientX-resizeState.startX);
+        const height = resizeState.axis === "x" ? resizeState.height : resizeState.height+(event.clientY-resizeState.startY);
+        setViewportSize(width,height);
+      }
+
+      function endResize() {
+        if (!resizeState) return;
+        resizeState = null;
+        document.body.classList.remove("is-resizing");
+        const {width,height} = currentSize();
+        announcement.textContent = `뷰포트 ${width} 곱하기 ${height} 픽셀로 조정됨`;
+      }
+
+      function resizeWithKeyboard(event) {
+        const axis = event.currentTarget.dataset.axis;
+        const allowed = ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"];
+        if (!allowed.includes(event.key)) return;
+        const amount = event.shiftKey ? 16 : 1;
+        const {width,height} = currentSize();
+        const deltaX = event.key === "ArrowLeft" ? -amount : event.key === "ArrowRight" ? amount : 0;
+        const deltaY = event.key === "ArrowUp" ? -amount : event.key === "ArrowDown" ? amount : 0;
+        setViewportSize(
+          axis === "y" ? width : width+deltaX,
+          axis === "x" ? height : height+deltaY,
+          {announce:true}
+        );
+        event.preventDefault();
+      }
+
+      document.querySelectorAll(".resize-handle").forEach(handle => {
+        handle.addEventListener("pointerdown",beginResize);
+        handle.addEventListener("keydown",resizeWithKeyboard);
+      });
+      window.addEventListener("pointermove",moveResize);
+      window.addEventListener("pointerup",endResize);
+      window.addEventListener("pointercancel",endResize);
+
+      function applyInputs() {
+        setViewportSize(widthInput.value,heightInput.value,{announce:true});
+      }
+      widthInput.addEventListener("change",applyInputs);
+      heightInput.addEventListener("change",applyInputs);
+      widthInput.addEventListener("keydown",event => { if (event.key === "Enter") applyInputs() });
+      heightInput.addEventListener("keydown",event => { if (event.key === "Enter") applyInputs() });
+
+      document.querySelectorAll(".preset").forEach(button => {
+        button.addEventListener("click",() => {
+          setViewportSize(button.dataset.width,button.dataset.height,{announce:true});
+          workspace.scrollTo({left:0,top:0,behavior:"smooth"});
+        });
+      });
+      document.querySelectorAll(".boundary").forEach(button => {
+        button.addEventListener("click",() => setViewportSize(button.dataset.boundary,heightInput.value,{announce:true}));
+      });
+      document.querySelectorAll("[data-row-probe]").forEach(button => {
+        button.addEventListener("click",() => setRowProbe(button.dataset.rowProbe,{announce:true}));
+      });
+      document.querySelector("#resetButton").addEventListener("click",() => {
+        setViewportSize(DEFAULT_SIZE.width,DEFAULT_SIZE.height,{announce:true});
+        workspace.scrollTo({left:0,top:0,behavior:"smooth"});
+      });
+      document.querySelector("#fitButton").addEventListener("click",() => {
+        const styles = getComputedStyle(workspace);
+        const width = workspace.clientWidth-parseFloat(styles.paddingLeft)-parseFloat(styles.paddingRight);
+        const height = workspace.clientHeight-parseFloat(styles.paddingTop)-parseFloat(styles.paddingBottom);
+        setViewportSize(width,height,{announce:true});
+        workspace.scrollTo({left:0,top:0,behavior:"smooth"});
+      });
+      frame.addEventListener("load",scheduleDiagnostics);
+      window.addEventListener("message",event => {
+        const message = event.data;
+        if (event.source !== frame.contentWindow || message?.source !== "responsive-workbench") return;
+        if (message.type === "pane-change") {
+          responsivePane = message.pane === "deck" ? "deck" : "library";
+          scheduleDiagnostics();
+        }
+        if (message.type === "layout-change") {
+          responsiveDeckMinimum = Number(message.deckMinimum)||243;
+          responsiveSingleBreakpoint = Number(message.singleBreakpoint)||824;
+          const deckBoundary = document.querySelector("#deckMinimumBoundary");
+          const singleBoundary = document.querySelector("#singlePaneBoundary");
+          deckBoundary.dataset.boundary = String(960+responsiveDeckMinimum);
+          deckBoundary.textContent = String(960+responsiveDeckMinimum);
+          singleBoundary.dataset.boundary = String(responsiveSingleBreakpoint);
+          singleBoundary.textContent = String(responsiveSingleBreakpoint);
+          const {width,height} = currentSize();
+          setViewportSize(width,height);
+          scheduleDiagnostics();
+        }
+      });
+      new ResizeObserver(scheduleDiagnostics).observe(viewport);
+      setViewportSize(DEFAULT_SIZE.width,DEFAULT_SIZE.height);
+    })();
+  </script>
+</body>
+</html>
