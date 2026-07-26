@@ -294,3 +294,30 @@ The one-click update UX is approved. Fully unattended mid-session installation i
 ### Verification
 
 Not started.
+
+## HCL-012 — ez 로컬 스킬 포팅
+
+- Status: `in_progress`
+- Priority: `P2`
+- Type: `chore`
+- Updated: `2026-07-26`
+- Codex: `HCL-012 · ez 로컬 스킬 포팅`
+- Branch: `codex/hcl-012-port-ez-skill`
+- Worktree: `hcl-012-port-ez-skill`
+- Depends on: `—`
+- Spec: `docs/design/2026-07-26-hcl-012-ez-skill-port.md`
+- Plan: `docs/plans/2026-07-26-hcl-012-ez-skill-port.md`
+- Next gate: port and validate identical `/ez` definitions, then run `/va`
+- Blocked: `—`
+
+### Goal
+
+Restore the preserved `/ez` explanation skill in both project-local agent discovery paths without reintroducing GStack or Superpowers workflow dependencies.
+
+### Progress
+
+The original untracked skill remained intact in the workflow-repair backup and is ready to be ported in its own feature worktree.
+
+### Verification
+
+Not started.

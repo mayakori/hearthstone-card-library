@@ -11,7 +11,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 test("real tracking files stay synchronized", () => {
   const result = validateTrackingFiles(repoRoot);
   assert.deepEqual(result.errors, []);
-  assert.equal(result.activeCount, 9);
+  assert.equal(result.activeCount, 10);
   assert.equal(result.archivedCount, 2);
 });
 
@@ -37,6 +37,7 @@ test("offline Kanban exposes the five columns and approved controls", () => {
     "HCL-009",
     "HCL-010",
     "HCL-011",
+    "HCL-012",
   ]);
 });
 
