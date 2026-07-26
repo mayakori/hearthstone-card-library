@@ -321,3 +321,30 @@ The preserved `/ez` skill is tracked in both `.agents/skills/ez/` and `.claude/s
 ### Verification
 
 Both skill directories passed `quick_validate.py`. The red/green repository contract test passed as part of `npm run check` (tracking 20/20, Vitest 6/6, build, and Rust check), `/va HCL-012` returned `clean`, and `npm run merge:check -- HCL-012` passed before squash merge.
+
+## HCL-013 — sdd 로컬 스킬 포팅
+
+- Status: `in_progress`
+- Priority: `P2`
+- Type: `chore`
+- Updated: `2026-07-26`
+- Codex: `HCL-013 · sdd 로컬 스킬 포팅`
+- Branch: `codex/hcl-013-port-sdd-skill`
+- Worktree: `hcl-013-port-sdd-skill`
+- Depends on: `—`
+- Spec: `docs/design/2026-07-26-hcl-013-sdd-skill-port.md`
+- Plan: `docs/plans/2026-07-26-hcl-013-sdd-skill-port.md`
+- Next gate: port and validate identical HCL-native `/sdd` definitions, then run `/va`
+- Blocked: `—`
+
+### Goal
+
+Restore the `dc_browser` `/sdd` handoff skill in both project-local agent discovery paths, adapted to this repository's HCL worktree and squash-merge workflow without GStack, Superpowers, or node-view dependencies.
+
+### Progress
+
+The RED consumer sample without `/sdd` confused it with an implementation procedure, did not produce a copyable handoff prompt, and asked the user to resolve the task ID instead.
+
+### Verification
+
+Baseline failure recorded; implementation not started.
