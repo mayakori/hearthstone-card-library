@@ -116,32 +116,43 @@ Deferred follow-up:
 
 The preview was checked at the 16px-font split boundary: 1280px renders a 960px library and 320px deck, 824px preserves three library columns and a 243px deck, and 823px switches to a single panel without page overflow. The approved document captures the 12–20px font-dependent thresholds and the component-test invariants. The current handoff prompt points the next session to the approved reference and explicitly prevents runtime implementation before component-contract approval.
 
-## HCL-006 — 공식 Hearthstone API 어댑터
+## HCL-006 — 공식 Hearthstone API 수집·정규화 파이프라인
 
-- Status: `backlog`
+- Status: `in_progress`
 - Priority: `P1`
 - Type: `feature`
-- Updated: `2026-07-23`
-- Codex: `—`
-- Branch: `—`
-- Worktree: `—`
-- Depends on: `HCL-005`
-- Spec: `—`
+- Updated: `2026-07-25`
+- Codex: `HCL-006 · 공식 Hearthstone API 수집 파이프라인 명세`
+- Branch: `main`
+- Worktree: `main`
+- Depends on: `HCL-004`
+- Spec: `docs/design/card-data-architecture-decisions.md`
 - Plan: `—`
-- Next gate: review the official API guide and freeze auth, pagination, rate-limit, retry, and fixture contracts
-- Blocked: `HCL-005 design approval is required before runtime implementation`
+- Next gate: continue the separate Superpowers design session from `docs/handoff-hcl-006-official-api-pipeline.md`
+- Blocked: `—`
 
 ### Goal
 
-Collect official Korean card data through the documented Hearthstone API behind a Rust adapter while preserving official IDs, slugs, locale, and source metadata.
+Build a trusted Rust data-pipeline CLI that collects official Korean and English card data, preserves locale-specific Raw snapshots, normalizes the data, and produces verified SQLite packages outside the Tauri runtime.
 
 ### Progress
 
-The earlier website-internal fetch approach is discarded. The official API guide is the source of truth, and fetch details are intentionally deferred until its authentication, pagination, rate-limit, retry, and response contracts are reviewed. Existing website-proxy fixtures and preview experiments remain exploratory only.
+The earlier website-internal fetch approach is discarded. The official Game Data API and official patch notes are the sources of truth. The approved R2 release design places collection and normalization in a trusted GitHub Actions pipeline while the packaged Tauri app downloads only verified normalized data and images.
+
+Approved design progress:
+
+- [x] Separate GitHub Actions collection and normalization from the packaged Tauri runtime.
+- [x] Keep `card-data-contract` and `card-data-pipeline` as isolated Rust workspace crates in the same repository.
+- [x] Preserve Raw and normalized data separately and support `ko_KR` and `en_US` from the first release.
+- [x] Consolidate schema, query-pool, version, image, R2 and updater decisions in `docs/design/card-data-architecture-decisions.md`.
+- [x] Record the separate-session resume context and first unresolved collection question in `docs/handoff-hcl-006-official-api-pipeline.md`.
+- [ ] Freeze OAuth, endpoints, metadata, pagination, timeout, retry and Raw envelope contracts.
+- [ ] Freeze deterministic normalized SQLite, zstd and manifest output contracts.
+- [ ] Approve the Superpowers implementation specification and write the implementation plan.
 
 ### Verification
 
-Not started.
+R2 smoke fixtures verified 15 cards per locale, 33 unique images and 39 manifest assets with zero hash failures. Production collection and packaging code has not started.
 
 ## HCL-007 — 원본 캐시와 정규화 로컬 DB
 
