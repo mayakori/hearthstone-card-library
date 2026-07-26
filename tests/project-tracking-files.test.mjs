@@ -69,6 +69,7 @@ test("repository instructions enforce the project workflow and merge gate", () =
   assert.equal(packageJson.scripts["tracking:check"], "node scripts/validate-project-tracking.mjs");
   assert.match(packageJson.scripts.check, /^npm run tracking:test && npm run tracking:check && /);
   assert.match(vitestConfig, /configDefaults\.exclude/);
+  assert.match(vitestConfig, /\.worktrees\/\*\*/);
   assert.match(vitestConfig, /tests\/project-tracking\*\.test\.mjs/);
   assert.match(vitestConfig, /tests\/merge-gate\.test\.mjs/);
   assert.equal(

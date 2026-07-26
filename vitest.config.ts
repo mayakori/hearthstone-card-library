@@ -5,6 +5,7 @@ export default defineConfig({
     environment: "happy-dom",
     exclude: [
       ...configDefaults.exclude,
+      ".worktrees/**",
       "tests/project-tracking*.test.mjs",
       "tests/merge-gate.test.mjs",
     ],

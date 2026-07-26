@@ -72,14 +72,14 @@ Focused design tests passed 5/5. The Task 3 full gate passed with tracking tests
 - Status: `in_progress`
 - Priority: `P1`
 - Type: `design`
-- Updated: `2026-07-24`
-- Codex: `—`
-- Branch: `—`
-- Worktree: `—`
+- Updated: `2026-07-26`
+- Codex: `HCL-005 · 기본 UI와 사용자 흐름 설계`
+- Branch: `codex/hcl-005-frontend-contract`
+- Worktree: `hcl-005-frontend-contract`
 - Depends on: `HCL-004`
 - Spec: `docs/design/hearthstone-workbench-main-screen.md`
 - Plan: `—`
-- Next gate: start the separate component-contract design session with `docs/handoff-ui-design.md`
+- Next gate: continue component-contract design in the assigned worktree from `docs/handoff-ui-design.md`
 - Blocked: `—`
 
 ### Goal
@@ -114,21 +114,21 @@ Deferred follow-up:
 
 ### Verification
 
-The preview was checked at the 16px-font split boundary: 1280px renders a 960px library and 320px deck, 824px preserves three library columns and a 243px deck, and 823px switches to a single panel without page overflow. The approved document captures the 12–20px font-dependent thresholds and the component-test invariants. The current handoff prompt points the next session to the approved reference and explicitly prevents runtime implementation before component-contract approval.
+The preview was checked at the 16px-font split boundary: 1280px renders a 960px library and 320px deck, 824px preserves three library columns and a 243px deck, and 823px switches to a single panel without page overflow. The approved document now defines a 12–24px UI root-font range in 2px steps while retaining actual rendered text measurement as the source of deck minimum width. The current handoff prompt points the next session to the approved reference and explicitly prevents runtime implementation before component-contract approval.
 
 ## HCL-006 — 공식 Hearthstone API 수집·정규화 파이프라인
 
 - Status: `in_progress`
 - Priority: `P1`
 - Type: `feature`
-- Updated: `2026-07-25`
+- Updated: `2026-07-26`
 - Codex: `HCL-006 · 공식 Hearthstone API 수집 파이프라인 명세`
-- Branch: `main`
-- Worktree: `main`
+- Branch: `codex/hcl-006-api-pipeline`
+- Worktree: `hcl-006-api-pipeline`
 - Depends on: `HCL-004`
 - Spec: `docs/design/card-data-architecture-decisions.md`
 - Plan: `—`
-- Next gate: continue the separate Superpowers design session from `docs/handoff-hcl-006-official-api-pipeline.md`
+- Next gate: continue the API pipeline specification in the assigned worktree from `docs/handoff-hcl-006-official-api-pipeline.md`
 - Blocked: `—`
 
 ### Goal
@@ -148,7 +148,7 @@ Approved design progress:
 - [x] Record the separate-session resume context and first unresolved collection question in `docs/handoff-hcl-006-official-api-pipeline.md`.
 - [ ] Freeze OAuth, endpoints, metadata, pagination, timeout, retry and Raw envelope contracts.
 - [ ] Freeze deterministic normalized SQLite, zstd and manifest output contracts.
-- [ ] Approve the Superpowers implementation specification and write the implementation plan.
+- [ ] Approve the implementation specification and write the implementation plan.
 
 ### Verification
 
