@@ -11,4 +11,5 @@ src-tauri/target/
 .DS_Store
 .gstack/
 .superpowers/
+.va-result.json
 src-tauri/gen/schemas/

@@ -66,4 +66,6 @@ npm run tauri:build
 
 작업은 `HCL-###` ID로 관리한다. 상세 진행 상태는 TODO가 정본이며 칸반은 같은 상태를 5열로 시각화한다. 세 관리 파일은 Git으로 추적하지만 기능 worktree에서는 수정하지 않는다.
 
+기능 작업은 `codex/hcl-###-slug` branch의 독립 worktree에서 설계부터 구현까지 진행한다. 병합 전 `/va HCL-###`와 `npm run merge:check -- HCL-###`를 통과시킨 뒤 main에서 squash merge해 작업별 최종 커밋 하나만 남긴다. 이 저장소의 이후 워크플로에서는 GStack을 사용하지 않으며, 과거 설계 문서는 기록으로 보존한다.
+
 실험용 카드 HTML은 [`preview/cards.html`](preview/cards.html)에서 열 수 있다.

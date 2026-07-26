@@ -53,30 +53,43 @@ main 전용 정본의 절대경로는 다음과 같다.
 
 - 상태는 `backlog → ready → in_progress → verify → done` 순서다.
 - 막힌 작업은 현재 상태를 유지하고 `Blocked`에 원인과 해제 조건을 기록한다.
+- 작업을 `in_progress`로 바꿀 때 같은 관리 커밋에서 branch와 worktree 소유권을 기록하고 즉시 해당 worktree를 만든다.
 - 기능 worktree에서는 spec, plan, 코드와 테스트를 수정할 수 있지만 `docs/TODO.md`, `docs/DONE.md`, `docs/kanban.html`은 수정하지 않는다.
 - 기능 진행 중 상태가 바뀌면 main 절대경로의 TODO와 칸반을 같은 관리 커밋에서 갱신한다.
 - TODO와 칸반을 수정한 뒤 `npm run tracking:check`를 실행한다.
 
 ### Worktree and merge gate
 
-기능 작업은 승인된 설계 이후 별도 worktree에서 시작한다. 병합 전 기능 브랜치에서 다음 명령의 출력이 없어야 한다.
+기능 작업은 설계 문서를 쓰기 전부터 `codex/hcl-###-slug` branch와 별도 worktree에서 진행한다. 같은 작업의 spec, plan, 설계, 구현과 테스트는 그 worktree에 둔다. 작업 중 의미 있는 내부 커밋은 허용하지만 main에는 최종 결과 하나만 남긴다.
 
-```powershell
-git diff --name-only main...HEAD -- docs/TODO.md docs/DONE.md docs/kanban.html
-```
+병합 전 기능 worktree에서 다음 순서를 지킨다.
 
-출력이 있으면 병합을 중단하고 관리 상태를 main 파일에 다시 반영한다. 기능 브랜치의 관리 문서 변경을 병합하지 않는다. 검증과 사용자 확인 후 squash merge하고, main 최종 검증 뒤 카드를 `done`으로 변경한다.
+1. 작업에 비례한 테스트를 실행하고 필요한 경우 사용자 live smoke 확인을 받는다.
+2. 최신 main을 반영한 뒤 같은 검증을 다시 실행한다.
+3. `/va HCL-###`로 프로젝트 정본 대비 아키텍처 부식을 점검한다.
+4. `npm run merge:check -- HCL-###`가 통과하는지 확인한다.
+
+`merge:check`는 branch와 작업 ID, clean worktree, main 전용 tracking 파일 미변경, 최신 `/va` clean 결과를 함께 검증한다. 하나라도 실패하면 병합을 중단한다.
+
+통과 후 main worktree에서 기능 branch를 `git merge --squash`하고, 같은 staged 변경에 TODO/DONE/칸반의 최종 상태를 반영한다. `npm run check` 통과 후 `type(HCL-###): summary` 형식의 단일 최종 커밋을 만든다. 기능 branch와 worktree는 최종 검증 뒤 정리하고 push는 사용자 승인 후 수행한다.
+
+## Skill Policy
+
+- 이 프로젝트에서는 GStack 명령과 스킬을 사용하지 않는다. 과거 설계 문서의 역사적 기록은 수정하거나 삭제하지 않는다.
+- Superpowers의 brainstorming, writing-plans, executing-plans, finishing 계열 프로세스 스킬은 자동 적용하지 않으며 사용자가 명시적으로 요청한 경우에만 사용한다.
+- 프로젝트 로컬 `/va`는 HCL 기능 branch의 squash merge 전에 반드시 실행한다.
+- 일반 구현과 검증은 `AGENTS.md`, 승인된 spec/plan과 저장소 명령을 직접 따른다.
 
 ## Product Design Workflow
 
-제품 방향, 사용자 흐름과 UI 구체화 단계에서는 GStack을 사용한다.
+제품 방향, 사용자 흐름과 UI를 구체화할 때는 특정 도구나 스킬에 의존하지 않고 다음 절차를 따른다.
 
-- 제품 전제나 사용자 문제가 불명확하면 `/office-hours`로 먼저 구체화한다.
-- 제품 범위와 우선순위를 재검토할 때는 `/plan-ceo-review`를 사용한다.
-- 화면 구조, 정보 위계, 상호작용과 UX 계획은 `/plan-design-review`로 검토한다.
-- 시각 언어, 타이포그래피, 색상과 디자인 시스템은 `/design-consultation`으로 구체화한다.
-- 여러 시각적 대안을 비교할 필요가 있고 사용자가 동의하면 `/design-shotgun`을 사용한다.
-- GStack 설계 단계와 구현 워크플로를 동시에 진행하지 않는다.
+- 이 프로젝트에서는 GStack 명령과 스킬을 사용하지 않는다.
+- 제품 전제나 핵심 사용자 문제가 불명확하면 사용자에게 확인하고 성공 기준을 명시한다.
+- 제품 범위와 우선순위를 정할 때는 결과에 영향을 주는 2~3개 대안, 장단점과 추천안을 제시한다.
+- 화면 구조, 정보 위계, 상태 소유권, 상호작용, 반응형과 접근성 계약을 검토한다.
+- 시각 언어, 타이포그래피와 색상을 변경해야 할 때는 먼저 사용자 승인을 받고 대안을 비교한다.
+- 설계 검토와 구현을 같은 단계에서 병행하지 않는다.
 - 사용자 승인을 받기 전에는 `src/`, `src-tauri/`, `package.json`과 런타임 코드를 수정하지 않는다.
 - 설계 결과는 `docs/design/` 아래의 간결한 문서에 기록하고 승인된 문서를 구현 기준으로 사용한다.
 
@@ -89,7 +102,7 @@ git diff --name-only main...HEAD -- docs/TODO.md docs/DONE.md docs/kanban.html
 5. 카드 상세와 관련 카드 탐색 구체화
 6. 덱 편집과 덱 코드 흐름 구체화
 7. 시각 시스템과 와이어프레임 승인
-8. 승인 후 별도 구현 작업 시작
+8. 승인 후 같은 기능 worktree에서 구현 단계 시작
 
 ## Architecture Boundaries
 
@@ -118,6 +131,7 @@ npm run tauri:dev
 npm run test
 npm run build
 npm run rust:check
+npm run merge:check -- HCL-###
 npm run check
 ```
 
@@ -140,7 +154,8 @@ Role contract: .codex/agents/{role}.toml
 ## Definition of Done
 
 - 요청된 동작이 구현되어 있다.
-- `npm run check`가 통과한다.
+- 런타임 변경과 merge 후보는 `npm run check`가 통과한다.
+- 문서 전용 또는 작은 관리 변경은 `git diff --check`, 관련 문서 검사와 영향 범위 테스트를 통과한다.
 - 데이터 형식 변경 시 관련 fixture 또는 테스트가 갱신되어 있다.
 - 사용자 변경사항과 무관한 파일이 수정되지 않았다.
 - 실행 방법 또는 중요한 제약이 바뀌면 `README.md`가 갱신되어 있다.

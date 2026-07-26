@@ -12,8 +12,9 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "rust:check": "cargo check --manifest-path src-tauri/Cargo.toml",
-    "tracking:test": "node --test tests/project-tracking.test.mjs tests/project-tracking-files.test.mjs",
+    "tracking:test": "node --test tests/project-tracking.test.mjs tests/project-tracking-files.test.mjs tests/merge-gate.test.mjs",
     "tracking:check": "node scripts/validate-project-tracking.mjs",
+    "merge:check": "node scripts/validate-merge-gate.mjs",
     "check": "npm run tracking:test && npm run tracking:check && npm run test && npm run build && npm run rust:check"
   },
   "dependencies": {

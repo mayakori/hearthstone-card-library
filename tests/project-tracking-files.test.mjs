@@ -40,7 +40,7 @@ test("offline Kanban exposes the five columns and approved controls", () => {
   ]);
 });
 
-test("repository instructions enforce main-only tracking and the merge gate", () => {
+test("repository instructions enforce the project workflow and merge gate", () => {
   const agents = readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8");
   const claude = readFileSync(path.join(repoRoot, "CLAUDE.md"), "utf8");
   const readme = readFileSync(path.join(repoRoot, "README.md"), "utf8");
@@ -50,17 +50,29 @@ test("repository instructions enforce main-only tracking and the merge gate", ()
   for (const file of ["docs/TODO.md", "docs/DONE.md", "docs/kanban.html"]) {
     assert.match(agents, new RegExp(file.replace("/", "\\/")));
   }
-  assert.match(agents, /main\.\.\.HEAD -- docs\/TODO\.md docs\/DONE\.md docs\/kanban\.html/);
+  assert.match(agents, /npm run merge:check -- HCL-###/);
+  assert.match(agents, /\/va/);
+  assert.match(agents, /GStack.*사용하지 않는다/);
+  assert.match(agents, /명시적으로 요청/);
   assert.match(claude, /Project Tracking/);
+  assert.match(claude, /@AGENTS\.md/);
   assert.match(readme, /docs\/kanban\.html/);
   assert.match(readme, /docs\/TODO\.md/);
   assert.match(readme, /docs\/DONE\.md/);
+  assert.match(readme, /npm run merge:check -- HCL-###/);
+  assert.match(readme, /squash merge/);
+  assert.equal(packageJson.scripts["merge:check"], "node scripts/validate-merge-gate.mjs");
   assert.equal(
     packageJson.scripts["tracking:test"],
-    "node --test tests/project-tracking.test.mjs tests/project-tracking-files.test.mjs",
+    "node --test tests/project-tracking.test.mjs tests/project-tracking-files.test.mjs tests/merge-gate.test.mjs",
   );
   assert.equal(packageJson.scripts["tracking:check"], "node scripts/validate-project-tracking.mjs");
   assert.match(packageJson.scripts.check, /^npm run tracking:test && npm run tracking:check && /);
   assert.match(vitestConfig, /configDefaults\.exclude/);
   assert.match(vitestConfig, /tests\/project-tracking\*\.test\.mjs/);
+  assert.match(vitestConfig, /tests\/merge-gate\.test\.mjs/);
+  assert.equal(
+    readFileSync(path.join(repoRoot, ".agents", "skills", "va", "SKILL.md"), "utf8"),
+    readFileSync(path.join(repoRoot, ".claude", "skills", "va", "SKILL.md"), "utf8"),
+  );
 });
