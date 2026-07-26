@@ -324,17 +324,17 @@ Both skill directories passed `quick_validate.py`. The red/green repository cont
 
 ## HCL-013 — sdd 로컬 스킬 포팅
 
-- Status: `in_progress`
+- Status: `done`
 - Priority: `P2`
 - Type: `chore`
 - Updated: `2026-07-26`
 - Codex: `HCL-013 · sdd 로컬 스킬 포팅`
-- Branch: `codex/hcl-013-port-sdd-skill`
-- Worktree: `hcl-013-port-sdd-skill`
+- Branch: `main`
+- Worktree: `main`
 - Depends on: `—`
 - Spec: `docs/design/2026-07-26-hcl-013-sdd-skill-port.md`
 - Plan: `docs/plans/2026-07-26-hcl-013-sdd-skill-port.md`
-- Next gate: port and validate identical HCL-native `/sdd` definitions, then run `/va`
+- Next gate: `—`
 - Blocked: `—`
 
 ### Goal
@@ -343,8 +343,8 @@ Restore the `dc_browser` `/sdd` handoff skill in both project-local agent discov
 
 ### Progress
 
-The RED consumer sample without `/sdd` confused it with an implementation procedure, did not produce a copyable handoff prompt, and asked the user to resolve the task ID instead.
+The `/sdd` skill is tracked in both project-local discovery paths with identical HCL-native definitions. It preserves the original single-copy-block handoff behavior while excluding the old repository's node-view, development-command, and process dependencies.
 
 ### Verification
 
-Baseline failure recorded; implementation not started.
+The RED consumer omitted the handoff; fresh GREEN consumers produced exactly one self-contained code block for both argument and no-argument forms while preserving supplied task IDs. Both skill validators passed, tracking tests passed 21/21, Vitest passed 6/6, build and Rust check passed, independent review reported no remaining Critical or Important findings, `/va HCL-013` returned `clean`, and `npm run merge:check -- HCL-013` passed.

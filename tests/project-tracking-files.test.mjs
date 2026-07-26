@@ -11,7 +11,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 test("real tracking files stay synchronized", () => {
   const result = validateTrackingFiles(repoRoot);
   assert.deepEqual(result.errors, []);
-  assert.equal(result.activeCount, 10);
+  assert.equal(result.activeCount, 11);
   assert.equal(result.archivedCount, 2);
 });
 
@@ -38,6 +38,7 @@ test("offline Kanban exposes the five columns and approved controls", () => {
     "HCL-010",
     "HCL-011",
     "HCL-012",
+    "HCL-013",
   ]);
 });
 
@@ -84,4 +85,22 @@ test("repository instructions enforce the project workflow and merge gate", () =
   assert.match(agentEz, /\/ez/);
   assert.match(agentEz, /쉽게 설명/);
   assert.doesNotMatch(agentEz, /GStack|Superpowers|Hearthstone|dc_browser/i);
+});
+
+test("project-local sdd skill stays discoverable without legacy workflow dependencies", () => {
+  const agentSdd = readFileSync(path.join(repoRoot, ".agents", "skills", "sdd", "SKILL.md"), "utf8");
+  const claudeSdd = readFileSync(path.join(repoRoot, ".claude", "skills", "sdd", "SKILL.md"), "utf8");
+
+  assert.equal(agentSdd, claudeSdd);
+  assert.match(
+    agentSdd,
+    /^---\r?\nname: sdd\r?\ndescription: [^\r\n]*\/sdd[^\r\n]*\r?\n---\r?\n/m,
+  );
+  assert.match(agentSdd, /\/sdd/);
+  assert.match(agentSdd, /코드블록 하나만/);
+  assert.match(agentSdd, /현재 세션에서 작업을 시작하지 않는다/);
+  assert.doesNotMatch(
+    agentSdd,
+    /GStack|Superpowers|dc_browser|node-view|guarding-todo-node-view|todo-overview|todo-working|scripts\/dev\.mjs/i,
+  );
 });
