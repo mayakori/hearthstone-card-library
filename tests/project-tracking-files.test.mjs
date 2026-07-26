@@ -47,6 +47,8 @@ test("repository instructions enforce the project workflow and merge gate", () =
   const readme = readFileSync(path.join(repoRoot, "README.md"), "utf8");
   const vitestConfig = readFileSync(path.join(repoRoot, "vitest.config.ts"), "utf8");
   const packageJson = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"));
+  const agentEz = readFileSync(path.join(repoRoot, ".agents", "skills", "ez", "SKILL.md"), "utf8");
+  const claudeEz = readFileSync(path.join(repoRoot, ".claude", "skills", "ez", "SKILL.md"), "utf8");
 
   for (const file of ["docs/TODO.md", "docs/DONE.md", "docs/kanban.html"]) {
     assert.match(agents, new RegExp(file.replace("/", "\\/")));
@@ -77,4 +79,9 @@ test("repository instructions enforce the project workflow and merge gate", () =
     readFileSync(path.join(repoRoot, ".agents", "skills", "va", "SKILL.md"), "utf8"),
     readFileSync(path.join(repoRoot, ".claude", "skills", "va", "SKILL.md"), "utf8"),
   );
+  assert.equal(agentEz, claudeEz);
+  assert.match(agentEz, /^---\r?\nname: ez\r?\n/m);
+  assert.match(agentEz, /\/ez/);
+  assert.match(agentEz, /쉽게 설명/);
+  assert.doesNotMatch(agentEz, /GStack|Superpowers|Hearthstone|dc_browser/i);
 });

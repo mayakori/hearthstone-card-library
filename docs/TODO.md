@@ -297,17 +297,17 @@ Not started.
 
 ## HCL-012 — ez 로컬 스킬 포팅
 
-- Status: `in_progress`
+- Status: `done`
 - Priority: `P2`
 - Type: `chore`
 - Updated: `2026-07-26`
 - Codex: `HCL-012 · ez 로컬 스킬 포팅`
-- Branch: `codex/hcl-012-port-ez-skill`
-- Worktree: `hcl-012-port-ez-skill`
+- Branch: `main`
+- Worktree: `main`
 - Depends on: `—`
 - Spec: `docs/design/2026-07-26-hcl-012-ez-skill-port.md`
 - Plan: `docs/plans/2026-07-26-hcl-012-ez-skill-port.md`
-- Next gate: port and validate identical `/ez` definitions, then run `/va`
+- Next gate: `—`
 - Blocked: `—`
 
 ### Goal
@@ -316,8 +316,8 @@ Restore the preserved `/ez` explanation skill in both project-local agent discov
 
 ### Progress
 
-The original untracked skill remained intact in the workflow-repair backup and is ready to be ported in its own feature worktree.
+The preserved `/ez` skill is tracked in both `.agents/skills/ez/` and `.claude/skills/ez/`. The copies remain text-identical to each other and semantically identical to the workflow-repair backup, without a global installation or GStack/Superpowers dependency.
 
 ### Verification
 
-Not started.
+Both skill directories passed `quick_validate.py`. The red/green repository contract test passed as part of `npm run check` (tracking 20/20, Vitest 6/6, build, and Rust check), `/va HCL-012` returned `clean`, and `npm run merge:check -- HCL-012` passed before squash merge.
