@@ -121,14 +121,14 @@ The preview was checked at the 16px-font split boundary: 1280px renders a 960px 
 - Status: `in_progress`
 - Priority: `P1`
 - Type: `feature`
-- Updated: `2026-07-26`
-- Codex: `HCL-006 · 공식 Hearthstone API 수집 파이프라인 명세`
+- Updated: `2026-08-05`
+- Codex: `HCL-006 · 공식 Hearthstone API 수집·정규화 파이프라인`
 - Branch: `codex/hcl-006-api-pipeline`
 - Worktree: `hcl-006-api-pipeline`
 - Depends on: `HCL-004`
-- Spec: `docs/design/card-data-architecture-decisions.md`
-- Plan: `—`
-- Next gate: continue the API pipeline specification in the assigned worktree from `docs/handoff-hcl-006-official-api-pipeline.md`
+- Spec: `docs/superpowers/specs/2026-07-25-hcl-006-official-card-data-pipeline-design.md`
+- Plan: `docs/superpowers/plans/2026-08-05-hcl-006-official-card-data-pipeline.md`
+- Next gate: execute Task 1 of the approved implementation plan in the assigned worktree
 - Blocked: `—`
 
 ### Goal
@@ -146,36 +146,36 @@ Approved design progress:
 - [x] Preserve Raw and normalized data separately and support `ko_KR` and `en_US` from the first release.
 - [x] Consolidate schema, query-pool, version, image, R2 and updater decisions in `docs/design/card-data-architecture-decisions.md`.
 - [x] Record the separate-session resume context and first unresolved collection question in `docs/handoff-hcl-006-official-api-pipeline.md`.
-- [ ] Freeze OAuth, endpoints, metadata, pagination, timeout, retry and Raw envelope contracts.
-- [ ] Freeze deterministic normalized SQLite, zstd and manifest output contracts.
-- [ ] Approve the implementation specification and write the implementation plan.
+- [x] Freeze OAuth, endpoints, metadata, pagination, timeout, retry and Raw envelope contracts.
+- [x] Freeze deterministic normalized SQLite, zstd and manifest output contracts.
+- [x] Approve the implementation specification and write the implementation plan.
 
 ### Verification
 
-R2 smoke fixtures verified 15 cards per locale, 33 unique images and 39 manifest assets with zero hash failures. Production collection and packaging code has not started.
+The approved implementation specification validates as 13 `STRICT` SQLite tables and five explicit indexes. A 2026-08-05 live read-only check returned 1,559 current Standard cards over four pages and confirmed that all 33 observed card fields are covered by normalized or explicit Raw-only policy. Production collection and packaging code has not started.
 
-## HCL-007 — 원본 캐시와 정규화 로컬 DB
+## HCL-007 — 카드 데이터 패키지 설치·로컬 활성화
 
 - Status: `backlog`
 - Priority: `P1`
 - Type: `feature`
-- Updated: `2026-07-18`
+- Updated: `2026-08-05`
 - Codex: `—`
 - Branch: `—`
 - Worktree: `—`
 - Depends on: `HCL-006`
 - Spec: `—`
 - Plan: `—`
-- Next gate: define raw-cache and normalized-schema boundaries after the adapter contract
-- Blocked: `HCL-006 adapter contract is required`
+- Next gate: define verified package installation, locale DB activation, rollback and local lifecycle after HCL-006
+- Blocked: `HCL-006 package output and manifest must be implemented`
 
 ### Goal
 
-Persist raw official responses separately from the normalized local card model.
+Consume a verified HCL-006 package in the Tauri backend, install the selected locale SQLite into the local cache, atomically activate it, and preserve the previously active database when verification or activation fails.
 
 ### Progress
 
-No production database contract has been approved.
+HCL-006 owns upstream API collection, Raw preservation, normalization and package production. HCL-007 starts at the package-consumer boundary and does not duplicate those responsibilities. R2 scheduling and publication remain outside this local installation slice.
 
 ### Verification
 
@@ -194,7 +194,7 @@ Not started.
 - Spec: `—`
 - Plan: `—`
 - Next gate: design the filter expression model and snippet/autocomplete interaction against normalized card data
-- Blocked: `HCL-007 normalized schema is required`
+- Blocked: `HCL-007 must expose an activated locale SQLite to the Rust search backend`
 
 ### Goal
 
