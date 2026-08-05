@@ -118,7 +118,7 @@ The preview was checked at the 16px-font split boundary: 1280px renders a 960px 
 
 ## HCL-006 — 공식 Hearthstone API 수집·정규화 파이프라인
 
-- Status: `in_progress`
+- Status: `verify`
 - Priority: `P1`
 - Type: `feature`
 - Updated: `2026-08-05`
@@ -128,7 +128,7 @@ The preview was checked at the 16px-font split boundary: 1280px renders a 960px 
 - Depends on: `HCL-004`
 - Spec: `docs/superpowers/specs/2026-07-25-hcl-006-official-card-data-pipeline-design.md`
 - Plan: `docs/superpowers/plans/2026-08-05-hcl-006-official-card-data-pipeline.md`
-- Next gate: execute Task 1 of the approved implementation plan in the assigned worktree
+- Next gate: merge latest `main`, rerun full verification, `/va HCL-006`, and `npm run merge:check -- HCL-006`
 - Blocked: `—`
 
 ### Goal
@@ -152,7 +152,7 @@ Approved design progress:
 
 ### Verification
 
-The approved implementation specification validates as 13 `STRICT` SQLite tables and five explicit indexes. A 2026-08-05 live read-only check returned 1,559 current Standard cards over four pages and confirmed that all 33 observed card fields are covered by normalized or explicit Raw-only policy. Production collection and packaging code has not started.
+The feature branch implements the approved two-locale official API collector, Raw preservation, normalized 13-table `STRICT` SQLite output, deterministic zstd package and manifest, JSONL CLI, offline end-to-end coverage, and a credentialed live smoke. Branch-wide review is clean; latest-main integration, `/va`, and the merge gate remain.
 
 ## HCL-007 — 카드 데이터 패키지 설치·로컬 활성화
 
