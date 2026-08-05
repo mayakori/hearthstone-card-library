@@ -1,0 +1,48 @@
+[package]
+name = "card-data-pipeline"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "card-data-pipeline"
+path = "src/main.rs"
+
+[[bin]]
+name = "card-data-pipeline-test-runner"
+path = "src/bin/test_support_runner.rs"
+required-features = ["test-support"]
+
+[[test]]
+name = "collection"
+path = "tests/collection.rs"
+required-features = ["test-support"]
+
+[features]
+test-support = []
+
+[dependencies]
+async-trait = "0.1"
+card-data-contract = { path = "../card-data-contract" }
+clap = { version = "4.6", features = ["derive"] }
+httpdate = "1"
+rand = "0.10"
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "form", "query", "rustls"] }
+secrecy = "0.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_path_to_error = "0.1"
+time = { version = "0.3", features = ["formatting", "parsing"] }
+tokio = { version = "1.53", features = ["macros", "rt-multi-thread", "time", "fs"] }
+rusqlite = { version = "0.40.1", features = ["bundled"] }
+sha2 = "0.11"
+hex = "0.4"
+zstd = { version = "0.13.3", features = ["zstdmt"] }
+tempfile = "3.27"
+
+[dev-dependencies]
+assert_cmd = "2.2"
+predicates = "3.1"
+wiremock = "0.6"
+
+[target.'cfg(any(target_os = "linux", target_vendor = "apple"))'.dependencies]
+rustix = { version = "1.1.4", features = ["fs"] }

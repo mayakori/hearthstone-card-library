@@ -107,18 +107,20 @@ main 전용 정본의 절대경로는 다음과 같다.
 ## Architecture Boundaries
 
 - `src/`: SolidJS 프론트엔드. 화면, 필터 편집기, 덱 편집기와 사용자 상호작용을 담당한다.
-- `src-tauri/src/`: Rust 백엔드. 공식 데이터 수집, 캐시, 로컬 DB, 카드 의미 분석과 Tauri IPC를 담당한다.
+- `crates/card-data-contract/`: 파이프라인과 앱이 공유하는 Raw, 정규화 schema, manifest 타입과 검증 규칙을 담당한다.
+- `crates/card-data-pipeline/`: 로컬 개발과 신뢰된 CI에서 공식 데이터 수집, 정규화 SQLite 생성과 패키징을 담당한다. Tauri 앱에 포함하지 않는다.
+- `src-tauri/src/`: Rust 백엔드. 검증된 데이터 패키지의 설치·활성화, 캐시, 로컬 DB, 카드 검색·의미 분석과 Tauri IPC를 담당한다. Blizzard API 수집과 정규화를 담당하지 않는다.
 - `data/fixtures/`: 테스트와 개발용 공식 응답 샘플이다. 런타임 DB로 사용하지 않는다.
 - `preview/`: 데이터 수집 가능성을 검증한 임시 독립 HTML이다. 제품 UI와 결합하지 않는다.
 - `docs/`: 설계와 구현 계획을 보관한다.
 
-프론트엔드에서 공식 사이트를 직접 호출하는 구조를 기본값으로 만들지 않는다. 네트워크 요청과 원본 응답 처리는 Rust 어댑터 뒤에 격리한다.
+프론트엔드와 패키징된 Tauri 앱에서 Blizzard API를 직접 호출하지 않는다. 공식 API 요청과 원본 응답 처리는 `card-data-pipeline`의 Rust 어댑터 뒤에 격리한다.
 
 ## Card Data Rules
 
 - 카드의 공식 `id`, `slug`, locale과 원본 출처를 보존한다.
 - 원본 응답과 앱에서 사용하는 정규화 모델을 구분한다.
-- 공식 카드 라이브러리의 내부 엔드포인트는 공개 안정 API가 아니므로 변경 가능성을 전제로 어댑터와 fixture 테스트를 둔다.
+- 카드 데이터 정본은 Blizzard 공식 Hearthstone Game Data API다. 공식 카드 라이브러리의 내부 endpoint와 HTML 메타데이터는 탐색 기록일 뿐 운영 수집 경로로 사용하지 않는다.
 - 카드 텍스트에서 추출한 의미 조건은 원문과 별도 필드에 저장하고, 추론 결과임을 구분할 수 있게 한다.
 - 기본 locale은 `ko_KR`이다.
 

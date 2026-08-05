@@ -35,6 +35,36 @@ npm run rust:check  # Rust/Tauri 컴파일 검사
 npm run check       # 작업 추적 테스트·동기화 검사 후 위 세 검사를 실행
 ```
 
+## 공식 카드 데이터 pipeline
+
+공식 Blizzard API에서 `ko_KR`, `en_US` 현재 정규전 카드를 수집해 Raw JSON과 SQLite package를 만들려면 다음 Rust 검증을 실행한다.
+
+```powershell
+cargo test --workspace
+cargo test -p card-data-pipeline --test live_smoke -- --ignored
+cargo run -p card-data-pipeline -- build --data-version 36.0.3-build247416-r1 --output-root .\output
+```
+
+fixture 기반의 offline 전체 pipeline E2E도 포함하려면 `cargo test --workspace --all-features --no-fail-fast`를 실행한다. `npm run check`는 이 feature를 포함해 Rust test와 check를 실행한다.
+
+live smoke와 build는 현재 process environment의 `BLIZZARD_CLIENT_ID`, `BLIZZARD_CLIENT_SECRET`만 읽는다. 로컬에서는 Git으로 무시되는 `.env.card-data.local`을 `.env.example` 형식으로 만들고, PowerShell 또는 별도 local tooling이 두 값을 process environment에 잠시 로드한 다음 명령을 실행한다. pipeline은 이 파일을 읽거나 복사하지 않으며, credential과 access token을 package·manifest·Raw·SQLite·로그에 기록하지 않는다.
+
+예를 들어 PowerShell에서 다음처럼 값을 출력하지 않고 현재 process에만 설정한 뒤 실행하고 제거할 수 있다.
+
+```powershell
+$entries = Get-Content .env.card-data.local | Where-Object { $_ -match '^(BLIZZARD_CLIENT_ID|BLIZZARD_CLIENT_SECRET)=' }
+foreach ($entry in $entries) {
+  $name, $value = $entry -split '=', 2
+  [Environment]::SetEnvironmentVariable($name, $value, 'Process')
+}
+try {
+  cargo test -p card-data-pipeline --test live_smoke -- --ignored
+} finally {
+  Remove-Item Env:BLIZZARD_CLIENT_ID -ErrorAction SilentlyContinue
+  Remove-Item Env:BLIZZARD_CLIENT_SECRET -ErrorAction SilentlyContinue
+}
+```
+
 데스크톱 실행 파일과 설치 번들을 만들 때는 다음을 사용한다.
 
 ```powershell

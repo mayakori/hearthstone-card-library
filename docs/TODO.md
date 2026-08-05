@@ -118,17 +118,17 @@ The preview was checked at the 16px-font split boundary: 1280px renders a 960px 
 
 ## HCL-006 — 공식 Hearthstone API 수집·정규화 파이프라인
 
-- Status: `verify`
+- Status: `done`
 - Priority: `P1`
 - Type: `feature`
-- Updated: `2026-08-05`
+- Updated: `2026-08-06`
 - Codex: `HCL-006 · 공식 Hearthstone API 수집·정규화 파이프라인`
-- Branch: `codex/hcl-006-api-pipeline`
-- Worktree: `hcl-006-api-pipeline`
+- Branch: `main`
+- Worktree: `main`
 - Depends on: `HCL-004`
 - Spec: `docs/superpowers/specs/2026-07-25-hcl-006-official-card-data-pipeline-design.md`
 - Plan: `docs/superpowers/plans/2026-08-05-hcl-006-official-card-data-pipeline.md`
-- Next gate: merge latest `main`, rerun full verification, `/va HCL-006`, and `npm run merge:check -- HCL-006`
+- Next gate: start HCL-014 Raw R2 candidate publication automation
 - Blocked: `—`
 
 ### Goal
@@ -152,7 +152,7 @@ Approved design progress:
 
 ### Verification
 
-The feature branch implements the approved two-locale official API collector, Raw preservation, normalized 13-table `STRICT` SQLite output, deterministic zstd package and manifest, JSONL CLI, offline end-to-end coverage, and a credentialed live smoke. Branch-wide review is clean; latest-main integration, `/va`, and the merge gate remain.
+The main branch now contains the approved two-locale official API collector, Raw preservation, normalized 13-table `STRICT` SQLite output, deterministic zstd package and manifest, JSONL CLI, offline end-to-end coverage, and a credentialed live smoke. The final live dataset excluded all 69 alternate hero skins while preserving their official relation IDs and retained non-skin gameplay references.
 
 ## HCL-007 — 카드 데이터 패키지 설치·로컬 활성화
 

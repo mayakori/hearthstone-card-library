@@ -346,6 +346,22 @@
     .keyword-detail p { margin: 0; color: var(--muted); font-size: 11px; }
     .source-map { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
 
+    .relation-stage { display: grid; grid-template-columns: minmax(210px, 0.78fr) 74px minmax(330px, 1.22fr); align-items: center; gap: var(--space-4); }
+    .relation-card { display: block; min-width: 0; padding: var(--space-4); border: 1px solid var(--line-strong); color: var(--ink); background: var(--panel); text-align: left; cursor: pointer; }
+    .relation-card:hover, .relation-card.selected { background: var(--panel-raised); box-shadow: inset 3px 0 var(--moss); }
+    .relation-card img { display: block; width: 100%; height: 300px; object-fit: contain; }
+    .relation-card.child img { height: 250px; }
+    .relation-card h3 { margin: var(--space-3) 0 var(--space-1); font-size: 15px; }
+    .relation-card p { margin: var(--space-2) 0 0; color: var(--muted); font-size: 11px; }
+    .relation-card code { color: var(--blue); font: 10px var(--mono); }
+    .relation-arrow { color: var(--moss); font: 600 11px/1.7 var(--mono); text-align: center; }
+    .relation-arrow b { display: block; font-size: 24px; }
+    .related-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+    .relation-note { display: grid; margin-top: var(--space-5); border-top: 1px solid var(--line); border-left: 1px solid var(--line); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .relation-note div { padding: var(--space-3); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--panel); }
+    .relation-note span { display: block; color: var(--faint); font: 10px var(--mono); }
+    .relation-note strong { display: block; margin-top: var(--space-1); font-size: 12px; }
+
     .image-lab { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(300px, 1.2fr); gap: var(--space-5); }
     .gold-preview { position: relative; display: grid; min-height: 420px; place-items: center; overflow: hidden; border: 1px solid #5e4f31; background: #17140e; }
     .gold-preview img { display: block; width: min(90%, 300px); max-height: 400px; object-fit: contain; transition: opacity 180ms ease; }
@@ -437,6 +453,10 @@
       .detail-layout { grid-template-columns: 1fr; }
       .detail-visual { min-height: 360px; }
       .keyword-grid { grid-template-columns: 1fr; }
+      .relation-stage { grid-template-columns: 1fr; }
+      .relation-arrow b { transform: rotate(90deg); }
+      .related-grid { grid-template-columns: 1fr; }
+      .relation-note { grid-template-columns: 1fr; }
       .image-lab { grid-template-columns: 1fr; }
       .gold-preview { min-height: 360px; }
       .condition { grid-template-columns: 1fr; }
@@ -489,9 +509,10 @@
         <p class="eyebrow">Frontend Contract</p>
         <button class="nav-button" type="button" data-view="ipc"><span class="nav-icon">04</span><span>Tauri IPC</span><span class="nav-count">10</span></button>
         <button class="nav-button" type="button" data-view="detail"><span class="nav-icon">05</span><span>상세 카드 샘플</span><span class="nav-count">1</span></button>
-        <button class="nav-button" type="button" data-view="query"><span class="nav-icon">06</span><span>AND / OR 쿼리</span><span class="nav-count">1</span></button>
-        <button class="nav-button" type="button" data-view="images"><span class="nav-icon">07</span><span>이미지 캐시</span><span class="nav-count">3</span></button>
-        <button class="nav-button" type="button" data-view="sync"><span class="nav-icon">08</span><span>동기화 상태</span><span class="nav-count">2</span></button>
+        <button class="nav-button" type="button" data-view="relations"><span class="nav-icon">06</span><span>관련 카드 샘플</span><span class="nav-count">2</span></button>
+        <button class="nav-button" type="button" data-view="query"><span class="nav-icon">07</span><span>AND / OR 쿼리</span><span class="nav-count">1</span></button>
+        <button class="nav-button" type="button" data-view="images"><span class="nav-icon">08</span><span>이미지 캐시</span><span class="nav-count">3</span></button>
+        <button class="nav-button" type="button" data-view="sync"><span class="nav-icon">09</span><span>동기화 상태</span><span class="nav-count">2</span></button>
       </div>
     </nav>
 
@@ -601,6 +622,41 @@
         <div class="callout"><div><strong>황금 이미지 상태</strong><br>이 카드의 공식 <code>imageGold</code>는 빈 문자열입니다. 제작 비용 400이 존재해도 황금 이미지 자산이 제공된다는 뜻은 아니므로 <code>gold.state = unavailable</code>로 정규화합니다.</div></div>
       </section>
 
+      <section class="view" id="view-relations" aria-labelledby="relations-title">
+        <div class="page-heading"><div><p class="eyebrow">Hydrated relations</p><h2 id="relations-title">관련 카드 조인 샘플</h2><p>불카노스 원본의 <code>childIds</code>를 한 번의 묶음 요청으로 조회하고, 비수집 부속 카드 두 장을 <code>CardDetail.relations.children</code>에 완성된 카드 요약으로 넣습니다.</p></div><span class="state-pill good">live sample · #123665</span></div>
+        <div class="relation-stage">
+          <button class="relation-card schema-select" type="button" data-schema="official_raw_samples.vulcanos">
+            <img src="https://d15f34w2p8l1cc.cloudfront.net/hearthstone/b7bd857a98cb4e3db3d3722dab713efc4ff6dbcf2402cb764ac3a89968032db7.png" alt="불카노스 카드">
+            <code>#123665 · parent · collectible</code>
+            <h3>불카노스</h3>
+            <p><b>거수 +2</b> · childIds [123666, 128032]</p>
+          </button>
+          <div class="relation-arrow" aria-hidden="true">ids bulk fetch<b>→</b>2 cards</div>
+          <div class="related-grid">
+            <button class="relation-card child schema-select" type="button" data-schema="official_raw_samples.vulcanos_related_cards.0">
+              <img src="https://d15f34w2p8l1cc.cloudfront.net/hearthstone/fa51af1cc63b72b0e5382ebf3297fc2614f65156432abfe09f72246b9f40264b.png" alt="불카노스의 융기 123666 카드">
+              <code>#123666 · child · non-collectible</code>
+              <h3>불카노스의 융기</h3>
+              <p>비용 2 · 공격력 1 · 생명력 4<br>parentId 123665</p>
+            </button>
+            <button class="relation-card child schema-select" type="button" data-schema="official_raw_samples.vulcanos_related_cards.1">
+              <img src="https://d15f34w2p8l1cc.cloudfront.net/hearthstone/8192a31a5637120edbd39656f92c890c1071a4ba988b497f301f4c2a51764eaa.png" alt="불카노스의 융기 128032 카드">
+              <code>#128032 · child · non-collectible</code>
+              <h3>불카노스의 융기</h3>
+              <p>비용 2 · 공격력 1 · 생명력 4<br>parentId 123665</p>
+            </button>
+          </div>
+        </div>
+        <div class="relation-note" aria-label="관련 카드 조인 규칙">
+          <div><span>공식 관계</span><strong>childIds ↔ parentId</strong></div>
+          <div><span>동일 이름 처리</span><strong>ID 기준으로 별도 보존</strong></div>
+          <div><span>프론트 응답</span><strong>children: CardSummary[2]</strong></div>
+        </div>
+        <div class="source-map"><button class="state-pill blue schema-select" type="button" data-schema="official_raw_samples.vulcanos">본체 원본</button><button class="state-pill gold schema-select" type="button" data-schema="official_raw_samples.vulcanos_related_cards">관련 카드 원본</button><button class="state-pill good schema-select" type="button" data-schema="ipc_wire_mocks.vulcanos_card_detail">조인된 CardDetail</button></div>
+        <section class="section" aria-labelledby="colossal-keyword-title"><div class="section-heading"><h3 id="colossal-keyword-title">자세한 내용</h3><p>keywordId 231 → MetadataCatalog</p></div><div class="keyword-grid"><article class="keyword-detail"><code>#231 · colossal-+x</code><strong>거수 +X</strong><p>소환하면, 부위를 X개 생성합니다.</p></article></div></section>
+        <div class="callout"><div><strong>이름으로 합치지 않음</strong><br>두 부속 카드는 표시 이름과 효과가 같지만 공식 ID와 이미지가 다릅니다. 캐시 키와 관계 조인은 항상 카드 ID를 기준으로 합니다.</div></div>
+      </section>
+
       <section class="view" id="view-query" aria-labelledby="query-title">
         <div class="page-heading"><div><p class="eyebrow">CardQuery</p><h2 id="query-title">중첩 AND / OR를 그대로 전달</h2><p>프론트 필터 빌더와 백엔드 검색 엔진이 동일한 트리 구조를 공유합니다. 의미 검색 조건도 나중에 같은 condition 노드로 확장할 수 있습니다.</p></div><span class="state-pill gold">limit 24</span></div>
         <div class="query-box schema-select" data-schema="ipc_wire_mocks.card_query" tabindex="0" role="button" aria-label="CardQuery JSON 보기">
@@ -650,7 +706,8 @@
         card_list: { url: "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=24&set=escape-from-violet-hold&textFilter=%EA%B3%B5%ED%97%88&sort=dateadded%3Adesc", status: 200, etag: "W/\"100f-Fcvu31Rlj0L9OniaPQEf+xWoNbY\"", card_count: 5, page_count: 1, page: 1 },
         standard_probe: { url: "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=3&set=standard&sort=dateadded%3Adesc", status: 200, card_count: 1152, page_count: 384, page: 1 },
         metadata: { url: "https://hearthstone.blizzard.com/ko-kr/cards", extraction: "#cardGalleryMount config attribute", counts: { sets: 46, classes: 13, types: 9, rarities: 5, minion_types: 25, spell_schools: 9, keywords: 74 } },
-        hot_spring_glider: { captured_at_utc: "2026-07-18T06:26:06Z", card_api_status: 200, card_api_etag: "W/\"467a-Imzlrq3X5pR3hqvII+ixFwdp+uc\"", card_id: 117382, metadata_page_status: 200 }
+        hot_spring_glider: { captured_at_utc: "2026-07-18T06:26:06Z", card_api_status: 200, card_api_etag: "W/\"467a-Imzlrq3X5pR3hqvII+ixFwdp+uc\"", card_id: 117382, metadata_page_status: 200 },
+        vulcanos: { captured_at_utc: "2026-07-18T12:56:07Z", parent_api_status: 200, parent_api_etag: "W/\"3c2-esfAVfDpv808WlaNNBYz/f7xWRE\"", related_api_status: 200, related_api_etag: "W/\"53c-H0ce/VK2QOah4SYBwSnWoFLXVA8\"", card_id: 123665, child_ids: [123666, 128032] }
       },
       official_raw_samples: {
         card_page: {
@@ -664,6 +721,12 @@
         },
         hot_spring_glider: { id: 117382, collectible: 1, slug: "117382-hot-spring-glider", classId: 5, multiClassIds: [], minionTypeId: 14, cardTypeId: 4, cardSetId: 1952, rarityId: 1, artistName: "Patrik Bjorkstrom", health: 4, attack: 2, manaCost: 3, name: "온천 활공꾼", text: "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/24b93a24160da08bbc9cb8fa7c8a5ac69cdb070f1ae7bd25af7eb5bfee6625af.png", imageGold: "", flavorText: "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/98143e114ea8f2e13305a00dce48b5532e1c6b8b237980a0e0a945f43f3ad1d6.png", keywordIds: [3, 8, 351], isZilliaxFunctionalModule: false, isZilliaxCosmeticModule: false },
         hot_spring_glider_metadata_join: { set: { id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }, class: { id: 5, slug: "paladin", name: "성기사" }, type: { id: 4, slug: "minion", name: "하수인" }, minion_type: { id: 14, slug: "murloc", name: "멀록" }, rarity: { id: 1, slug: "common", name: "일반", craftingCost: [40, 400], dustValue: [5, 50] }, keywords: [{ id: 3, slug: "divine-shield", name: "천상의 보호막", refText: "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.", text: "이 캐릭터는 처음 받는 피해를 무시합니다." }, { id: 8, slug: "battlecry", name: "전투의 함성", refText: "카드를 손에서 낼 때 효과가 발동합니다.", text: "카드를 손에서 낼 때 효과가 발동합니다." }, { id: 351, slug: "kindred", name: "유사", refText: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.", text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다." }] },
+        vulcanos: { id: 123665, collectible: 1, slug: "123665-vulcanos", classId: 4, multiClassIds: [], minionTypeId: 18, cardTypeId: 4, cardSetId: 1980, rarityId: 5, artistName: "Zoltan Boros", health: 8, attack: 4, manaCost: 7, name: "불카노스", text: "<b>거수 +2</b>, 내 턴이 끝날 때, 다른 모든 하수인에게 피해를 2 줍니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/b7bd857a98cb4e3db3d3722dab713efc4ff6dbcf2402cb764ac3a89968032db7.png", imageGold: "", flavorText: "아제로스가 불타는 모습을 보고 말겠다고 결심한 라그나로스는 살아 있는 화산을 깨워 불모의 땅에 용암의 강을 흘려보냈습니다.", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/73e9732e3b74e81438d8fd22775683608f384cdb567d1fb87633b7b54f5d5853.png", childIds: [123666, 128032], keywordIds: [231], isZilliaxFunctionalModule: false, isZilliaxCosmeticModule: false },
+        vulcanos_related_cards: [
+          { id: 123666, collectible: 0, slug: "123666-plume-of-vulcanos", classId: 4, multiClassIds: [], minionTypeId: 18, cardTypeId: 4, cardSetId: 1980, rarityId: null, artistName: null, health: 4, attack: 1, manaCost: 2, name: "불카노스의 융기", text: "이 하수인이 피해를 받을 때마다 무작위 화염 주문을 얻습니다. 그 주문의 비용이 (3) 감소합니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/fa51af1cc63b72b0e5382ebf3297fc2614f65156432abfe09f72246b9f40264b.png", imageGold: "", flavorText: "", cropImage: null, parentId: 123665, isZilliaxFunctionalModule: false, isZilliaxCosmeticModule: false },
+          { id: 128032, collectible: 0, slug: "128032-plume-of-vulcanos", classId: 4, multiClassIds: [], minionTypeId: 18, cardTypeId: 4, cardSetId: 1980, rarityId: null, artistName: null, health: 4, attack: 1, manaCost: 2, name: "불카노스의 융기", text: "이 하수인이 피해를 받을 때마다 무작위 화염 주문을 얻습니다. 그 주문의 비용이 (3) 감소합니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/8192a31a5637120edbd39656f92c890c1071a4ba988b497f301f4c2a51764eaa.png", imageGold: "", flavorText: "", cropImage: null, parentId: 123665, isZilliaxFunctionalModule: false, isZilliaxCosmeticModule: false }
+        ],
+        vulcanos_metadata_join: { set: { id: 1980, slug: "cataclysm", name: "대격변" }, class: { id: 4, slug: "mage", name: "마법사" }, type: { id: 4, slug: "minion", name: "하수인" }, minion_type: { id: 18, slug: "elemental", name: "정령" }, rarity: { id: 5, slug: "legendary", name: "전설", craftingCost: [1600, 3200], dustValue: [400, 1600] }, keywords: [{ id: 231, slug: "colossal-+x", name: "거수 +X", refText: "소환하면, 부위를 X개 생성합니다.", text: "소환하면, 부위를 X개 생성합니다." }] },
         gold_card: { id: 48158, slug: "48158-baku-the-mooneater", name: "달을 삼킨 구렁이 바쿠", text: "<b>개전:</b> 내 덱에 비용이 홀수인 카드만 있으면, 내 기본 영웅 능력을 강화합니다.", image: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/f0b7f3ddda277057df3dbd6d63058eaef6f8dcbb11d5d3656c367126634e816a.png", imageGold: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/33560b88e57d51948fe9edc645d0d694b9132e21de1d07fa5115173b4910ea84.png", cropImage: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/bc292a0af280d18431799b1e2efe58fbde3c2754cb26f1de8f02bd1c291e3fa4.png", keywordIds: [64] }
       },
       disk_cache_mocks: {
@@ -672,9 +735,28 @@
         normalized_set_shard: { format_version: 1, locale: "ko_KR", set: { id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }, cards: [{ id: 117382, slug: "117382-hot-spring-glider", locale: "ko_KR", collectible: true, name: "온천 활공꾼", effect: { plain: "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.", markup: "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.", format: "blizzard_html" }, mana_cost: 3, attack: 2, health: 4, artist_name: "Patrik Bjorkstrom", flavor_text: "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.", class_ids: [5], type_id: 4, set_id: 1952, rarity_id: 1, minion_type_id: 14, spell_school_id: null, keyword_ids: [3, 8, 351], relations: { parent_id: null, child_ids: [], copy_of_ids: [] }, image_sources: { normal: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/24b93a24160da08bbc9cb8fa7c8a5ac69cdb070f1ae7bd25af7eb5bfee6625af.png", crop: "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/98143e114ea8f2e13305a00dce48b5532e1c6b8b237980a0e0a945f43f3ad1d6.png", gold: null } }] }
       },
       ipc_wire_mocks: {
-        metadata_catalog: { locale: "ko_KR", sets: [{ id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }], classes: [{ id: 5, slug: "paladin", name: "성기사" }], types: [{ id: 4, slug: "minion", name: "하수인" }], minion_types: [{ id: 14, slug: "murloc", name: "멀록" }], spell_schools: [], rarities: [{ id: 1, slug: "common", name: "일반", crafting_cost: { normal: 40, golden: 400 }, dust_value: { normal: 5, golden: 50 } }], keywords: [{ id: 3, slug: "divine-shield", name: "천상의 보호막", ref_text: "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.", text: "이 캐릭터는 처음 받는 피해를 무시합니다." }, { id: 8, slug: "battlecry", name: "전투의 함성", ref_text: "카드를 손에서 낼 때 효과가 발동합니다.", text: "카드를 손에서 낼 때 효과가 발동합니다." }, { id: 351, slug: "kindred", name: "유사", ref_text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.", text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다." }], catalog_version: "2026-07-18T06:26:06Z" },
+        metadata_catalog: { locale: "ko_KR", sets: [{ id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }, { id: 1980, slug: "cataclysm", name: "대격변" }], classes: [{ id: 5, slug: "paladin", name: "성기사" }, { id: 4, slug: "mage", name: "마법사" }], types: [{ id: 4, slug: "minion", name: "하수인" }], minion_types: [{ id: 14, slug: "murloc", name: "멀록" }, { id: 18, slug: "elemental", name: "정령" }], spell_schools: [], rarities: [{ id: 1, slug: "common", name: "일반", crafting_cost: { normal: 40, golden: 400 }, dust_value: { normal: 5, golden: 50 } }, { id: 5, slug: "legendary", name: "전설", crafting_cost: { normal: 1600, golden: 3200 }, dust_value: { normal: 400, golden: 1600 } }], keywords: [{ id: 3, slug: "divine-shield", name: "천상의 보호막", ref_text: "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.", text: "이 캐릭터는 처음 받는 피해를 무시합니다." }, { id: 8, slug: "battlecry", name: "전투의 함성", ref_text: "카드를 손에서 낼 때 효과가 발동합니다.", text: "카드를 손에서 낼 때 효과가 발동합니다." }, { id: 351, slug: "kindred", name: "유사", ref_text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.", text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다." }, { id: 231, slug: "colossal-+x", name: "거수 +X", ref_text: "소환하면, 부위를 X개 생성합니다.", text: "소환하면, 부위를 X개 생성합니다." }], catalog_version: "2026-07-18T12:56:07Z" },
         card_summary: { id: 117382, slug: "117382-hot-spring-glider", name: "온천 활공꾼", text_plain: "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.", mana_cost: 3, attack: 2, health: 4, collectible: true, class_ids: [5], type_id: 4, set_id: 1952, rarity_id: 1, keyword_ids: [3, 8, 351], image: { normal: { state: "cached", cache_key: "ko_KR/normal/117382" }, crop: { state: "cached", cache_key: "ko_KR/crop/117382" }, gold: { state: "unavailable", cache_key: null } } },
         card_detail: { summary: { id: 117382, slug: "117382-hot-spring-glider", name: "온천 활공꾼", text_plain: "전투의 함성: 내 다음 멀록의 비용이 (1) 감소합니다. 유사: 그리고 천상의 보호막을 얻습니다.", mana_cost: 3, attack: 2, health: 4, collectible: true, class_ids: [5], type_id: 4, set_id: 1952, rarity_id: 1, keyword_ids: [3, 8, 351], image: { normal: { state: "cached", cache_key: "ko_KR/normal/117382" }, crop: { state: "cached", cache_key: "ko_KR/crop/117382" }, gold: { state: "unavailable", cache_key: null } } }, text_markup: "<b>전투의 함성:</b> 내 다음 멀록의 비용이 (1) 감소합니다. <b>유사:</b> 그리고 <b>천상의 보호막</b>을 얻습니다.", artist_name: "Patrik Bjorkstrom", flavor_text: "운고로 분화구에서 살아남으려면 눈에 띄지 않아야 합니다. 가르글은 오래 버티지 못할 겁니다.", taxonomy: { classes: [{ id: 5, slug: "paladin", name: "성기사" }], type: { id: 4, slug: "minion", name: "하수인" }, minion_type: { id: 14, slug: "murloc", name: "멀록" }, spell_school: null, set: { id: 1952, slug: "the-lost-city-of-ungoro", name: "운고로의 잃어버린 도시" }, rarity: { id: 1, slug: "common", name: "일반" } }, economy: { crafting_cost: { normal: 40, golden: 400 }, dust_value: { normal: 5, golden: 50 } }, keywords: [{ id: 3, slug: "divine-shield", name: "천상의 보호막", ref_text: "보호막이 있는 캐릭터는 처음 받는 피해를 무시합니다.", text: "이 캐릭터는 처음 받는 피해를 무시합니다." }, { id: 8, slug: "battlecry", name: "전투의 함성", ref_text: "카드를 손에서 낼 때 효과가 발동합니다.", text: "카드를 손에서 낼 때 효과가 발동합니다." }, { id: 351, slug: "kindred", name: "유사", ref_text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.", text: "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다." }], relations: { parent_id: null, child_ids: [], copy_of_ids: [] }, flags: { banned_from_sideboard: false, zilliax_functional_module: false, zilliax_cosmetic_module: false } },
+        vulcanos_card_detail: {
+          summary: { id: 123665, slug: "123665-vulcanos", name: "불카노스", text_plain: "거수 +2, 내 턴이 끝날 때, 다른 모든 하수인에게 피해를 2 줍니다.", mana_cost: 7, attack: 4, health: 8, collectible: true, class_ids: [4], type_id: 4, set_id: 1980, rarity_id: 5, keyword_ids: [231], image: { normal: { state: "cached", cache_key: "ko_KR/normal/123665" }, crop: { state: "cached", cache_key: "ko_KR/crop/123665" }, gold: { state: "unavailable", cache_key: null } } },
+          text_markup: "<b>거수 +2</b>, 내 턴이 끝날 때, 다른 모든 하수인에게 피해를 2 줍니다.",
+          artist_name: "Zoltan Boros",
+          flavor_text: "아제로스가 불타는 모습을 보고 말겠다고 결심한 라그나로스는 살아 있는 화산을 깨워 불모의 땅에 용암의 강을 흘려보냈습니다.",
+          taxonomy: { classes: [{ id: 4, slug: "mage", name: "마법사" }], type: { id: 4, slug: "minion", name: "하수인" }, minion_type: { id: 18, slug: "elemental", name: "정령" }, spell_school: null, set: { id: 1980, slug: "cataclysm", name: "대격변" }, rarity: { id: 5, slug: "legendary", name: "전설" } },
+          economy: { crafting_cost: { normal: 1600, golden: 3200 }, dust_value: { normal: 400, golden: 1600 } },
+          keywords: [{ id: 231, slug: "colossal-+x", name: "거수 +X", ref_text: "소환하면, 부위를 X개 생성합니다.", text: "소환하면, 부위를 X개 생성합니다." }],
+          relations: {
+            parent_id: null,
+            child_ids: [123666, 128032],
+            children: [
+              { id: 123666, slug: "123666-plume-of-vulcanos", name: "불카노스의 융기", text_plain: "이 하수인이 피해를 받을 때마다 무작위 화염 주문을 얻습니다. 그 주문의 비용이 (3) 감소합니다.", mana_cost: 2, attack: 1, health: 4, collectible: false, class_ids: [4], type_id: 4, set_id: 1980, rarity_id: null, keyword_ids: [], image: { normal: { state: "cached", cache_key: "ko_KR/normal/123666" }, crop: { state: "unavailable", cache_key: null }, gold: { state: "unavailable", cache_key: null } } },
+              { id: 128032, slug: "128032-plume-of-vulcanos", name: "불카노스의 융기", text_plain: "이 하수인이 피해를 받을 때마다 무작위 화염 주문을 얻습니다. 그 주문의 비용이 (3) 감소합니다.", mana_cost: 2, attack: 1, health: 4, collectible: false, class_ids: [4], type_id: 4, set_id: 1980, rarity_id: null, keyword_ids: [], image: { normal: { state: "cached", cache_key: "ko_KR/normal/128032" }, crop: { state: "unavailable", cache_key: null }, gold: { state: "unavailable", cache_key: null } } }
+            ],
+            copy_of_ids: []
+          },
+          flags: { banned_from_sideboard: false, zilliax_functional_module: false, zilliax_cosmetic_module: false }
+        },
         card_query: { locale: "ko_KR", where: { kind: "group", operator: "and", children: [{ kind: "condition", field: "set_id", operator: "eq", value: 1988 }, { kind: "group", operator: "or", children: [{ kind: "condition", field: "name", operator: "contains", value: "공허" }, { kind: "condition", field: "text_plain", operator: "contains", value: "공허" }] }] }, sort: [{ field: "date_added", direction: "desc" }, { field: "name", direction: "asc" }], cursor: null, limit: 24 },
         card_page: { items: [{ id: 126660, name: "별가루 낫", mana_cost: 4, attack: 3, health: 2 }, { id: 126663, name: "흉포한 공허비늘", mana_cost: 3, attack: 3, health: 4 }, { id: 127157, name: "공허의 폭발", mana_cost: 2, attack: null, health: null }, { id: 126662, name: "공허의 영혼", mana_cost: 1, attack: null, health: null }, { id: 126211, name: "이리다 신시커", mana_cost: 4, attack: 7, health: 5 }], total: 5, next_cursor: null, catalog_version: "2026-07-17T19:36:34Z", from_cache: true, stale: false },
         library_status: { locale: "ko_KR", catalog_state: "ready", catalog_version: "2026-07-17T19:36:34Z", card_count: 1152, last_success_at_utc: "2026-07-17T19:36:34Z", stale_after_utc: "2026-07-18T19:36:34Z", stale: false, sync_state: "idle", last_error: null },
@@ -688,7 +770,7 @@
     const SCHEMAS = [
       { key: "metadata_catalog", title: "MetadataCatalog", type: "response", description: "분류명, 제작·추출 값, 키워드 설명까지 보존하는 조인 사전", fields: ["sets", "classes", "minion_types", "rarity economy", "keyword text"] },
       { key: "card_summary", title: "CardSummary", type: "response", description: "검색 결과 카드 한 장. 목록 렌더에 필요한 최소 필드", fields: ["id", "name", "text_plain", "stats", "image state"] },
-      { key: "card_detail", title: "CardDetail", type: "response", description: "공식 상세 화면을 단독으로 그릴 수 있는 self-contained 응답", fields: ["summary", "taxonomy", "economy", "keywords", "flavor", "artist"] },
+      { key: "card_detail", title: "CardDetail", type: "response", description: "공식 상세 화면과 관련 카드를 단독으로 그릴 수 있는 self-contained 응답", fields: ["summary", "taxonomy", "economy", "keywords", "relations"] },
       { key: "card_query", title: "CardQuery", type: "request", description: "중첩 AND/OR 조건, 정렬, 커서와 limit", fields: ["where", "sort", "cursor", "limit"] },
       { key: "card_page", title: "CardPage", type: "response", description: "검색 결과와 카탈로그 버전·캐시 신선도", fields: ["items", "total", "next_cursor", "from_cache"] },
       { key: "library_status", title: "LibraryStatus", type: "response", description: "앱 시작 시 현재 카드 라이브러리를 바로 쓸 수 있는지 확인", fields: ["catalog_state", "card_count", "stale", "sync_state"] },
@@ -702,12 +784,18 @@
       "official_raw_samples.card_page": ["OfficialCardPage", "official raw response"],
       "official_raw_samples.hot_spring_glider": ["OfficialCard", "official raw response"],
       "official_raw_samples.hot_spring_glider_metadata_join": ["DetailMetadataJoin", "page config subset"],
+      "official_raw_samples.vulcanos": ["OfficialCard · Vulcanos", "official raw response"],
+      "official_raw_samples.vulcanos_related_cards": ["OfficialCard[] · children", "official ids response"],
+      "official_raw_samples.vulcanos_related_cards.0": ["OfficialCard · #123666", "official related card"],
+      "official_raw_samples.vulcanos_related_cards.1": ["OfficialCard · #128032", "official related card"],
+      "official_raw_samples.vulcanos_metadata_join": ["DetailMetadataJoin · Vulcanos", "page config subset"],
       "disk_cache_mocks.manifest": ["CacheManifest", "disk cache mock"],
       "disk_cache_mocks.raw_page_shard": ["RawPageShard", "disk cache mock"],
       "disk_cache_mocks.normalized_set_shard": ["NormalizedSetShard", "normalized cache mock"],
       "ipc_wire_mocks.metadata_catalog": ["MetadataCatalog", "ipc wire mock"],
       "ipc_wire_mocks.card_summary": ["CardSummary", "ipc wire mock"],
       "ipc_wire_mocks.card_detail": ["CardDetail", "ipc wire mock"],
+      "ipc_wire_mocks.vulcanos_card_detail": ["CardDetail · related cards", "ipc wire mock"],
       "ipc_wire_mocks.card_query": ["CardQuery", "ipc wire mock"],
       "ipc_wire_mocks.card_page": ["CardPage", "ipc wire mock"],
       "ipc_wire_mocks.library_status": ["LibraryStatus", "ipc wire mock"],
@@ -801,6 +889,7 @@
       if (viewName === "cache") showSchema("disk_cache_mocks.manifest", undefined, false);
       if (viewName === "ipc") showSchema("ipc_wire_mocks.card_summary", undefined, false);
       if (viewName === "detail") showSchema("ipc_wire_mocks.card_detail", undefined, false);
+      if (viewName === "relations") showSchema("ipc_wire_mocks.vulcanos_card_detail", undefined, false);
       if (viewName === "query") showSchema("ipc_wire_mocks.card_query", undefined, false);
       if (viewName === "images") showSchema("ipc_wire_mocks.image_request", undefined, false);
       if (viewName === "sync") showSchema("ipc_wire_mocks.sync_status", undefined, false);

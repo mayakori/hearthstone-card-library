@@ -16,6 +16,10 @@ Locale: `ko_KR`
 - `온천 활공꾼` 카드 객체에는 `artistName`, `flavorText`, `keywordIds`가 직접 포함되어 있다. 종류·종족·등급·세트·직업 이름은 ID로 메타데이터를 조인한다.
 - 제작 비용과 추출 가루는 카드 객체가 아니라 희귀도 메타데이터의 `craftingCost`, `dustValue`에서 가져온다. 일반 등급은 현재 각각 `[40, 400]`, `[5, 50]`이다.
 - 키워드 상세 설명은 카드의 `keywordIds`와 메타데이터 `keywords`를 조인한다. `온천 활공꾼`은 천상의 보호막(3), 전투의 함성(8), 유사(351)를 가진다.
+- `불카노스` 원본은 `childIds=[123666, 128032]`를 제공한다. 두 ID는 `ids=123666,128032` 묶음 요청 한 번으로 조회할 수 있다.
+- 두 `불카노스의 융기`는 모두 `collectible=0`, `parentId=123665`다. 이름·효과·능력치는 같지만 공식 ID와 이미지가 다르므로 이름으로 중복 제거하지 않는다.
+- 관련 카드도 일반 카드와 같은 정규화 모델에 저장한다. 부모 `CardDetail`에서는 `relations.children: CardSummary[]`로 조립하고, 원본 `childIds`와 자식 `parentId`는 별도로 보존한다.
+- `불카노스`의 키워드 231은 메타데이터에서 `거수 +X`와 설명 `소환하면, 부위를 X개 생성합니다.`로 조인된다.
 - 실데이터의 전투의 함성 slug는 끝에 개행이 붙은 `"battlecry\n"`이었다. raw에는 그대로 두고 정규화 어댑터에서 trim한다.
 - 신규 카드의 `imageGold`는 빈 문자열일 수 있다. 정규화 계층에서는 빈 문자열을 `null`로 바꾼다.
 - 바쿠의 일반, 크롭, 황금 이미지 URL은 모두 HTTP 200이었다. 황금 이미지는 `image/png`, 98,560바이트였으며 열람 시 다운로드하는 흐름을 구성할 수 있다.
@@ -55,7 +59,7 @@ Tauri IPC
 |---|---|---|
 | `MetadataCatalog` | ID를 한글 이름과 slug로 표시 | 종족·주문 계열, 희귀도별 제작/추출 값, 키워드 설명까지 보존한다. |
 | `CardSummary` | 카드 그리드와 검색 결과 | 평문 효과만 포함하고 상세 전용 필드는 제외한다. |
-| `CardDetail` | 상세 패널과 관련 카드 탐색 | `CardSummary`와 함께 taxonomy, economy, 해석된 keyword 객체를 넣어 단독으로 상세 화면을 그릴 수 있게 한다. |
+| `CardDetail` | 상세 패널과 관련 카드 탐색 | `CardSummary`와 함께 taxonomy, economy, 해석된 keyword 객체를 넣는다. 관계 ID가 있으면 관련 카드 `CardSummary`까지 채워 단독으로 상세 화면을 그릴 수 있게 한다. |
 | `CardQuery` | AND/OR 고급 검색 | 중첩 가능한 group/condition 트리이며 cursor는 불투명 문자열이다. |
 | `CardPage` | 검색 결과 페이지 | `from_cache`와 `stale`을 포함해 SWR 동작을 프론트가 구분한다. |
 | `LibraryStatus` | 앱 시작 상태 | 현재 catalog가 표시 가능한지와 마지막 성공 시각을 제공한다. |
@@ -112,6 +116,32 @@ CardDetail
 ```
 
 전체 원본은 `official_raw_samples.hot_spring_glider`, 조인에 사용한 메타데이터는 `official_raw_samples.hot_spring_glider_metadata_join`, 프론트 계약 결과는 `ipc_wire_mocks.card_detail`에서 확인한다.
+
+### 불카노스 관련 카드 예시
+
+```text
+OfficialCard #123665 불카노스
+  └─ childIds=[123666, 128032]
+              │
+              ├─ GET /api/cards?...&ids=123666,128032
+              │
+              ├─ OfficialCard #123666 불카노스의 융기
+              │    ├─ collectible=0
+              │    ├─ parentId=123665
+              │    └─ image=fa51...png
+              │
+              └─ OfficialCard #128032 불카노스의 융기
+                   ├─ collectible=0
+                   ├─ parentId=123665
+                   └─ image=8192...png
+                              ↓
+CardDetail #123665
+  └─ relations
+       ├─ child_ids=[123666, 128032]
+       └─ children=[CardSummary #123666, CardSummary #128032]
+```
+
+프론트는 별도 IPC를 두 번 호출하지 않고 `ipc_wire_mocks.vulcanos_card_detail` 하나로 본체와 관련 카드 두 장을 그린다. 원본 본체는 `official_raw_samples.vulcanos`, 자식 응답은 `official_raw_samples.vulcanos_related_cards`, 분류·희귀도·거수 설명 조인은 `official_raw_samples.vulcanos_metadata_join`에서 확인한다.
 
 ### 황금 이미지 예시
 

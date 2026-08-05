@@ -1,0 +1,1 @@
+{"id":2001,"slug":"fixture-child","collectible":0,"manaCost":1,"cardSetId":1,"cardTypeId":4,"classId":1,"minionTypeId":20,"rarityId":1,"name":"첫 번째 관련 카드","text":"다음 카드를 만듭니다.","flavorText":"계속 이어진다.","artistName":"김 화가","image":"https://ko.example.test/2001.png","cropImage":"https://ko.example.test/2001-crop.png","attack":1,"health":1,"childIds":[2003]}

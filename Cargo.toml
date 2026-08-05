@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/card-data-contract", "crates/card-data-pipeline", "src-tauri"]
+resolver = "2"

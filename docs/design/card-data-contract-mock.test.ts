@@ -83,3 +83,63 @@ describe("card data contract detail sample", () => {
     expect(window.document.getElementById("view-detail")?.classList.contains("active")).toBe(true);
   });
 });
+
+describe("related card contract sample", () => {
+  it("preserves Vulcanos childIds and both official child payloads", () => {
+    const parent = contract.official_raw_samples.vulcanos;
+    const children = contract.official_raw_samples.vulcanos_related_cards;
+
+    expect(parent).toMatchObject({
+      id: 123665,
+      name: "불카노스",
+      childIds: [123666, 128032],
+      keywordIds: [231],
+    });
+    expect(children).toHaveLength(2);
+    expect(children.map((card: { id: number }) => card.id)).toEqual([123666, 128032]);
+    expect(children.every((card: { parentId: number }) => card.parentId === 123665)).toBe(true);
+    expect(new Set(children.map((card: { image: string }) => card.image)).size).toBe(2);
+  });
+
+  it("hydrates both non-collectible children in the frontend CardDetail", () => {
+    const detail = contract.ipc_wire_mocks.vulcanos_card_detail;
+
+    expect(detail.summary.id).toBe(123665);
+    expect(detail.relations.child_ids).toEqual([123666, 128032]);
+    expect(detail.relations.children).toHaveLength(2);
+    expect(detail.relations.children).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 123666, name: "불카노스의 융기", collectible: false }),
+        expect.objectContaining({ id: 128032, name: "불카노스의 융기", collectible: false }),
+      ]),
+    );
+    expect(
+      new Set(
+        detail.relations.children.map(
+          (card: { image: { normal: { cache_key: string } } }) => card.image.normal.cache_key,
+        ),
+      ).size,
+    ).toBe(2);
+  });
+
+  it("shows and deep-links the Vulcanos related-card view in the local HTML mock", () => {
+    const html = readFileSync(htmlPath, "utf8");
+    const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(
+      (match) => match[1],
+    );
+    const markup = html.replace(/<script(?:\s[^>]*)?>[\s\S]*?<\/script>/g, "");
+    const window = new Window({ url: "file:///card-data-schema-explorer.html#relations" });
+
+    expect(html).toContain("불카노스의 융기");
+    expect(html).toContain("123666");
+    expect(html).toContain("128032");
+
+    window.document.write(markup);
+    window.HTMLElement.prototype.scrollTo = () => undefined;
+    window.eval(scripts[0]);
+
+    expect(window.document.getElementById("view-relations")?.classList.contains("active")).toBe(
+      true,
+    );
+  });
+});

@@ -1,0 +1,1 @@
+{"id":2003,"slug":"fixture-grandchild","collectible":0,"manaCost":0,"cardSetId":1,"cardTypeId":4,"classId":1,"minionTypeId":20,"rarityId":1,"name":"두 번째 관련 카드","text":"마지막 카드입니다.","flavorText":"끝에 도착했다.","artistName":"김 화가","image":"https://ko.example.test/2003.png","cropImage":"https://ko.example.test/2003-crop.png","attack":1,"health":2}

@@ -1,6 +1,6 @@
 {
-  "schema_version": 2,
-  "captured_at_utc": "2026-07-18T06:26:06Z",
+  "schema_version": 3,
+  "captured_at_utc": "2026-07-18T12:56:07Z",
   "purpose": "Design-only shared samples for the Rust cache/domain layer and the frontend IPC wire contract.",
   "live_evidence": {
     "card_list": {
@@ -47,6 +47,27 @@
       "url": "https://hearthstone.blizzard.com/ko-kr/cards/117382-hot-spring-glider?set=standard&textFilter=Patrik%20Bjorkstrom",
       "status": 200,
       "etag": "W/\"42434-6KQes2ay7GLYJ8Vi2+MWQg8t22k\"",
+      "extraction": "#cardGalleryMount config attribute"
+    },
+    "vulcanos_card_api": {
+      "url": "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=24&id=123665",
+      "status": 200,
+      "etag": "W/\"3c2-esfAVfDpv808WlaNNBYz/f7xWRE\"",
+      "matched_card_id": 123665,
+      "captured_at_utc": "2026-07-18T12:56:07Z"
+    },
+    "vulcanos_related_cards_api": {
+      "url": "https://hearthstone.blizzard.com/ko-kr/api/cards?locale=ko_KR&page=1&pageSize=24&ids=123666,128032",
+      "status": 200,
+      "etag": "W/\"53c-H0ce/VK2QOah4SYBwSnWoFLXVA8\"",
+      "requested_ids": [123666, 128032],
+      "returned_ids": [123666, 128032],
+      "captured_at_utc": "2026-07-18T12:56:07Z"
+    },
+    "vulcanos_page_metadata": {
+      "url": "https://hearthstone.blizzard.com/ko-kr/cards/123665-vulcanos",
+      "status": 200,
+      "etag": "W/\"42348-v6cWu2gguE7LlkSm583GttVLZjM\"",
       "extraction": "#cardGalleryMount config attribute"
     },
     "image_heads": [
@@ -293,6 +314,104 @@
       ],
       "_normalization_note": "The live battlecry slug ended with a newline and is trimmed by the adapter."
     },
+    "vulcanos": {
+      "id": 123665,
+      "collectible": 1,
+      "slug": "123665-vulcanos",
+      "classId": 4,
+      "multiClassIds": [],
+      "minionTypeId": 18,
+      "cardTypeId": 4,
+      "cardSetId": 1980,
+      "rarityId": 5,
+      "artistName": "Zoltan Boros",
+      "health": 8,
+      "attack": 4,
+      "manaCost": 7,
+      "name": "불카노스",
+      "text": "<b>거수 +2</b>, 내 턴이 끝날 때, 다른 모든 하수인에게 피해를 2 줍니다.",
+      "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/b7bd857a98cb4e3db3d3722dab713efc4ff6dbcf2402cb764ac3a89968032db7.png",
+      "imageGold": "",
+      "flavorText": "아제로스가 불타는 모습을 보고 말겠다고 결심한 라그나로스는 살아 있는 화산을 깨워 불모의 땅에 용암의 강을 흘려보냈습니다.",
+      "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/73e9732e3b74e81438d8fd22775683608f384cdb567d1fb87633b7b54f5d5853.png",
+      "childIds": [123666, 128032],
+      "keywordIds": [231],
+      "isZilliaxFunctionalModule": false,
+      "isZilliaxCosmeticModule": false
+    },
+    "vulcanos_related_cards": [
+      {
+        "id": 123666,
+        "collectible": 0,
+        "slug": "123666-plume-of-vulcanos",
+        "classId": 4,
+        "multiClassIds": [],
+        "minionTypeId": 18,
+        "cardTypeId": 4,
+        "cardSetId": 1980,
+        "rarityId": null,
+        "artistName": null,
+        "health": 4,
+        "attack": 1,
+        "manaCost": 2,
+        "name": "불카노스의 융기",
+        "text": "이 하수인이 피해를 받을 때마다 무작위 화염 주문을 얻습니다. 그 주문의 비용이 (3) 감소합니다.",
+        "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/fa51af1cc63b72b0e5382ebf3297fc2614f65156432abfe09f72246b9f40264b.png",
+        "imageGold": "",
+        "flavorText": "",
+        "cropImage": null,
+        "parentId": 123665,
+        "isZilliaxFunctionalModule": false,
+        "isZilliaxCosmeticModule": false
+      },
+      {
+        "id": 128032,
+        "collectible": 0,
+        "slug": "128032-plume-of-vulcanos",
+        "classId": 4,
+        "multiClassIds": [],
+        "minionTypeId": 18,
+        "cardTypeId": 4,
+        "cardSetId": 1980,
+        "rarityId": null,
+        "artistName": null,
+        "health": 4,
+        "attack": 1,
+        "manaCost": 2,
+        "name": "불카노스의 융기",
+        "text": "이 하수인이 피해를 받을 때마다 무작위 화염 주문을 얻습니다. 그 주문의 비용이 (3) 감소합니다.",
+        "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/8192a31a5637120edbd39656f92c890c1071a4ba988b497f301f4c2a51764eaa.png",
+        "imageGold": "",
+        "flavorText": "",
+        "cropImage": null,
+        "parentId": 123665,
+        "isZilliaxFunctionalModule": false,
+        "isZilliaxCosmeticModule": false
+      }
+    ],
+    "vulcanos_metadata_join": {
+      "set": { "id": 1980, "slug": "cataclysm", "name": "대격변" },
+      "class": { "id": 4, "slug": "mage", "name": "마법사" },
+      "type": { "id": 4, "slug": "minion", "name": "하수인" },
+      "minion_type": { "id": 18, "slug": "elemental", "name": "정령" },
+      "rarity": {
+        "id": 5,
+        "slug": "legendary",
+        "name": "전설",
+        "craftingCost": [1600, 3200],
+        "dustValue": [400, 1600]
+      },
+      "keywords": [
+        {
+          "id": 231,
+          "slug": "colossal-+x",
+          "name": "거수 +X",
+          "refText": "소환하면, 부위를 X개 생성합니다.",
+          "text": "소환하면, 부위를 X개 생성합니다."
+        }
+      ],
+      "_normalization_note": "The live colossal slug ended with a newline and is trimmed by the adapter."
+    },
     "gold_card": {
       "id": 48158,
       "slug": "48158-baku-the-mooneater",
@@ -398,16 +517,19 @@
     "metadata_catalog": {
       "locale": "ko_KR",
       "sets": [
-        { "id": 1952, "slug": "the-lost-city-of-ungoro", "name": "운고로의 잃어버린 도시" }
+        { "id": 1952, "slug": "the-lost-city-of-ungoro", "name": "운고로의 잃어버린 도시" },
+        { "id": 1980, "slug": "cataclysm", "name": "대격변" }
       ],
       "classes": [
-        { "id": 5, "slug": "paladin", "name": "성기사" }
+        { "id": 5, "slug": "paladin", "name": "성기사" },
+        { "id": 4, "slug": "mage", "name": "마법사" }
       ],
       "types": [
         { "id": 4, "slug": "minion", "name": "하수인" }
       ],
       "minion_types": [
-        { "id": 14, "slug": "murloc", "name": "멀록" }
+        { "id": 14, "slug": "murloc", "name": "멀록" },
+        { "id": 18, "slug": "elemental", "name": "정령" }
       ],
       "spell_schools": [
       ],
@@ -418,6 +540,13 @@
           "name": "일반",
           "crafting_cost": { "normal": 40, "golden": 400 },
           "dust_value": { "normal": 5, "golden": 50 }
+        },
+        {
+          "id": 5,
+          "slug": "legendary",
+          "name": "전설",
+          "crafting_cost": { "normal": 1600, "golden": 3200 },
+          "dust_value": { "normal": 400, "golden": 1600 }
         }
       ],
       "keywords": [
@@ -441,9 +570,16 @@
           "name": "유사",
           "ref_text": "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다.",
           "text": "지난 턴에 같은 하수인 종족/주문 계열을 냈을 경우 받는 보너스입니다."
+        },
+        {
+          "id": 231,
+          "slug": "colossal-+x",
+          "name": "거수 +X",
+          "ref_text": "소환하면, 부위를 X개 생성합니다.",
+          "text": "소환하면, 부위를 X개 생성합니다."
         }
       ],
-      "catalog_version": "2026-07-18T06:26:06Z"
+      "catalog_version": "2026-07-18T12:56:07Z"
     },
     "card_summary": {
       "id": 117382,
@@ -529,6 +665,106 @@
       "relations": {
         "parent_id": null,
         "child_ids": [],
+        "copy_of_ids": []
+      },
+      "flags": {
+        "banned_from_sideboard": false,
+        "zilliax_functional_module": false,
+        "zilliax_cosmetic_module": false
+      }
+    },
+    "vulcanos_card_detail": {
+      "summary": {
+        "id": 123665,
+        "slug": "123665-vulcanos",
+        "name": "불카노스",
+        "text_plain": "거수 +2, 내 턴이 끝날 때, 다른 모든 하수인에게 피해를 2 줍니다.",
+        "mana_cost": 7,
+        "attack": 4,
+        "health": 8,
+        "collectible": true,
+        "class_ids": [4],
+        "type_id": 4,
+        "set_id": 1980,
+        "rarity_id": 5,
+        "keyword_ids": [231],
+        "image": {
+          "normal": { "state": "cached", "cache_key": "ko_KR/normal/123665" },
+          "crop": { "state": "cached", "cache_key": "ko_KR/crop/123665" },
+          "gold": { "state": "unavailable", "cache_key": null }
+        }
+      },
+      "text_markup": "<b>거수 +2</b>, 내 턴이 끝날 때, 다른 모든 하수인에게 피해를 2 줍니다.",
+      "artist_name": "Zoltan Boros",
+      "flavor_text": "아제로스가 불타는 모습을 보고 말겠다고 결심한 라그나로스는 살아 있는 화산을 깨워 불모의 땅에 용암의 강을 흘려보냈습니다.",
+      "taxonomy": {
+        "classes": [
+          { "id": 4, "slug": "mage", "name": "마법사" }
+        ],
+        "type": { "id": 4, "slug": "minion", "name": "하수인" },
+        "minion_type": { "id": 18, "slug": "elemental", "name": "정령" },
+        "spell_school": null,
+        "set": { "id": 1980, "slug": "cataclysm", "name": "대격변" },
+        "rarity": { "id": 5, "slug": "legendary", "name": "전설" }
+      },
+      "economy": {
+        "crafting_cost": { "normal": 1600, "golden": 3200 },
+        "dust_value": { "normal": 400, "golden": 1600 }
+      },
+      "keywords": [
+        {
+          "id": 231,
+          "slug": "colossal-+x",
+          "name": "거수 +X",
+          "ref_text": "소환하면, 부위를 X개 생성합니다.",
+          "text": "소환하면, 부위를 X개 생성합니다."
+        }
+      ],
+      "relations": {
+        "parent_id": null,
+        "child_ids": [123666, 128032],
+        "children": [
+          {
+            "id": 123666,
+            "slug": "123666-plume-of-vulcanos",
+            "name": "불카노스의 융기",
+            "text_plain": "이 하수인이 피해를 받을 때마다 무작위 화염 주문을 얻습니다. 그 주문의 비용이 (3) 감소합니다.",
+            "mana_cost": 2,
+            "attack": 1,
+            "health": 4,
+            "collectible": false,
+            "class_ids": [4],
+            "type_id": 4,
+            "set_id": 1980,
+            "rarity_id": null,
+            "keyword_ids": [],
+            "image": {
+              "normal": { "state": "cached", "cache_key": "ko_KR/normal/123666" },
+              "crop": { "state": "unavailable", "cache_key": null },
+              "gold": { "state": "unavailable", "cache_key": null }
+            }
+          },
+          {
+            "id": 128032,
+            "slug": "128032-plume-of-vulcanos",
+            "name": "불카노스의 융기",
+            "text_plain": "이 하수인이 피해를 받을 때마다 무작위 화염 주문을 얻습니다. 그 주문의 비용이 (3) 감소합니다.",
+            "mana_cost": 2,
+            "attack": 1,
+            "health": 4,
+            "collectible": false,
+            "class_ids": [4],
+            "type_id": 4,
+            "set_id": 1980,
+            "rarity_id": null,
+            "keyword_ids": [],
+            "image": {
+              "normal": { "state": "cached", "cache_key": "ko_KR/normal/128032" },
+              "crop": { "state": "unavailable", "cache_key": null },
+              "gold": { "state": "unavailable", "cache_key": null }
+            }
+          }
+        ],
         "copy_of_ids": []
       },
       "flags": {

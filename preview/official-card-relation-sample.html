@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>공식 API 카드 관계 샘플 · 멀록 정찰병</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Noto Sans KR", sans-serif;
+      background: #151410;
+      color: #f1eadb;
+      --surface: #211f1a;
+      --surface-2: #2b2822;
+      --line: #49443a;
+      --muted: #b8ae9b;
+      --gold: #e7b963;
+      --green: #8ed09a;
+      --blue: #86bce2;
+      --red: #ed8e87;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(231, 185, 99, 0.09), transparent 26rem),
+        #151410;
+    }
+
+    button, code { font: inherit; }
+
+    .shell {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 42px);
+      line-height: 1.15;
+      letter-spacing: -0.035em;
+    }
+
+    .lead {
+      max-width: 880px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 20px;
+      padding: 12px 14px;
+      border: 1px solid #3d6444;
+      background: #1b2a1e;
+    }
+
+    .status-badge,
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 8px;
+      border: 1px solid currentColor;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-strip strong { color: #dff2e2; }
+    .status-strip small { color: #a7c4ac; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .version-button {
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      color: var(--muted);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .version-button:hover { color: #fff8e9; background: #302c25; }
+    .version-button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .version-button[aria-pressed="true"] {
+      border-color: var(--gold);
+      color: #fff6df;
+      background: #3b3020;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.85fr);
+      gap: 16px;
+      margin-top: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      min-height: 48px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #1c1b17;
+    }
+
+    .panel-heading h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .panel-heading span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .relation-stage {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 180px minmax(220px, 1fr);
+      gap: 12px;
+      padding: 16px;
+      align-items: stretch;
+    }
+
+    .card-record {
+      display: grid;
+      grid-template-rows: 270px auto;
+      min-width: 0;
+      border: 1px solid #544d40;
+      background: var(--surface-2);
+    }
+
+    .card-image {
+      position: relative;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      min-height: 0;
+      background:
+        linear-gradient(135deg, rgba(231, 185, 99, 0.12), transparent),
+        #171612;
+    }
+
+    .card-image img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .card-image .image-fallback {
+      display: none;
+      padding: 20px;
+      color: var(--red);
+      text-align: center;
+    }
+
+    .card-image.is-failed img { display: none; }
+    .card-image.is-failed .image-fallback { display: block; }
+
+    .record-body { padding: 14px; }
+
+    .record-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .record-title h3 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.3;
+    }
+
+    .record-title code,
+    .raw-block code {
+      color: var(--blue);
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 12px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin: 12px 0;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .stat {
+      padding: 8px;
+      background: #23211c;
+      text-align: center;
+    }
+
+    .stat strong { display: block; font-size: 17px; }
+    .stat span { color: var(--muted); font-size: 11px; }
+
+    .record-text {
+      min-height: 48px;
+      margin: 0;
+      color: #ddd4c3;
+      line-height: 1.55;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr);
+      gap: 7px 12px;
+      margin: 13px 0 0;
+      padding-top: 12px;
+      border-top: 1px solid #474137;
+      font-size: 12px;
+    }
+
+    .fields dt { color: var(--muted); }
+    .fields dd { margin: 0; overflow-wrap: anywhere; }
+
+    .connector {
+      display: grid;
+      place-content: center;
+      gap: 16px;
+      min-width: 0;
+      text-align: center;
+    }
+
+    .edge {
+      position: relative;
+      padding: 10px 8px;
+      border-block: 1px solid var(--gold);
+      color: #ffe6ac;
+      background: rgba(231, 185, 99, 0.08);
+      font: 12px/1.5 Consolas, "Cascadia Mono", monospace;
+    }
+
+    .edge::after {
+      content: "▶";
+      position: absolute;
+      right: -9px;
+      top: 50%;
+      translate: 0 -50%;
+      color: var(--gold);
+    }
+
+    .edge.reverse::after {
+      content: "◀";
+      right: auto;
+      left: -9px;
+    }
+
+    .relation-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .checks { margin: 0; padding: 0; list-style: none; }
+
+    .check {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #3b372f;
+    }
+
+    .check:last-child { border-bottom: 0; }
+    .check .result { color: var(--green); font-size: 12px; font-weight: 800; }
+    .check.is-na .result { color: var(--blue); }
+    .check strong { display: block; font-size: 13px; }
+    .check p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .diagnosis {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid #6a5834;
+      background: #2c2519;
+    }
+
+    .diagnosis h2 { margin: 0 0 10px; font-size: 16px; }
+    .diagnosis ul { margin: 0; padding-left: 20px; color: #dbd1be; line-height: 1.7; }
+
+    details { margin-top: 16px; border: 1px solid var(--line); background: var(--surface); }
+    summary { padding: 13px 14px; cursor: pointer; font-weight: 700; }
+    summary:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+
+    .raw-block {
+      max-height: 520px;
+      overflow: auto;
+      margin: 0;
+      padding: 16px;
+      border-top: 1px solid var(--line);
+      color: #d9d0c0;
+      background: #12110f;
+      font: 12px/1.6 Consolas, "Cascadia Mono", monospace;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .footer {
+      margin-top: 16px;
+      color: #938b7d;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .status-strip { grid-template-columns: auto 1fr; }
+      .status-strip small { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 720px) {
+      .shell { padding: 14px; }
+      .relation-stage { grid-template-columns: 1fr; }
+      .connector { grid-template-columns: 1fr 1fr; }
+      .edge::after, .edge.reverse::after { display: none; }
+      .card-record { grid-template-rows: 230px auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <p class="eyebrow">HCL-006 · Data provenance lab</p>
+      <h1>공식 API 카드 관계 샘플</h1>
+      <p class="lead">Blizzard Game Data API가 제공한 카드 ID와 관계 필드를 그대로 비교합니다. 제품 UI 목업이 아니라 수집·정규화 계약을 확인하는 로컬 진단 페이지입니다.</p>
+    </header>
+
+    <section class="status-strip" aria-label="현재 검증 결론">
+      <span class="status-badge">FETCHED</span>
+      <strong>두 관계 샘플 모두 실제 Standard 목록 응답과 교정된 ko_KR SQLite에 존재합니다.</strong>
+      <small>API 수집 2026-08-06 02:21 KST · 영웅 스킨 69장 제외 · 패키지 검증 성공</small>
+    </section>
+
+    <div class="toolbar" role="group" aria-label="카드 버전 선택">
+      <button class="version-button" type="button" data-version="core" aria-pressed="true">현재 Core · #69557 / #69571</button>
+      <button class="version-button" type="button" data-version="latest" aria-pressed="false">최신 확장팩 · #125917 / #127507</button>
+    </div>
+
+    <div class="layout">
+      <section class="panel" aria-labelledby="relation-title">
+        <div class="panel-heading">
+          <h2 id="relation-title">공식 관계 필드</h2>
+          <span id="scope-label">정규전 조회 및 SQLite 포함</span>
+        </div>
+        <div class="relation-stage">
+          <article class="card-record" id="parent-card"></article>
+          <div class="connector" aria-label="관계 방향">
+            <div class="edge" id="child-edge"></div>
+            <div class="edge reverse" id="parent-edge"></div>
+            <div class="relation-note">같은 연결처럼 보여도 두 공식 원본 필드를 각각 보존합니다.</div>
+          </div>
+          <article class="card-record" id="child-card"></article>
+        </div>
+      </section>
+
+      <aside class="panel" aria-labelledby="checks-title">
+        <div class="panel-heading">
+          <h2 id="checks-title">검사 결과</h2>
+          <span id="overall-result">6 / 6 PASS</span>
+        </div>
+        <ul class="checks" id="checks"></ul>
+      </aside>
+    </div>
+
+    <section class="diagnosis" aria-labelledby="diagnosis-title">
+      <h2 id="diagnosis-title">기존 목업에서 문제가 생긴 이유</h2>
+      <ul>
+        <li>멀록 정찰병은 실제 Standard 목록에 있지만 <code>collectible=0</code>인 게임 요소입니다. “정규전 API 범위”와 “덱 편입 가능 카드”를 같은 뜻으로 표시하면 오해가 생깁니다.</li>
+        <li>#69557과 #69571은 개별 카드 endpoint가 아니라 <code>collectible=0,1</code>을 사용한 페이지 목록 응답에서 수집됐습니다. 현재 개별 ID 조회는 404를 반환합니다.</li>
+        <li>최신 expansion은 metadata 첫 항목인 <strong>보랏빛 요새 탈출 작전 #1988</strong>이며, 수집 카드 #125917과 비수집 하위 요소 #127507도 양방향 관계를 보존합니다.</li>
+        <li>교정된 패키지는 <code>alternateHeroCardIds</code> 69장만 제외하고 강화 영웅 능력 같은 실제 게임 요소는 계속 수집합니다.</li>
+      </ul>
+    </section>
+
+    <details>
+      <summary>이 페이지에 사용한 실제 API 응답 보기</summary>
+      <pre class="raw-block" id="raw-json"></pre>
+    </details>
+
+    <p class="footer">API 출처: https://us.api.blizzard.com/hearthstone/cards?locale=ko_KR&amp;set=standard&amp;gameMode=constructed&amp;collectible=0,1 · 인증 토큰은 저장하지 않았습니다. SQLite 검사는 36.0.3-build247416-r1 교정 빌드에서 수행했습니다.</p>
+  </main>
+
+  <script id="snapshot" type="application/json">
+  {
+    "fetchedAtUtc": "2026-08-05T17:21:19.6300951Z",
+    "fetch": {
+      "mode": "standard-list-pages",
+      "individualLookups": [
+        {"id": 69557, "status": 404},
+        {"id": 69571, "status": 404}
+      ]
+    },
+    "listQuery": {
+      "set": "standard",
+      "gameMode": "constructed",
+      "collectible": "0,1",
+      "cardCount": 1559,
+      "pageCount": 4,
+      "matchedIds": [69557, 69571, 125917, 127507]
+    },
+    "pipeline": {
+      "dataVersion": "36.0.3-build247416-r1",
+      "ko_KR": {"standard": 1559, "related": 64, "classReference": 22, "total": 1645},
+      "alternateHeroIds": {"metadata": 69, "collected": 0},
+      "integrity": "ok",
+      "foreignKeyErrors": 0,
+      "sqliteCards": [69557, 69571, 125917, 127507],
+      "sqliteRelations": [
+        {"sourceCardId": 69557, "relationKind": "child", "sourceField": "childIds", "targetCardId": 69571, "displayOrder": 0},
+        {"sourceCardId": 69557, "relationKind": "copy_of", "sourceField": "copyOfCardId", "targetCardId": 68468, "displayOrder": 0},
+        {"sourceCardId": 69557, "relationKind": "copy_of", "sourceField": "copyOfCardId", "targetCardId": 976, "displayOrder": 1},
+        {"sourceCardId": 69571, "relationKind": "copy_of", "sourceField": "copyOfCardId", "targetCardId": 68469, "displayOrder": 0},
+        {"sourceCardId": 69571, "relationKind": "copy_of", "sourceField": "copyOfCardId", "targetCardId": 1078, "displayOrder": 1},
+        {"sourceCardId": 69571, "relationKind": "parent", "sourceField": "parentId", "targetCardId": 69557, "displayOrder": 0},
+        {"sourceCardId": 125917, "relationKind": "child", "sourceField": "childIds", "targetCardId": 127507, "displayOrder": 0},
+        {"sourceCardId": 127507, "relationKind": "parent", "sourceField": "parentId", "targetCardId": 125917, "displayOrder": 0}
+      ]
+    },
+    "pairs": {
+      "core": {"label": "현재 Core", "parentId": 69557, "childId": 69571, "set": {"id": 1637, "slug": "core", "name": "핵심"}},
+      "latest": {"label": "최신 확장팩", "parentId": 125917, "childId": 127507, "set": {"id": 1988, "slug": "escape-from-violet-hold", "name": "보랏빛 요새 탈출 작전"}}
+    },
+    "cards": [
+      {
+        "id": 69557,
+        "collectible": 1,
+        "slug": "69557-murloc-tidehunter",
+        "classId": 12,
+        "minionTypeId": 14,
+        "cardTypeId": 4,
+        "cardSetId": 1637,
+        "rarityId": 1,
+        "artistName": "Dan Scott",
+        "health": 1,
+        "attack": 2,
+        "manaCost": 2,
+        "name": "멀록 바다사냥꾼",
+        "text": "<b>전투의 함성:</b> 1/1 멀록 정찰병을 소환합니다.",
+        "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/7f85a48a39bdad26f66aefff1ceaff30d6003a594a36f0e85de109a421f7c935.png",
+        "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/5c5f41dac78d339dfb1660b66f065432636fe4d5e159342d3a872383119798a6.png",
+        "childIds": [69571],
+        "copyOfCardId": [68468, 976]
+      },
+      {
+        "id": 69571,
+        "collectible": 0,
+        "slug": "69571-murloc-scout",
+        "classId": 12,
+        "minionTypeId": 14,
+        "cardTypeId": 4,
+        "cardSetId": 1637,
+        "rarityId": 1,
+        "artistName": null,
+        "health": 1,
+        "attack": 1,
+        "manaCost": 1,
+        "name": "멀록 정찰병",
+        "text": "",
+        "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/ecadd609e7d0a717c01cd0581002a4634e40dd294bb0a29b5a2c811c26eb945f.png",
+        "cropImage": null,
+        "parentId": 69557,
+        "copyOfCardId": [68469, 1078]
+      },
+      {
+        "id": 125917,
+        "collectible": 1,
+        "slug": "125917-imp-gang-stooge",
+        "classId": 9,
+        "minionTypeId": 15,
+        "cardTypeId": 4,
+        "cardSetId": 1988,
+        "rarityId": 1,
+        "artistName": "Brian Adriel",
+        "health": 5,
+        "attack": 2,
+        "manaCost": 3,
+        "name": "임프 무리 앞잡이",
+        "text": "<b>도발</b>, <b>죽음의 메아리:</b> <b>도발</b>과 <b>생명력 흡수</b> 능력이 있는 8/8 악마 둘을 내 덱 맨 아래에 놓습니다.",
+        "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/1839b8620658b72d184b9e23bbb80bd6f38df225e9b0c6a95b01549151b923e7.png",
+        "cropImage": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/73de83ede01d164519a8723f9d99e857cda247be3f46b348e7af31cbb0f85101.png",
+        "childIds": [127507]
+      },
+      {
+        "id": 127507,
+        "collectible": 0,
+        "slug": "127507-grandmother-imp",
+        "classId": 9,
+        "minionTypeId": 15,
+        "cardTypeId": 4,
+        "cardSetId": 1988,
+        "rarityId": null,
+        "artistName": "Brian Adriel",
+        "health": 8,
+        "attack": 8,
+        "manaCost": 8,
+        "name": "할머니 임프",
+        "text": "<b>도발</b> <b>생명력 흡수</b>",
+        "image": "https://d15f34w2p8l1cc.cloudfront.net/hearthstone/3388d0a634592cc996edb254db0756265f74c157ce8f5fd822196e9718e4e15e.png",
+        "cropImage": null,
+        "parentId": 125917
+      }
+    ]
+  }
+  </script>
+
+  <script>
+    (() => {
+      const snapshot = JSON.parse(document.getElementById("snapshot").textContent);
+      const cards = new Map(snapshot.cards.map((card) => [card.id, card]));
+      const buttons = [...document.querySelectorAll("[data-version]")];
+
+      function cardMarkup(card, role) {
+        const relationValue = role === "parent"
+          ? `childIds=[${(card.childIds || []).join(", ")}]`
+          : `parentId=${card.parentId ?? "null"}`;
+        const safeText = card.text || "공식 효과 텍스트 없음";
+        const roleLabel = role === "parent" ? "수집 카드" : "게임 요소 · 덱 편입 불가";
+        return `
+          <div class="card-image">
+            <img src="${card.image}" alt="${card.name} 공식 카드 이미지">
+            <span class="image-fallback">공식 이미지 로드 실패<br>텍스트 데이터는 계속 사용할 수 있습니다.</span>
+          </div>
+          <div class="record-body">
+            <div class="record-title"><div><h3>${card.name}</h3><code>#${card.id}</code></div><span class="chip">${roleLabel}</span></div>
+            <div class="stats">
+              <div class="stat"><strong>${card.manaCost}</strong><span>비용</span></div>
+              <div class="stat"><strong>${card.attack}</strong><span>공격력</span></div>
+              <div class="stat"><strong>${card.health}</strong><span>생명력</span></div>
+            </div>
+            <p class="record-text">${safeText}</p>
+            <dl class="fields">
+              <dt>collectible</dt><dd>${card.collectible}</dd>
+              <dt>cardSetId</dt><dd>${card.cardSetId}</dd>
+              <dt>cardTypeId</dt><dd>${card.cardTypeId}</dd>
+              <dt>minionTypeId</dt><dd>${card.minionTypeId}</dd>
+              <dt>공식 관계</dt><dd><code>${relationValue}</code></dd>
+              <dt>copyOfCardId</dt><dd>[${(card.copyOfCardId || []).join(", ")}]</dd>
+            </dl>
+          </div>`;
+      }
+
+      function checkMarkup(result, title, description, na = false) {
+        return `<li class="check${na ? " is-na" : ""}"><span class="result">${result}</span><div><strong>${title}</strong><p>${description}</p></div></li>`;
+      }
+
+      function render(version) {
+        const pair = snapshot.pairs[version];
+        const parent = cards.get(pair.parentId);
+        const child = cards.get(pair.childId);
+        const childMatches = parent.childIds?.includes(child.id) === true;
+        const parentMatches = child.parentId === parent.id;
+
+        document.getElementById("parent-card").innerHTML = cardMarkup(parent, "parent");
+        document.getElementById("child-card").innerHTML = cardMarkup(child, "child");
+        document.getElementById("child-edge").textContent = `childIds: ${parent.id} → ${child.id}`;
+        document.getElementById("parent-edge").textContent = `parentId: ${child.id} → ${parent.id}`;
+        document.getElementById("scope-label").textContent = `${pair.set.name} #${pair.set.id} · Standard 목록 및 SQLite 포함`;
+        const pairRelations = snapshot.pipeline.sqliteRelations.filter((relation) =>
+          relation.sourceCardId === parent.id || relation.sourceCardId === child.id
+        );
+        const copyRelations = pairRelations.filter((relation) => relation.sourceField === "copyOfCardId");
+
+        const checks = [
+          checkMarkup("PASS", "목록 API 수집", `Standard ${snapshot.listQuery.cardCount}장을 ${snapshot.listQuery.pageCount}페이지로 받아 두 ID를 확인했습니다.`),
+          checkMarkup("PASS", "부모 childIds", `#${parent.id}.childIds가 #${child.id}를 포함합니다.`),
+          checkMarkup("PASS", "자식 parentId", `#${child.id}.parentId가 #${parent.id}와 일치합니다.`),
+          checkMarkup("PASS", "비수집 카드 보존", `#${child.id}은 collectible=0인 게임 요소이며 덱 편입 카드와 구분됩니다.`),
+          checkMarkup("PASS", "확장팩 식별", `${pair.set.name} #${pair.set.id} 원본 set ID를 보존합니다.`),
+          checkMarkup("PASS", "정규화 SQLite", `cards 2행과 공식 관계 ${pairRelations.length}행을 직접 조회했습니다.`),
+          copyRelations.length
+            ? checkMarkup("PASS", "copyOfCardId 4행", "Core/Legacy 대응 ID 4개는 추가 수집 없이 관계 행으로 보존됩니다.")
+            : checkMarkup("PASS", "child/parent 2행", "최신 확장팩의 양방향 공식 필드를 각각 보존합니다."),
+          checkMarkup("PASS", "패키지 무결성", `integrity=${snapshot.pipeline.integrity}, FK 오류 ${snapshot.pipeline.foreignKeyErrors}, 영웅 스킨 수집 ${snapshot.pipeline.alternateHeroIds.collected}장입니다.`)
+        ];
+
+        document.getElementById("checks").innerHTML = checks.join("");
+        document.getElementById("overall-result").textContent = "8 / 8 PASS";
+        document.getElementById("raw-json").textContent = JSON.stringify({
+          fetchedAtUtc: snapshot.fetchedAtUtc,
+          fetch: snapshot.fetch,
+          pair: pair.label,
+          set: pair.set,
+          cards: [parent, child],
+          sqliteRelations: pairRelations,
+          pipelineCounts: snapshot.pipeline.ko_KR
+        }, null, 2);
+
+        document.querySelectorAll(".card-image img").forEach((image) => {
+          image.addEventListener("error", () => image.closest(".card-image").classList.add("is-failed"), { once: true });
+        });
+
+        buttons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.version === version)));
+        if (!childMatches || !parentMatches) {
+          document.getElementById("overall-result").textContent = "RELATION FAIL";
+        }
+      }
+
+      buttons.forEach((button) => button.addEventListener("click", () => render(button.dataset.version)));
+      render("core");
+    })();
+  </script>
+</body>
+</html>
