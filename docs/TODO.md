@@ -167,7 +167,7 @@ The main branch now contains the approved two-locale official API collector, Raw
 - Spec: `—`
 - Plan: `—`
 - Next gate: define verified package installation, locale DB activation, rollback and local lifecycle after HCL-006
-- Blocked: `HCL-006 package output and manifest must be implemented`
+- Blocked: `—`
 
 ### Goal
 
@@ -348,3 +348,30 @@ The `/sdd` skill is tracked in both project-local discovery paths with identical
 ### Verification
 
 The RED consumer omitted the handoff; fresh GREEN consumers produced exactly one self-contained code block for both argument and no-argument forms while preserving supplied task IDs. Both skill validators passed, tracking tests passed 21/21, Vitest passed 6/6, build and Rust check passed, independent review reported no remaining Critical or Important findings, `/va HCL-013` returned `clean`, and `npm run merge:check -- HCL-013` passed.
+
+## HCL-014 — R2 Raw 후보 업로드 자동화
+
+- Status: `in_progress`
+- Priority: `P1`
+- Type: `feature`
+- Updated: `2026-08-06`
+- Codex: `HCL-014 · R2 Raw 후보 업로드 자동화`
+- Branch: `codex/hcl-014-r2-raw-candidates`
+- Worktree: `hcl-014-r2-raw-candidates`
+- Depends on: `HCL-006`
+- Spec: `—`
+- Plan: `—`
+- Next gate: implement and verify a manual GitHub Actions run that publishes only validated Raw assets to an immutable R2 candidate prefix
+- Blocked: `—`
+
+### Goal
+
+Run the production HCL-006 collector from a manually dispatched GitHub Actions workflow, retain the complete verified package as a short-lived Actions artifact, upload only the two locale Raw zstd assets to an immutable Cloudflare R2 candidate prefix, and verify the uploaded bytes without changing any production pointer.
+
+### Progress
+
+HCL-006 is merged on main and supplies the single production collection and packaging path. HCL-014 will add CI orchestration and candidate-only R2 storage without introducing a Raw-only collector, scheduled publishing, signatures, `stable.json`, or app download behavior.
+
+### Verification
+
+Not started.
