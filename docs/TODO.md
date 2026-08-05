@@ -359,8 +359,8 @@ The RED consumer omitted the handoff; fresh GREEN consumers produced exactly one
 - Branch: `codex/hcl-014-r2-raw-candidates`
 - Worktree: `hcl-014-r2-raw-candidates`
 - Depends on: `HCL-006`
-- Spec: `—`
-- Plan: `—`
+- Spec: `docs/design/2026-08-06-hcl-014-r2-raw-candidate-workflow.md`
+- Plan: `docs/plans/2026-08-06-hcl-014-r2-raw-candidate-workflow.md`
 - Next gate: run `/va HCL-014` and `npm run merge:check -- HCL-014`, then configure GitHub Secrets/Variables after merge and execute the first manual workflow
 - Blocked: `—`
 
