@@ -351,7 +351,7 @@ The RED consumer omitted the handoff; fresh GREEN consumers produced exactly one
 
 ## HCL-014 — R2 Raw 후보 업로드 자동화
 
-- Status: `in_progress`
+- Status: `verify`
 - Priority: `P1`
 - Type: `feature`
 - Updated: `2026-08-06`
@@ -361,7 +361,7 @@ The RED consumer omitted the handoff; fresh GREEN consumers produced exactly one
 - Depends on: `HCL-006`
 - Spec: `—`
 - Plan: `—`
-- Next gate: implement and verify a manual GitHub Actions run that publishes only validated Raw assets to an immutable R2 candidate prefix
+- Next gate: run `/va HCL-014` and `npm run merge:check -- HCL-014`, then configure GitHub Secrets/Variables after merge and execute the first manual workflow
 - Blocked: `—`
 
 ### Goal
@@ -370,8 +370,8 @@ Run the production HCL-006 collector from a manually dispatched GitHub Actions w
 
 ### Progress
 
-HCL-006 is merged on main and supplies the single production collection and packaging path. HCL-014 will add CI orchestration and candidate-only R2 storage without introducing a Raw-only collector, scheduled publishing, signatures, `stable.json`, or app download behavior.
+The feature branch adds a manual GitHub Actions workflow that runs the single HCL-006 production path, retains the complete package as a seven-day Actions artifact, derives a two-object Raw-only receipt, uploads those objects to a run-unique R2 candidate prefix, and downloads them again for byte-size and SHA-256 verification. It does not introduce a Raw-only collector, scheduled publishing, signatures, production pointers, or app download behavior.
 
 ### Verification
 
-Not started.
+The Node workflow contract passed 6/6, including tamper rejection, exact Raw-only object planning, remote-byte verification semantics and forbidden pointer checks. The planner accepted the credentialed HCL-006 live package and selected exactly the 264,521-byte Korean Raw asset and 250,162-byte English Raw asset. `npm run check` passed after the branch was updated with current main.
