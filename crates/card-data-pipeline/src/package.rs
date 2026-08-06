@@ -574,7 +574,7 @@ impl PackageIo for FilesystemIo {
 fn no_replace_rename(from: &Path, to: &Path) -> io::Result<()> {
     use rustix::fs::{renameat_with, RenameFlags, CWD};
 
-    renameat_with(CWD, from, CWD, to, RenameFlags::NOREPLACE)
+    Ok(renameat_with(CWD, from, CWD, to, RenameFlags::NOREPLACE)?)
 }
 
 #[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
