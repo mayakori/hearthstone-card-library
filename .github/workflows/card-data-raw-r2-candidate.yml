@@ -64,7 +64,7 @@ jobs:
         run: |
           set -euo pipefail
           output_root="${RUNNER_TEMP}/card-data-output"
-          cargo run --locked -p card-data-pipeline --release -- build \
+          cargo run --locked -p card-data-pipeline --bin card-data-pipeline --release -- build \
             --data-version "${DATA_VERSION}" \
             --output-root "${output_root}"
           version_root="${output_root}/${DATA_VERSION}"

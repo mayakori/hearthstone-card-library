@@ -139,7 +139,10 @@ test("workflow is manual, least-privilege, candidate-only, and verifies R2 downl
   assert.doesNotMatch(workflow, /\bschedule:/);
   assert.doesNotMatch(workflow, /\bpush:/);
   assert.match(workflow, /permissions:\s*\r?\n\s+contents: read/);
-  assert.match(workflow, /cargo run --locked -p card-data-pipeline --release -- build/);
+  assert.match(
+    workflow,
+    /cargo run --locked -p card-data-pipeline --bin card-data-pipeline --release -- build/,
+  );
   assert.match(workflow, /BLIZZARD_CLIENT_ID: \$\{\{ secrets\.BLIZZARD_CLIENT_ID \}\}/);
   assert.match(workflow, /R2_ACCESS_KEY_ID: \$\{\{ secrets\.R2_ACCESS_KEY_ID \}\}/);
   assert.match(workflow, /R2_ACCOUNT_ID: \$\{\{ vars\.R2_ACCOUNT_ID \}\}/);
