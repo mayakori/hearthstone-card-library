@@ -378,7 +378,7 @@ The Node workflow contract passed 6/6, including tamper rejection, exact Raw-onl
 
 ## HCL-015 — 카드 이미지 기준팩 후보 파이프라인
 
-- Status: `in_progress`
+- Status: `verify`
 - Priority: `P1`
 - Type: `feature`
 - Updated: `2026-08-06`
@@ -388,7 +388,7 @@ The Node workflow contract passed 6/6, including tamper rejection, exact Raw-onl
 - Depends on: `HCL-006`, `HCL-014`
 - Spec: `docs/design/2026-08-06-hcl-015-image-baseline-candidate-pipeline.md`
 - Plan: `docs/plans/2026-08-06-hcl-015-image-baseline-candidate-pipeline.md`
-- Next gate: execute the approved image baseline candidate plan with fixture-first RED/GREEN verification
+- Next gate: obtain push approval, squash-merge the clean feature branch, then run the credentialed manual image workflow and record the R2 smoke evidence
 - Blocked: `—`
 
 ### Goal
@@ -397,8 +397,8 @@ Build a trusted GitHub Actions image pipeline that derives the current `ko_KR` a
 
 ### Progress
 
-The approved design fixes the scope to both supported locales and the normal/crop variants, excludes gold and hero skins, preserves official image bytes, deduplicates by SHA-256, fails closed on fetch or media validation errors, splits deterministic packs at 480 MiB, and keeps delta packs, bootstrap publication, global indexes and application consumption out of this slice. The implementation plan separates verified package input, bounded downloading, deterministic packaging, production CLI orchestration and receipt-last R2 publication into fixture-first RED/GREEN stages.
+The feature branch now validates the complete HCL-006 package before extracting both locale image requests, downloads normal/crop bytes with bounded concurrency, HTTPS/redirect/timeout/retry and media checks, globally deduplicates by SHA-256, and writes deterministic 480 MiB-sharded tar.zst packs, locale maps and a canonical receipt. A separate manual workflow builds the package, uploads only image packs/maps to the run-unique R2 candidate prefix, downloads and verifies every object and archive member, then uploads and rechecks the receipt last. Gold, hero skins, pointers, delta/bootstrap packs and application consumption remain excluded.
 
 ### Verification
 
-The design and implementation plan passed `git diff --check`, and the synchronized tracking contract passed before implementation began.
+Fixture-first coverage now includes source parity and absent URLs, PNG/JPEG/WebP validation, timeout, retry-after, redirect and byte caps, bounded concurrency, cross-locale deduplication, deterministic output, multi-shard splitting, unsafe run identities and tamper rejection. Fresh `npm run check`, `/va HCL-015` and `npm run merge:check -- HCL-015` passed on the clean implementation head; the remaining completion evidence is the credentialed GitHub Actions/R2 full smoke after approved push.
