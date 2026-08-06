@@ -405,17 +405,17 @@ Fixture-first coverage includes source parity and absent URLs, PNG/JPEG/WebP val
 
 ## HCL-016 — 로컬 GPU 이미지 업스케일 후보 파이프라인
 
-- Status: `verify`
+- Status: `done`
 - Priority: `P1`
 - Type: `feature`
 - Updated: `2026-08-06`
 - Codex: `HCL-016 · 로컬 GPU 이미지 업스케일 후보 파이프라인`
-- Branch: `codex/hcl-016-gpu-upscale-candidates`
-- Worktree: `hcl-016-gpu-upscale-candidates`
+- Branch: `main`
+- Worktree: `main`
 - Depends on: `HCL-015`
 - Spec: `docs/design/2026-08-06-hcl-016-gpu-upscale-candidate-pipeline.md`
 - Plan: `docs/plans/2026-08-06-hcl-016-gpu-upscale-candidate-pipeline.md`
-- Next gate: pass `/va`, merge gate, squash merge and the 20-image GitHub Actions R2 smoke
+- Next gate: define derived image candidate retention and application-package consumption with HCL-007
 - Blocked: `—`
 
 ### Goal
@@ -424,8 +424,8 @@ Consume a verified immutable HCL-015 R2 image candidate, upscale its normal card
 
 ### Progress
 
-The implementation now consumes the verified HCL-015 receipt and maps from R2, derives the exact pack set from normal references, validates every source archive member, runs the pinned Real-ESRGAN tool on the trusted Windows GPU runner, restores alpha after x2 postprocessing, builds verified derived packs/map/receipt, re-downloads all remote objects and uploads the receipt last. Workflow actions, the Real-ESRGAN archive/executable/models and every Python wheel are SHA-256 pinned. The runner is registered, online and idle; repository Actions permissions are read-only, restrict external actions and require approval for every external contributor workflow.
+The merged implementation consumes the verified HCL-015 receipt and maps from R2, derives the exact pack set from normal references, validates every source archive member, runs the pinned Real-ESRGAN tool on the trusted Windows GPU runner, restores alpha after x2 postprocessing, builds verified derived packs/map/receipt, re-downloads all remote objects and uploads the receipt last. Workflow actions, the Real-ESRGAN archive/executable/models and every Python wheel are SHA-256 pinned. The runner is registered and online; repository Actions permissions are read-only, restrict external actions, require full Action SHA pins and require approval for every external contributor workflow.
 
 ### Verification
 
-Node/Python contract tests pass, including unsafe identity/path rejection, HCL-015 crop-owner pack compatibility for normal references, locale-bounded sampling, alpha restoration, deterministic derived pack/map/receipt verification, receipt-last ordering, trusted runner labels and full Action SHA pins. A local 20-image smoke read the actual HCL-015 candidate, selected 10 hashes per locale, ran RTX 4090 inference, produced two verified packs and one map, and verified all 20 output members. Fresh `npm run check` passed. Pending `/va HCL-016`, merge gate and the credentialed GitHub Actions R2 smoke.
+Node/Python contract tests pass, including unsafe identity/path rejection, HCL-015 crop-owner pack compatibility for normal references, locale-bounded sampling, alpha restoration, deterministic derived pack/map/receipt verification, receipt-last ordering, trusted runner labels and full Action SHA pins. A local 20-image smoke read the actual HCL-015 candidate and verified all 20 output members. Fresh `npm run check`, `/va HCL-016` and `npm run merge:check -- HCL-016` passed. GitHub Actions smoke run `31076153311` generated, uploaded and remotely reverified 20 images. Complete run `31076252673` generated and remotely reverified all 3,284 unique normal images, publishing 1,643 `ko_KR` and 1,641 `en_US` members in two immutable R2 packs plus the map, then uploaded receipt SHA-256 `5f297735b6f2db51bb95be181d56819190933688aeebe2d1cf732a8b130b310a` last without changing a production pointer.
