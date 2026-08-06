@@ -361,7 +361,7 @@ The RED consumer omitted the handoff; fresh GREEN consumers produced exactly one
 - Depends on: `HCL-006`
 - Spec: `docs/design/2026-08-06-hcl-014-r2-raw-candidate-workflow.md`
 - Plan: `docs/plans/2026-08-06-hcl-014-r2-raw-candidate-workflow.md`
-- Next gate: execute the first credentialed manual workflow and inspect its verified R2 candidate before designing promotion or application consumption
+- Next gate: define candidate retention and promotion separately from HCL-007 application package consumption
 - Blocked: `—`
 
 ### Goal
@@ -374,4 +374,4 @@ The merged implementation adds a manual GitHub Actions workflow that runs the si
 
 ### Verification
 
-The Node workflow contract passed 6/6, including tamper rejection, exact Raw-only object planning, remote-byte verification semantics and forbidden pointer checks. The planner accepted the credentialed HCL-006 live package and selected exactly the 264,521-byte Korean Raw asset and 250,162-byte English Raw asset. `npm run check`, `/va HCL-014`, and `npm run merge:check -- HCL-014` passed after the branch was updated with current main.
+The Node workflow contract passed 6/6, including tamper rejection, exact Raw-only object planning, remote-byte verification semantics and forbidden pointer checks. The planner accepted the credentialed HCL-006 live package and selected exactly the 264,521-byte Korean Raw asset and 250,162-byte English Raw asset. `npm run check`, `/va HCL-014`, and `npm run merge:check -- HCL-014` passed after the branch was updated with current main. GitHub Actions run `31060455325`, attempt 2, then collected the live two-locale package, uploaded two Raw objects under `candidates/raw/36.0.3-build247416-r1/runs/31060455325-2`, downloaded both objects from R2, and verified all 514,695 bytes successfully without changing a production pointer.
