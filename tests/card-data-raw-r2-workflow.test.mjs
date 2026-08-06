@@ -147,7 +147,7 @@ test("workflow is manual, least-privilege, candidate-only, and verifies R2 downl
   assert.match(workflow, /R2_ACCESS_KEY_ID: \$\{\{ secrets\.R2_ACCESS_KEY_ID \}\}/);
   assert.match(workflow, /R2_ACCOUNT_ID: \$\{\{ vars\.R2_ACCOUNT_ID \}\}/);
   assert.match(workflow, /R2_BUCKET: \$\{\{ vars\.R2_BUCKET \}\}/);
-  assert.match(workflow, /actions\/upload-artifact@v4/);
+  assert.match(workflow, /actions\/upload-artifact@[0-9a-f]{40}/);
   assert.match(workflow, /rustup toolchain install stable --profile minimal/);
   assert.doesNotMatch(workflow, /rustup (?:toolchain install|override set) 1\.85\.0/);
   assert.match(workflow, /card-data-raw-r2-candidate\.mjs plan/);

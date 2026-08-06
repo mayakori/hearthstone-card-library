@@ -4,6 +4,8 @@ dist/
 target/
 src-tauri/target/
 .vite/
+__pycache__/
+*.pyc
 *.log
 .env
 .env.*

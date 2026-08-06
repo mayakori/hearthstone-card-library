@@ -76,6 +76,21 @@ cargo run -p card-data-pipeline -- image-baseline-verify `
   --candidate-root .\image-output\candidates\images\36.0.3-build247416-r1\runs\12345-1
 ```
 
+### GitHub Actions RTX 4090 업스케일 candidate
+
+`.github/workflows/card-image-upscale-r2-candidate.yml`은 등록된 `hcl-rtx4090` Windows self-hosted runner에서만 수동 실행한다. 입력은 receipt-last 검증이 끝난 HCL-015 R2 prefix이며, 두 locale map의 `normal` 참조가 요구하는 공식 source pack만 내려받는다. Raw JSON이나 Blizzard CDN을 다시 호출하지 않으므로 GPU job에는 Blizzard Secret을 전달하지 않는다.
+
+`max_images=10`은 locale별 source hash 앞 10개를 선택하는 20장 smoke이고, `max_images=0`은 모든 고유 normal 이미지를 처리한다. Real-ESRGAN `realesrgan-x4plus`의 x4 결과를 Pillow Lanczos로 정확한 x2 크기로 축소한 뒤 원본 alpha의 x2 값을 복원한다. tool archive, 실행 파일과 model hash를 고정 검증하며 실행 결과는 다음과 같이 원본과 분리한다.
+
+```text
+candidates/derived-images/realesrgan-x2/<data-version>/runs/<run-id>-<attempt>/
+├─ packs/
+├─ maps/normal-realesrgan-x2.json.zst
+└─ receipt.json
+```
+
+workflow는 pack/map을 업로드한 뒤 새 경로로 전부 다시 내려받아 archive member까지 검증하고, 성공한 경우에만 receipt를 마지막에 올려 exact bytes를 다시 확인한다. 이 단계도 `stable`, `current`, `versions` pointer나 앱용 정식 release를 만들지 않는다. runner는 Windows 서비스가 아니므로 실행 전 `C:\actions-runner-hcl\run.cmd`를 켜서 GitHub의 runner 상태가 `Idle`인지 확인한다.
+
 예를 들어 PowerShell에서 다음처럼 값을 출력하지 않고 현재 process에만 설정한 뒤 실행하고 제거할 수 있다.
 
 ```powershell

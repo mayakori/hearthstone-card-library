@@ -1,0 +1,173 @@
+name: Card image upscale R2 candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_candidate_prefix:
+        description: Verified HCL-015 prefix under candidates/images
+        required: true
+        type: string
+      max_images:
+        description: Images per locale (10 = 20-image smoke, 0 = complete)
+        required: true
+        default: 10
+        type: number
+
+permissions:
+  contents: read
+
+concurrency:
+  group: card-image-upscale-${{ inputs.source_candidate_prefix }}
+  cancel-in-progress: false
+
+jobs:
+  upscale-and-upload:
+    runs-on: [self-hosted, Windows, X64, gpu, rtx4090]
+    timeout-minutes: 120
+    env:
+      R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      PYTHONUTF8: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Prepare isolated run directories
+        id: paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $identity = "${env:GITHUB_RUN_ID}-${env:GITHUB_RUN_ATTEMPT}"
+          $outputRoot = Join-Path $env:RUNNER_TEMP "hcl016-output-$identity"
+          $workRoot = Join-Path $env:RUNNER_TEMP "hcl016-work-$identity"
+          if ((Test-Path -LiteralPath $outputRoot) -or (Test-Path -LiteralPath $workRoot)) {
+            throw 'Run-specific output or work directory already exists'
+          }
+          New-Item -ItemType Directory -Path $outputRoot, $workRoot | Out-Null
+          "output_root=$outputRoot" >> $env:GITHUB_OUTPUT
+          "work_root=$workRoot" >> $env:GITHUB_OUTPUT
+          "tool_cache=$(Join-Path $workRoot 'tools')" >> $env:GITHUB_OUTPUT
+
+      - name: Validate runner and install pinned dependencies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          nvidia-smi
+          python --version
+          $pythonDeps = Join-Path "${{ steps.paths.outputs.work_root }}" 'python-deps'
+          python -m pip install `
+            --disable-pip-version-check `
+            --no-input `
+            --require-hashes `
+            --target $pythonDeps `
+            --requirement requirements/card-image-upscale.txt
+          "PYTHONPATH=$pythonDeps" >> $env:GITHUB_ENV
+          $env:PYTHONPATH = $pythonDeps
+          python -c "import boto3, PIL, zstandard; print(boto3.__version__, PIL.__version__, zstandard.__version__)"
+          python -m unittest tests/python/test_card_image_upscale.py
+
+      - name: Build locally verified upscale candidate
+        id: candidate
+        shell: pwsh
+        env:
+          SOURCE_CANDIDATE_PREFIX: ${{ inputs.source_candidate_prefix }}
+          MAX_IMAGES: ${{ inputs.max_images }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -u scripts/card_image_upscale.py build `
+            --source-prefix $env:SOURCE_CANDIDATE_PREFIX `
+            --max-images $env:MAX_IMAGES `
+            --run-id $env:GITHUB_RUN_ID `
+            --run-attempt $env:GITHUB_RUN_ATTEMPT `
+            --output-root '${{ steps.paths.outputs.output_root }}' `
+            --work-root '${{ steps.paths.outputs.work_root }}' `
+            --tool-cache '${{ steps.paths.outputs.tool_cache }}'
+          $receipts = @(Get-ChildItem -LiteralPath '${{ steps.paths.outputs.output_root }}' -Recurse -Filter receipt.json -File)
+          if ($receipts.Count -ne 1) { throw "Expected one derived receipt, found $($receipts.Count)" }
+          $receipt = Get-Content -Raw -LiteralPath $receipts[0].FullName | ConvertFrom-Json
+          "candidate_root=$($receipts[0].Directory.FullName)" >> $env:GITHUB_OUTPUT
+          "candidate_prefix=$($receipt.candidatePrefix)" >> $env:GITHUB_OUTPUT
+          "mode=$($receipt.mode)" >> $env:GITHUB_OUTPUT
+          "selected_count=$($receipt.selectedImageCount)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload packs and map
+        shell: pwsh
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -u scripts/card_image_upscale.py upload-objects `
+            --candidate-root '${{ steps.candidate.outputs.candidate_root }}'
+
+      - name: Download and verify derived objects
+        shell: pwsh
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $downloadRoot = Join-Path '${{ steps.paths.outputs.work_root }}' 'remote-verification'
+          python -u scripts/card_image_upscale.py verify-remote `
+            --candidate-root '${{ steps.candidate.outputs.candidate_root }}' `
+            --download-root $downloadRoot
+
+      - name: Upload receipt last
+        shell: pwsh
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -u scripts/card_image_upscale.py upload-receipt `
+            --candidate-root '${{ steps.candidate.outputs.candidate_root }}'
+
+      - name: Retain receipt, map and safe logs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: card-image-upscale-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ steps.candidate.outputs.candidate_root }}/maps
+            ${{ steps.candidate.outputs.candidate_root }}/receipt.json
+            ${{ steps.paths.outputs.work_root }}/realesrgan.log
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Summarize derived candidate
+        shell: pwsh
+        env:
+          SOURCE_CANDIDATE_PREFIX: ${{ inputs.source_candidate_prefix }}
+          DERIVED_CANDIDATE_PREFIX: ${{ steps.candidate.outputs.candidate_prefix }}
+          CANDIDATE_MODE: ${{ steps.candidate.outputs.mode }}
+          SELECTED_COUNT: ${{ steps.candidate.outputs.selected_count }}
+        run: |
+          @"
+          ### GPU image candidate verified
+
+          - Source: $env:SOURCE_CANDIDATE_PREFIX
+          - Derived: $env:DERIVED_CANDIDATE_PREFIX
+          - Mode: $env:CANDIDATE_MODE
+          - Selected unique images: $env:SELECTED_COUNT
+          - Receipt uploaded last: yes
+          - Production pointers changed: no
+          "@ >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Clean GPU intermediates
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tempRoot = [IO.Path]::GetFullPath($env:RUNNER_TEMP).TrimEnd('\') + '\'
+          foreach ($candidate in @('${{ steps.paths.outputs.output_root }}', '${{ steps.paths.outputs.work_root }}')) {
+            if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+            $resolved = [IO.Path]::GetFullPath($candidate)
+            if (-not $resolved.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase)) {
+              throw "Refusing to clean path outside RUNNER_TEMP: $resolved"
+            }
+            if (Test-Path -LiteralPath $resolved) {
+              Remove-Item -LiteralPath $resolved -Recurse -Force
+            }
+          }
