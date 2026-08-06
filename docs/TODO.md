@@ -405,7 +405,7 @@ Fixture-first coverage includes source parity and absent URLs, PNG/JPEG/WebP val
 
 ## HCL-016 — 로컬 GPU 이미지 업스케일 후보 파이프라인
 
-- Status: `in_progress`
+- Status: `verify`
 - Priority: `P1`
 - Type: `feature`
 - Updated: `2026-08-06`
@@ -415,7 +415,7 @@ Fixture-first coverage includes source parity and absent URLs, PNG/JPEG/WebP val
 - Depends on: `HCL-015`
 - Spec: `docs/design/2026-08-06-hcl-016-gpu-upscale-candidate-pipeline.md`
 - Plan: `docs/plans/2026-08-06-hcl-016-gpu-upscale-candidate-pipeline.md`
-- Next gate: implement the approved Windows self-hosted GPU candidate workflow and pass a 20-image live R2 smoke
+- Next gate: pass `/va`, merge gate, squash merge and the 20-image GitHub Actions R2 smoke
 - Blocked: `—`
 
 ### Goal
@@ -424,8 +424,8 @@ Consume a verified immutable HCL-015 R2 image candidate, upscale its normal card
 
 ### Progress
 
-The user approved a manual-only workflow in the public repository, a repository-scoped Windows x64 runner named `hcl-rtx4090` with `gpu` and `rtx4090` labels, Real-ESRGAN x4 inference followed by Lanczos x2 downsampling and original-alpha restoration, normal-image-only input, separate derived R2 objects, remote byte verification and receipt-last completion. The runner is registered, online and idle; repository Actions permissions are read-only, restrict external actions and require approval for every external contributor workflow.
+The implementation now consumes the verified HCL-015 receipt and maps from R2, derives the exact pack set from normal references, validates every source archive member, runs the pinned Real-ESRGAN tool on the trusted Windows GPU runner, restores alpha after x2 postprocessing, builds verified derived packs/map/receipt, re-downloads all remote objects and uploads the receipt last. Workflow actions, the Real-ESRGAN archive/executable/models and every Python wheel are SHA-256 pinned. The runner is registered, online and idle; repository Actions permissions are read-only, restrict external actions and require approval for every external contributor workflow.
 
 ### Verification
 
-Pending fixture-first workflow and transformation tests, a 20-image live R2 smoke, a full current-candidate run, fresh `npm run check`, `/va HCL-016` and `npm run merge:check -- HCL-016`.
+Node/Python contract tests pass, including unsafe identity/path rejection, HCL-015 crop-owner pack compatibility for normal references, locale-bounded sampling, alpha restoration, deterministic derived pack/map/receipt verification, receipt-last ordering, trusted runner labels and full Action SHA pins. A local 20-image smoke read the actual HCL-015 candidate, selected 10 hashes per locale, ran RTX 4090 inference, produced two verified packs and one map, and verified all 20 output members. Fresh `npm run check` passed. Pending `/va HCL-016`, merge gate and the credentialed GitHub Actions R2 smoke.
