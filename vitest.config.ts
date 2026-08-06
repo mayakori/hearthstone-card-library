@@ -8,6 +8,7 @@ export default defineConfig({
       ".worktrees/**",
       "tests/project-tracking*.test.mjs",
       "tests/merge-gate.test.mjs",
+      "tests/card-data-raw-r2-workflow.test.mjs",
     ],
   },
 });

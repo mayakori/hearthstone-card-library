@@ -1,0 +1,151 @@
+name: Card data Raw R2 candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_version:
+        description: Version in 36.0.3-build247416-r1 form
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: card-data-raw-r2-${{ inputs.data_version }}
+  cancel-in-progress: false
+
+jobs:
+  collect-and-upload:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_TERM_COLOR: always
+      R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate workflow configuration
+        shell: bash
+        env:
+          BLIZZARD_CLIENT_ID: ${{ secrets.BLIZZARD_CLIENT_ID }}
+          BLIZZARD_CLIENT_SECRET: ${{ secrets.BLIZZARD_CLIENT_SECRET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          : "${BLIZZARD_CLIENT_ID:?BLIZZARD_CLIENT_ID secret is required}"
+          : "${BLIZZARD_CLIENT_SECRET:?BLIZZARD_CLIENT_SECRET secret is required}"
+          : "${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID secret is required}"
+          : "${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY secret is required}"
+          : "${R2_ACCOUNT_ID:?R2_ACCOUNT_ID variable is required}"
+          : "${R2_BUCKET:?R2_BUCKET variable is required}"
+          aws --version
+
+      - name: Select stable Rust toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable --profile minimal
+          rustup override set stable
+
+      - name: Verify offline pipeline
+        run: cargo test --locked -p card-data-contract -p card-data-pipeline --all-features --no-fail-fast
+
+      - name: Collect and build verified package
+        id: build
+        shell: bash
+        env:
+          BLIZZARD_CLIENT_ID: ${{ secrets.BLIZZARD_CLIENT_ID }}
+          BLIZZARD_CLIENT_SECRET: ${{ secrets.BLIZZARD_CLIENT_SECRET }}
+          DATA_VERSION: ${{ inputs.data_version }}
+        run: |
+          set -euo pipefail
+          output_root="${RUNNER_TEMP}/card-data-output"
+          cargo run --locked -p card-data-pipeline --release -- build \
+            --data-version "${DATA_VERSION}" \
+            --output-root "${output_root}"
+          version_root="${output_root}/${DATA_VERSION}"
+          test -f "${version_root}/manifest.json"
+          echo "version_root=${version_root}" >> "${GITHUB_OUTPUT}"
+
+      - name: Plan Raw-only candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/card-data-raw-r2-candidate.mjs plan \
+            --version-root "${{ steps.build.outputs.version_root }}" \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --receipt "${RUNNER_TEMP}/raw-r2-candidate.json"
+
+      - name: Retain complete verified package
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-data-${{ inputs.data_version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.build.outputs.version_root }}
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Upload only Raw assets to R2 candidate prefix
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          set -euo pipefail
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          entries="${RUNNER_TEMP}/raw-r2-entries.tsv"
+          node scripts/card-data-raw-r2-candidate.mjs entries \
+            --receipt "${{ steps.candidate.outputs.receipt_path }}" > "${entries}"
+          while IFS=$'\t' read -r source object_key locale bytes sha256; do
+            aws s3 cp "${source}" "s3://${R2_BUCKET}/${object_key}" \
+              --endpoint-url "${endpoint}" \
+              --content-type application/zstd \
+              --cache-control no-store \
+              --metadata "sha256=${sha256},locale=${locale},bytes=${bytes}" \
+              --only-show-errors \
+              --no-progress
+          done < "${entries}"
+
+      - name: Download and verify R2 candidate bytes
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          set -euo pipefail
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          download_root="${RUNNER_TEMP}/r2-download"
+          mkdir -p "${download_root}/raw"
+          entries="${RUNNER_TEMP}/raw-r2-entries.tsv"
+          while IFS=$'\t' read -r source object_key locale bytes sha256; do
+            aws s3 cp "s3://${R2_BUCKET}/${object_key}" \
+              "${download_root}/raw/${locale}.json.zst" \
+              --endpoint-url "${endpoint}" \
+              --only-show-errors \
+              --no-progress
+          done < "${entries}"
+          node scripts/card-data-raw-r2-candidate.mjs verify \
+            --receipt "${{ steps.candidate.outputs.receipt_path }}" \
+            --download-root "${download_root}"
+
+      - name: Summarize candidate
+        shell: bash
+        run: |
+          {
+            echo "### Raw R2 candidate verified"
+            echo ""
+            echo "- Data version: \`${{ inputs.data_version }}\`"
+            echo "- R2 prefix: \`${{ steps.candidate.outputs.candidate_prefix }}\`"
+            echo "- Published objects: 2 Raw zstd assets"
+            echo "- Production pointers changed: no"
+          } >> "${GITHUB_STEP_SUMMARY}"

@@ -49,6 +49,12 @@ fixture 기반의 offline 전체 pipeline E2E도 포함하려면 `cargo test --w
 
 live smoke와 build는 현재 process environment의 `BLIZZARD_CLIENT_ID`, `BLIZZARD_CLIENT_SECRET`만 읽는다. 로컬에서는 Git으로 무시되는 `.env.card-data.local`을 `.env.example` 형식으로 만들고, PowerShell 또는 별도 local tooling이 두 값을 process environment에 잠시 로드한 다음 명령을 실행한다. pipeline은 이 파일을 읽거나 복사하지 않으며, credential과 access token을 package·manifest·Raw·SQLite·로그에 기록하지 않는다.
 
+### GitHub Actions R2 Raw candidate
+
+`.github/workflows/card-data-raw-r2-candidate.yml`은 수동 `workflow_dispatch`에서만 실행한다. production pipeline 전체를 실행·검증하고 전체 package를 7일짜리 GitHub Actions artifact로 남기지만, Cloudflare R2에는 두 locale Raw zstd만 고유 candidate 경로로 업로드한 뒤 다시 내려받아 byte size와 SHA-256을 확인한다. 운영 `stable` 또는 `current` pointer는 변경하지 않는다.
+
+저장소 Actions 설정에는 `BLIZZARD_CLIENT_ID`, `BLIZZARD_CLIENT_SECRET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` Secret과 `R2_ACCOUNT_ID`, `R2_BUCKET` Variable이 필요하다. R2 token은 대상 bucket object read/write에 필요한 최소 권한만 부여한다.
+
 예를 들어 PowerShell에서 다음처럼 값을 출력하지 않고 현재 process에만 설정한 뒤 실행하고 제거할 수 있다.
 
 ```powershell
