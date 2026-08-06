@@ -375,3 +375,30 @@ The merged implementation adds a manual GitHub Actions workflow that runs the si
 ### Verification
 
 The Node workflow contract passed 6/6, including tamper rejection, exact Raw-only object planning, remote-byte verification semantics and forbidden pointer checks. The planner accepted the credentialed HCL-006 live package and selected exactly the 264,521-byte Korean Raw asset and 250,162-byte English Raw asset. `npm run check`, `/va HCL-014`, and `npm run merge:check -- HCL-014` passed after the branch was updated with current main. GitHub Actions run `31060455325`, attempt 2, then collected the live two-locale package, uploaded two Raw objects under `candidates/raw/36.0.3-build247416-r1/runs/31060455325-2`, downloaded both objects from R2, and verified all 514,695 bytes successfully without changing a production pointer.
+
+## HCL-015 — 카드 이미지 기준팩 후보 파이프라인
+
+- Status: `in_progress`
+- Priority: `P1`
+- Type: `feature`
+- Updated: `2026-08-06`
+- Codex: `HCL-015 · 카드 이미지 기준팩 후보 파이프라인`
+- Branch: `codex/hcl-015-image-baseline-candidates`
+- Worktree: `hcl-015-image-baseline-candidates`
+- Depends on: `HCL-006`, `HCL-014`
+- Spec: `docs/design/2026-08-06-hcl-015-image-baseline-candidate-pipeline.md`
+- Plan: `—`
+- Next gate: write and approve the image baseline candidate design, then create its implementation plan
+- Blocked: `—`
+
+### Goal
+
+Build a trusted GitHub Actions image pipeline that derives the current `ko_KR` and `en_US` normal/crop image set from an HCL-006 package, verifies and content-addresses the official bytes, creates deterministic baseline packs and maps, uploads them to an immutable R2 candidate prefix, and verifies the downloaded candidate without publishing an application pointer.
+
+### Progress
+
+The approved design inputs fix the scope to both supported locales and the normal/crop variants, exclude gold and hero skins, preserve official image bytes, deduplicate by SHA-256, fail closed on fetch or media validation errors, split deterministic packs at 480 MiB, and keep delta packs, bootstrap publication, global indexes and application consumption out of this slice.
+
+### Verification
+
+Not started.
