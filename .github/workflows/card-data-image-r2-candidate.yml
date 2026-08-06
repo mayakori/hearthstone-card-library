@@ -1,0 +1,194 @@
+name: Card data image R2 candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_version:
+        description: Version in 36.0.3-build247416-r1 form
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: card-data-image-${{ inputs.data_version }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CARGO_TERM_COLOR: always
+      R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate workflow configuration
+        shell: bash
+        env:
+          BLIZZARD_CLIENT_ID: ${{ secrets.BLIZZARD_CLIENT_ID }}
+          BLIZZARD_CLIENT_SECRET: ${{ secrets.BLIZZARD_CLIENT_SECRET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          : "${BLIZZARD_CLIENT_ID:?BLIZZARD_CLIENT_ID secret is required}"
+          : "${BLIZZARD_CLIENT_SECRET:?BLIZZARD_CLIENT_SECRET secret is required}"
+          : "${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID secret is required}"
+          : "${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY secret is required}"
+          : "${R2_ACCOUNT_ID:?R2_ACCOUNT_ID variable is required}"
+          : "${R2_BUCKET:?R2_BUCKET variable is required}"
+          aws --version
+
+      - name: Select stable Rust toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable --profile minimal
+          rustup override set stable
+
+      - name: Verify offline pipeline
+        run: cargo test --locked -p card-data-contract -p card-data-pipeline --all-features --no-fail-fast
+
+      - name: Build production pipeline CLI
+        run: cargo build --locked -p card-data-pipeline --bin card-data-pipeline --release
+
+      - name: Collect and build verified package
+        id: package
+        shell: bash
+        env:
+          BLIZZARD_CLIENT_ID: ${{ secrets.BLIZZARD_CLIENT_ID }}
+          BLIZZARD_CLIENT_SECRET: ${{ secrets.BLIZZARD_CLIENT_SECRET }}
+          DATA_VERSION: ${{ inputs.data_version }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/image-logs"
+          output_root="${RUNNER_TEMP}/card-data-output"
+          "${GITHUB_WORKSPACE}/target/release/card-data-pipeline" build \
+            --data-version "${DATA_VERSION}" \
+            --output-root "${output_root}" 2>&1 | tee "${RUNNER_TEMP}/image-logs/package.jsonl"
+          version_root="${output_root}/${DATA_VERSION}"
+          test -f "${version_root}/manifest.json"
+          echo "version_root=${version_root}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build and locally verify image candidate
+        id: candidate
+        shell: bash
+        env:
+          DATA_VERSION: ${{ inputs.data_version }}
+        run: |
+          set -euo pipefail
+          output_root="${RUNNER_TEMP}/image-output"
+          "${GITHUB_WORKSPACE}/target/release/card-data-pipeline" image-baseline-build \
+            --package-root "${{ steps.package.outputs.version_root }}" \
+            --output-root "${output_root}" \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-attempt "${GITHUB_RUN_ATTEMPT}" 2>&1 | tee "${RUNNER_TEMP}/image-logs/image.jsonl"
+          prefix="candidates/images/${DATA_VERSION}/runs/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          candidate_root="${output_root}/${prefix}"
+          test -f "${candidate_root}/receipt.json"
+          echo "candidate_root=${candidate_root}" >> "${GITHUB_OUTPUT}"
+          echo "candidate_prefix=${prefix}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload packs and maps
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          set -euo pipefail
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          entries="${RUNNER_TEMP}/image-entries.tsv"
+          node scripts/card-data-image-r2-candidate.mjs entries \
+            --candidate-root "${{ steps.candidate.outputs.candidate_root }}" > "${entries}"
+          while IFS=$'\t' read -r source object_key relative bytes sha256 content_type; do
+            aws s3 cp "${source}" "s3://${R2_BUCKET}/${object_key}" \
+              --endpoint-url "${endpoint}" \
+              --content-type "${content_type}" \
+              --cache-control no-store \
+              --metadata "sha256=${sha256},bytes=${bytes}" \
+              --only-show-errors \
+              --no-progress
+          done < "${entries}"
+
+      - name: Download and verify packs and maps
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          set -euo pipefail
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          download_root="${RUNNER_TEMP}/image-r2-download"
+          entries="${RUNNER_TEMP}/image-entries.tsv"
+          while IFS=$'\t' read -r source object_key relative bytes sha256 content_type; do
+            destination="${download_root}/${relative}"
+            mkdir -p "$(dirname "${destination}")"
+            aws s3 cp "s3://${R2_BUCKET}/${object_key}" "${destination}" \
+              --endpoint-url "${endpoint}" \
+              --only-show-errors \
+              --no-progress
+          done < "${entries}"
+          cp "${{ steps.candidate.outputs.candidate_root }}/receipt.json" "${download_root}/receipt.json"
+          "${GITHUB_WORKSPACE}/target/release/card-data-pipeline" image-baseline-verify \
+            --candidate-root "${download_root}"
+
+      - name: Upload receipt last
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          set -euo pipefail
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          entry="${RUNNER_TEMP}/image-receipt-entry.tsv"
+          node scripts/card-data-image-r2-candidate.mjs receipt-entry \
+            --candidate-root "${{ steps.candidate.outputs.candidate_root }}" > "${entry}"
+          IFS=$'\t' read -r source object_key relative bytes sha256 content_type < "${entry}"
+          aws s3 cp "${source}" "s3://${R2_BUCKET}/${object_key}" \
+            --endpoint-url "${endpoint}" \
+            --content-type "${content_type}" \
+            --cache-control no-store \
+            --metadata "sha256=${sha256},bytes=${bytes}" \
+            --only-show-errors \
+            --no-progress
+          remote_receipt="${RUNNER_TEMP}/remote-receipt.json"
+          aws s3 cp "s3://${R2_BUCKET}/${object_key}" "${remote_receipt}" \
+            --endpoint-url "${endpoint}" \
+            --only-show-errors \
+            --no-progress
+          cmp --silent "${source}" "${remote_receipt}"
+
+      - name: Retain maps, receipt and safe logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-images-${{ inputs.data_version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ steps.candidate.outputs.candidate_root }}/maps
+            ${{ steps.candidate.outputs.candidate_root }}/receipt.json
+            ${{ runner.temp }}/image-logs
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Summarize candidate
+        shell: bash
+        run: |
+          {
+            echo "### Image R2 candidate verified"
+            echo ""
+            echo "- Data version: \`${{ inputs.data_version }}\`"
+            echo "- R2 prefix: \`${{ steps.candidate.outputs.candidate_prefix }}\`"
+            echo "- Receipt uploaded last: yes"
+            echo "- Production pointers changed: no"
+          } >> "${GITHUB_STEP_SUMMARY}"

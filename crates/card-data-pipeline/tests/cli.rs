@@ -62,6 +62,31 @@ fn clap_parse_error_is_jsonl_and_never_writes_stdout() {
 }
 
 #[test]
+fn image_baseline_build_does_not_require_blizzard_credentials_and_validates_package() {
+    let output = tempfile::tempdir().unwrap();
+    let missing_package = output.path().join("missing-package");
+    let assertion = binary()
+        .env_remove("BLIZZARD_CLIENT_ID")
+        .env_remove("BLIZZARD_CLIENT_SECRET")
+        .args([
+            "image-baseline-build",
+            "--package-root",
+            &missing_package.display().to_string(),
+            "--output-root",
+            &output.path().display().to_string(),
+            "--run-id",
+            "12345",
+            "--run-attempt",
+            "1",
+        ])
+        .assert()
+        .code(7);
+
+    assert_jsonl_failure(&assertion.get_output().stderr, 7);
+    assert!(assertion.get_output().stdout.is_empty());
+}
+
+#[test]
 fn typed_pipeline_errors_have_the_stable_exit_codes() {
     for (error, expected) in [
         (PipelineError::Cli("x".into()), 2),
@@ -156,16 +181,15 @@ fn assert_jsonl_failure(stderr: &[u8], exit_code: i32) {
     assert!(!text.contains(CLIENT_SECRET));
     assert!(!text.contains(TOKEN));
     assert!(!text.contains("Authorization"));
-    for line in text.lines().filter(|line| !line.is_empty()) {
-        let event: Value = serde_json::from_str(line).unwrap();
+    let events = text
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(|line| serde_json::from_str::<Value>(line).unwrap())
+        .collect::<Vec<_>>();
+    for event in &events {
         let object = event.as_object().unwrap();
         assert_eq!(object["schema_version"], 1);
         OffsetDateTime::parse(object["timestamp"].as_str().unwrap(), &Rfc3339).unwrap();
-        assert_eq!(object["level"], "error");
-        assert_eq!(object["stage"], "final");
-        assert_eq!(object["event"], "failure");
-        assert_eq!(object["error_code"], exit_code);
-        assert_eq!(object["message"], "build failed");
         for field in object.keys() {
             assert!(
                 [
@@ -186,4 +210,24 @@ fn assert_jsonl_failure(stderr: &[u8], exit_code: i32) {
             );
         }
     }
+    let final_event = events.last().unwrap().as_object().unwrap();
+    assert_eq!(final_event["level"], "error");
+    assert_eq!(final_event["stage"], "final");
+    assert_eq!(final_event["event"], "failure");
+    assert_eq!(final_event["error_code"], exit_code);
+    assert_eq!(final_event["message"], "build failed");
+}
+
+#[test]
+fn jsonl_image_retry_event_uses_the_image_stage_and_safe_scalars() {
+    let mut sink = JsonlEventSink::new(Vec::new());
+    sink.emit(Event::image_retry(1, Some(503)).unwrap())
+        .unwrap();
+
+    let event: Value = serde_json::from_slice(&sink.into_inner()).unwrap();
+    assert_eq!(event["level"], "warn");
+    assert_eq!(event["stage"], "image_download");
+    assert_eq!(event["event"], "retry");
+    assert_eq!(event["attempt"], 1);
+    assert_eq!(event["status_code"], 503);
 }

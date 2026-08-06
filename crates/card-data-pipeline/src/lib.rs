@@ -9,6 +9,8 @@ mod collect;
 mod config;
 mod error;
 mod http;
+mod image;
+mod image_candidate;
 mod logging;
 mod normalize;
 mod oauth;
@@ -23,6 +25,14 @@ pub use collect::{CollectedLocale, CollectedLocales, Collector};
 pub use config::{Credentials, HttpPolicy};
 pub use error::PipelineError;
 pub use http::{BlizzardClient, RetryEvent};
+pub use image::{
+    load_image_source, FetchedImage, ImageContent, ImageDownloadPolicy, ImageDownloader,
+    ImageRequest, ImageRetryEvent, ImageSource, ImageUnavailable, ImageVariant,
+};
+pub use image_candidate::{
+    build_image_candidate, run_image_baseline_build, verify_image_candidate, ImageCandidate,
+    ImageCandidateRequest, ImageReceipt, ObjectReceipt, PackReceipt,
+};
 pub use logging::{Event, EventSink, JsonlEventSink, VecEventSink};
 pub use normalize::normalize_locale;
 pub use oauth::TokenProvider;

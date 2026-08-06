@@ -383,6 +383,7 @@ dependencies = [
  "async-trait",
  "card-data-contract",
  "clap",
+ "futures",
  "hex",
  "httpdate",
  "predicates",

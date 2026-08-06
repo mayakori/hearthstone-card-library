@@ -55,6 +55,27 @@ live smoke와 build는 현재 process environment의 `BLIZZARD_CLIENT_ID`, `BLIZ
 
 저장소 Actions 설정에는 `BLIZZARD_CLIENT_ID`, `BLIZZARD_CLIENT_SECRET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` Secret과 `R2_ACCOUNT_ID`, `R2_BUCKET` Variable이 필요하다. R2 token은 대상 bucket object read/write에 필요한 최소 권한만 부여한다.
 
+### GitHub Actions R2 이미지 candidate
+
+`.github/workflows/card-data-image-r2-candidate.yml`도 수동 `workflow_dispatch` 전용이다. 입력 버전의 검증 package를 새로 만든 뒤 그 package에 포함된 `ko_KR`, `en_US` 카드의 normal/crop 이미지만 내려받는다. 원본 바이트를 SHA-256으로 전역 중복 제거하고 결정적 `tar.zst` pack과 locale map을 만든다.
+
+공식 CDN이 정상 PNG/JPEG 바이트를 `application/octet-stream`으로 표시하는 경우에는 실제 파일 signature로 media type을 결정한다. URL은 있지만 공식 서버가 429 이외 4xx를 반환한 자산은 실행을 중단하거나 임의 이미지로 대체하지 않고, locale map에 출처 URL·`http_status` 사유·상태 코드를 가진 `unavailable` 상태로 보존한다. 입력부터 URL이 없었던 `null`과는 구분된다.
+
+workflow는 `packs/`와 `maps/`를 실행별 `candidates/images/<data-version>/runs/<run-id>-<attempt>/` 경로에 먼저 올린 뒤 전부 다시 내려받아 Rust verifier로 archive member까지 검사한다. 검증이 끝난 후에만 `receipt.json`을 마지막으로 올리고 다시 내려받아 exact bytes를 확인한다. `stable`, `current`, `versions` pointer와 앱용 정식 release는 이 단계에서 만들지 않는다. GitHub Artifact에는 대형 pack 대신 두 map, receipt와 안전한 로그만 7일 보존한다.
+
+동일한 Secrets/Variables를 재사용한다. 로컬에서 이미 준비된 package로 candidate 구조를 확인하려면 다음처럼 실행할 수 있으며, 이미지 CDN 요청에는 Blizzard나 R2 자격증명이 전달되지 않는다.
+
+```powershell
+cargo run -p card-data-pipeline -- image-baseline-build `
+  --package-root .\output\36.0.3-build247416-r1 `
+  --output-root .\image-output `
+  --run-id 12345 `
+  --run-attempt 1
+
+cargo run -p card-data-pipeline -- image-baseline-verify `
+  --candidate-root .\image-output\candidates\images\36.0.3-build247416-r1\runs\12345-1
+```
+
 예를 들어 PowerShell에서 다음처럼 값을 출력하지 않고 현재 process에만 설정한 뒤 실행하고 제거할 수 있다.
 
 ```powershell

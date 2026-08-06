@@ -24,6 +24,7 @@ test-support = []
 async-trait = "0.1"
 card-data-contract = { path = "../card-data-contract" }
 clap = { version = "4.6", features = ["derive"] }
+futures = "0.3"
 httpdate = "1"
 rand = "0.10"
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "form", "query", "rustls"] }

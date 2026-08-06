@@ -14,7 +14,7 @@
     "rust:test": "cargo test --workspace --all-features --no-fail-fast",
     "rust:check": "cargo check --workspace && cargo check --workspace --all-features",
     "tracking:test": "node --test tests/project-tracking.test.mjs tests/project-tracking-files.test.mjs tests/merge-gate.test.mjs",
-    "workflow:test": "node --test tests/card-data-raw-r2-workflow.test.mjs",
+    "workflow:test": "node --test tests/card-data-raw-r2-workflow.test.mjs tests/card-data-image-r2-workflow.test.mjs",
     "tracking:check": "node scripts/validate-project-tracking.mjs",
     "merge:check": "node scripts/validate-merge-gate.mjs",
     "check": "npm run tracking:test && npm run tracking:check && npm run workflow:test && npm run test && npm run build && npm run rust:check && npm run rust:test"

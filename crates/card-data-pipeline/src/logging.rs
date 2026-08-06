@@ -49,6 +49,13 @@ impl Event {
         Ok(event)
     }
 
+    pub fn image_retry(attempt: u8, status_code: Option<u16>) -> io::Result<Self> {
+        let mut event = Self::new("warn", "image_download", "retry")?;
+        event.attempt = Some(attempt);
+        event.status_code = status_code;
+        Ok(event)
+    }
+
     pub fn success() -> io::Result<Self> {
         Self::new("info", "final", "success")
     }
