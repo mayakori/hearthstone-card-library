@@ -402,3 +402,30 @@ The merged implementation validates the complete HCL-006 package before extracti
 ### Verification
 
 Fixture-first coverage includes source parity and absent URLs, PNG/JPEG/WebP validation, timeout, retry-after, redirect and byte caps, bounded concurrency, cross-locale deduplication, deterministic output, multi-shard splitting, unsafe run identities and tamper rejection. Fresh `npm run check`, `/va HCL-015` and `npm run merge:check -- HCL-015` passed on the clean implementation head. GitHub Actions run `31066060504`, attempt 1, then collected and normalized 1,645 live cards for each locale, processed 6,580 image slots, preserved 1,180 absent and 2 unavailable slots, uploaded 4,314 unique verified images plus two locale maps under `candidates/images/36.0.3-build247416-r1/runs/31066060504-1`, downloaded and verified all packs and maps from R2, and uploaded and byte-compared the receipt last without changing a production pointer.
+
+## HCL-016 — 로컬 GPU 이미지 업스케일 후보 파이프라인
+
+- Status: `in_progress`
+- Priority: `P1`
+- Type: `feature`
+- Updated: `2026-08-06`
+- Codex: `HCL-016 · 로컬 GPU 이미지 업스케일 후보 파이프라인`
+- Branch: `codex/hcl-016-gpu-upscale-candidates`
+- Worktree: `hcl-016-gpu-upscale-candidates`
+- Depends on: `HCL-015`
+- Spec: `docs/design/2026-08-06-hcl-016-gpu-upscale-candidate-pipeline.md`
+- Plan: `docs/plans/2026-08-06-hcl-016-gpu-upscale-candidate-pipeline.md`
+- Next gate: implement the approved Windows self-hosted GPU candidate workflow and pass a 20-image live R2 smoke
+- Blocked: `—`
+
+### Goal
+
+Consume a verified immutable HCL-015 R2 image candidate, upscale its normal card images on the trusted local RTX 4090 self-hosted runner, restore original alpha after deterministic x2 output processing, publish verified derived packs and maps to a separate immutable R2 candidate prefix, and upload the derived receipt last without changing the official source candidate or a production pointer.
+
+### Progress
+
+The user approved a manual-only workflow in the public repository, a repository-scoped Windows x64 runner named `hcl-rtx4090` with `gpu` and `rtx4090` labels, Real-ESRGAN x4 inference followed by Lanczos x2 downsampling and original-alpha restoration, normal-image-only input, separate derived R2 objects, remote byte verification and receipt-last completion. The runner is registered, online and idle; repository Actions permissions are read-only, restrict external actions and require approval for every external contributor workflow.
+
+### Verification
+
+Pending fixture-first workflow and transformation tests, a 20-image live R2 smoke, a full current-candidate run, fresh `npm run check`, `/va HCL-016` and `npm run merge:check -- HCL-016`.
