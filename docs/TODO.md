@@ -387,8 +387,8 @@ The Node workflow contract passed 6/6, including tamper rejection, exact Raw-onl
 - Worktree: `hcl-015-image-baseline-candidates`
 - Depends on: `HCL-006`, `HCL-014`
 - Spec: `docs/design/2026-08-06-hcl-015-image-baseline-candidate-pipeline.md`
-- Plan: `—`
-- Next gate: write and approve the image baseline candidate design, then create its implementation plan
+- Plan: `docs/plans/2026-08-06-hcl-015-image-baseline-candidate-pipeline.md`
+- Next gate: execute the approved image baseline candidate plan with fixture-first RED/GREEN verification
 - Blocked: `—`
 
 ### Goal
@@ -397,8 +397,8 @@ Build a trusted GitHub Actions image pipeline that derives the current `ko_KR` a
 
 ### Progress
 
-The approved design inputs fix the scope to both supported locales and the normal/crop variants, exclude gold and hero skins, preserve official image bytes, deduplicate by SHA-256, fail closed on fetch or media validation errors, split deterministic packs at 480 MiB, and keep delta packs, bootstrap publication, global indexes and application consumption out of this slice.
+The approved design fixes the scope to both supported locales and the normal/crop variants, excludes gold and hero skins, preserves official image bytes, deduplicates by SHA-256, fails closed on fetch or media validation errors, splits deterministic packs at 480 MiB, and keeps delta packs, bootstrap publication, global indexes and application consumption out of this slice. The implementation plan separates verified package input, bounded downloading, deterministic packaging, production CLI orchestration and receipt-last R2 publication into fixture-first RED/GREEN stages.
 
 ### Verification
 
-Not started.
+The design and implementation plan passed `git diff --check`, and the synchronized tracking contract passed before implementation began.
