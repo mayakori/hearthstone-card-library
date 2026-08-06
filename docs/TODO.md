@@ -378,17 +378,17 @@ The Node workflow contract passed 6/6, including tamper rejection, exact Raw-onl
 
 ## HCL-015 — 카드 이미지 기준팩 후보 파이프라인
 
-- Status: `verify`
+- Status: `done`
 - Priority: `P1`
 - Type: `feature`
 - Updated: `2026-08-06`
 - Codex: `HCL-015 · 카드 이미지 기준팩 후보 파이프라인`
-- Branch: `codex/hcl-015-image-baseline-candidates`
-- Worktree: `hcl-015-image-baseline-candidates`
+- Branch: `main`
+- Worktree: `main`
 - Depends on: `HCL-006`, `HCL-014`
 - Spec: `docs/design/2026-08-06-hcl-015-image-baseline-candidate-pipeline.md`
 - Plan: `docs/plans/2026-08-06-hcl-015-image-baseline-candidate-pipeline.md`
-- Next gate: obtain push approval, squash-merge the clean feature branch, then run the credentialed manual image workflow and record the R2 smoke evidence
+- Next gate: define image candidate retention and promotion separately from HCL-007 application package consumption
 - Blocked: `—`
 
 ### Goal
@@ -397,8 +397,8 @@ Build a trusted GitHub Actions image pipeline that derives the current `ko_KR` a
 
 ### Progress
 
-The feature branch now validates the complete HCL-006 package before extracting both locale image requests, downloads normal/crop bytes with bounded concurrency, HTTPS/redirect/timeout/retry and media checks, globally deduplicates by SHA-256, and writes deterministic 480 MiB-sharded tar.zst packs, locale maps and a canonical receipt. A separate manual workflow builds the package, uploads only image packs/maps to the run-unique R2 candidate prefix, downloads and verifies every object and archive member, then uploads and rechecks the receipt last. Gold, hero skins, pointers, delta/bootstrap packs and application consumption remain excluded.
+The merged implementation validates the complete HCL-006 package before extracting both locale image requests, downloads normal/crop bytes with bounded concurrency, HTTPS/redirect/timeout/retry and media checks, globally deduplicates by SHA-256, and writes deterministic 480 MiB-sharded tar.zst packs, locale maps and a canonical receipt. A separate manual workflow builds the package, uploads only image packs/maps to the run-unique R2 candidate prefix, downloads and verifies every object and archive member, then uploads and rechecks the receipt last. Gold, hero skins, pointers, delta/bootstrap packs and application consumption remain excluded.
 
 ### Verification
 
-Fixture-first coverage now includes source parity and absent URLs, PNG/JPEG/WebP validation, timeout, retry-after, redirect and byte caps, bounded concurrency, cross-locale deduplication, deterministic output, multi-shard splitting, unsafe run identities and tamper rejection. Fresh `npm run check`, `/va HCL-015` and `npm run merge:check -- HCL-015` passed on the clean implementation head; the remaining completion evidence is the credentialed GitHub Actions/R2 full smoke after approved push.
+Fixture-first coverage includes source parity and absent URLs, PNG/JPEG/WebP validation, timeout, retry-after, redirect and byte caps, bounded concurrency, cross-locale deduplication, deterministic output, multi-shard splitting, unsafe run identities and tamper rejection. Fresh `npm run check`, `/va HCL-015` and `npm run merge:check -- HCL-015` passed on the clean implementation head. GitHub Actions run `31066060504`, attempt 1, then collected and normalized 1,645 live cards for each locale, processed 6,580 image slots, preserved 1,180 absent and 2 unavailable slots, uploaded 4,314 unique verified images plus two locale maps under `candidates/images/36.0.3-build247416-r1/runs/31066060504-1`, downloaded and verified all packs and maps from R2, and uploaded and byte-compared the receipt last without changing a production pointer.
